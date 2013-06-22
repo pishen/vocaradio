@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="web-radio" default="war">
+<project name="vocaradio" default="war">
 	<property environment="env"/>
 	<property name="TOMCAT_HOME" value="${env.TOMCAT_HOME}"/>
 	
@@ -9,17 +9,17 @@
 	</path>
 	
 	<target name="compile">
+		<mkdir dir="lib"/>
 		<delete dir="bin"/>
 		<mkdir dir="bin"/>
 		<javac includeantruntime="false" srcdir="src" destdir="bin" classpathref="classpath"/>
 	</target>
 	
 	<target name="war" depends="compile">
-		<war destfile="${TOMCAT_HOME}/webapps/web-radio.war" needxmlfile='false'>
+		<war destfile="vocaradio.war" needxmlfile='false'>
 			<lib dir="lib"/>
 			<fileset dir="WebContent"/>
 			<classes dir="bin"/>
 		</war>
-		<delete dir="${TOMCAT_HOME}/webapps/web-radio"/>
 	</target>
 </project>
