@@ -1,0 +1,106 @@
+*{
+    margin:0px;
+    padding:0px;
+}
+
+html{
+    position:relative;
+    min-height:100%;
+}
+
+body{
+	background-color:#413839;
+	background-image:url('dummy-bg.png');
+	background-repeat:no-repeat;
+	background-size: 300px;
+	background-position: 100% 100%;
+	font-family:Verdana, Geneva, sans-serif;
+	color:white;
+}
+
+footer{
+    position:absolute;
+    bottom:0px;
+    width:100%;
+    height:50px;
+    text-align:center;
+}
+
+#dummy-footer{
+    height:50px;
+}
+
+header{
+	position:relative;
+	margin: auto;
+	height:100px;
+	width:970px;
+}
+
+header h1{
+    position:absolute;
+    left:10px;
+    top:10px;
+    margin:0px;
+    font-family: 'Iceberg', Geneva, sans-serif;
+    font-size: 3.5em;
+    color: hotpink;
+}
+
+nav{
+    position:absolute;
+    right:10px;
+    bottom:10px;
+}
+
+nav ul{
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+
+nav li{
+    float:left;
+    display:block;
+    width:100px;
+    font-weight:bold;
+    color:white;
+    text-align:center;
+    padding:4px;
+    text-decoration:none;
+    text-transform:uppercase;
+}
+
+nav li:hover{
+    background-color:deeppink;
+    cursor:pointer;
+}
+
+div.content{
+	margin:auto;
+	width:970px;
+	background-color:gray;
+}
+
+div#play h2{
+    padding-bottom:20px;
+}
+
+div#play p{
+    padding:4px;
+}
+
+div#playing-box{
+    margin:0 auto 0 auto;
+    padding: 30px 0 30px 0;
+    width:500px;
+}
+
+div#thumbnail{
+    width:256px;
+    height:144px;
+    background-color: rgba(0,0,0,0.5);
+    margin:0 0 10px 0;
+    border-radius:20px;
+    text-align:center;
+}

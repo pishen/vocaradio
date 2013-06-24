@@ -10,6 +10,7 @@ import java.util.ArrayList;
 public class Playlist {
 	private Path musicDir;
 	private ArrayList<Path> musicQueue = new ArrayList<Path>();
+	private String currentMusicTitle;
 	
 	public String getNext() throws NoMusicDirException, MusicDirReadingException, EmptyMusicDirException{
 		if(musicDir == null){
@@ -30,11 +31,18 @@ public class Playlist {
 				throw new EmptyMusicDirException();
 			}
 			
-			return allMusic.get((int)(Math.random() * allMusic.size())).toString();
+			Path nextMusicPath = allMusic.get((int)(Math.random() * allMusic.size()));
+			currentMusicTitle = nextMusicPath.getFileName().toString().replaceAll("\\.\\w{3}", "");
+			
+			return nextMusicPath.toString();
 		}else{
 			//TODO get music from queue
 			return null;
 		}
+	}
+	
+	public String getCurrentMusicTitle(){
+		return currentMusicTitle;
 	}
 	
 	public void setMusicDir(String pathName){
