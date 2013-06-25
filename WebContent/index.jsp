@@ -1,30 +1,38 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!-- <!DOCTYPE HTML> -->
+<!DOCTYPE HTML>
 <html>
 <head>
-	<title>VOCARADIO</title>
-	<link type="text/css" rel="stylesheet" href="resources/style.css"/>
-	<link href='http://fonts.googleapis.com/css?family=Iceberg' rel='stylesheet' type='text/css'>
+<meta charset="utf-8"></meta>
+<title>VOCARADIO</title>
+<link type="text/css" rel="stylesheet" href="resources/style.css" />
+<link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+<script src="resources/menu.js"></script>
 </head>
-<body>
-	<header>
-		<h1>VOCARADIO</h1>
+<body onload="bodyLoad()">
+	<div id="bg">
+		
+	</div>
+	
+	<div id="left-panel">
+		<h1>VocaRadio</h1>
 		<nav>
 			<ul>
-				<li>Play</li>
+				<li class="selected">Play</li>
 				<li>History</li>
 				<li>Order</li>
 			</ul>
 		</nav>
-	</header>
-	<div id="play" class="content">
-		<div id="playing-box">
-			<h2>Current playing:</h2>
-			<div id="thumbnail">MV thumbnail</div>
-			<p>タイトル</p>
-		</div>
 	</div>
-	<div id="dummy-footer"></div>
-	<footer>I had run once. It was awful.</footer>
+	
+	<div id="right-panel">
+		<div id="play" class="selected">
+			<p>Status: <span id="status">ON AIR</span> - <b>1/20</b> listeners.</p>
+			<p>Now playing: <b>タイトル</b></p>
+			<audio src="http://dg.pishen.info:8000/stream.ogg" controls></audio>
+		</div>
+		<div id="history">test2</div>
+		<div id="order">test3</div>
+	</div>
+	<div id="fill-bg"></div>
 </body>
 </html>

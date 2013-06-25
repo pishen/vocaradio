@@ -37,6 +37,7 @@ public class Controller extends HttpServlet {
 				req.getRequestDispatcher("/index.jsp").forward(req, resp);
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "PathInfo: " + req.getPathInfo());
+				//out.println("GET method: " + req.getMethod());
 			}
 		}
 	}
@@ -45,13 +46,15 @@ public class Controller extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter(); BufferedReader in = req.getReader()){
-			if(req.getServletPath().equals("/music-dir") && req.getRemoteAddr().equals("127.0.0.1")){
+			if(req.getPathInfo().equals("/music-dir") && req.getRemoteAddr().equals("127.0.0.1")){
 				String line = in.readLine();
 				if(line != null){
 					playlist.setMusicDir(line);
 				}
+				out.println("music dir '" + line + "' has been set.");
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
+				//out.println("POST method: " + req.getMethod());
 			}
 		}
 	}

@@ -10,90 +10,94 @@ html{
 
 body{
 	background-color:#413839;
-	background-image:url('dummy-bg.png');
-	background-repeat:no-repeat;
-	background-size: 300px;
-	background-position: 100% 100%;
+	background-position: 0% 100%;
 	font-family:Verdana, Geneva, sans-serif;
 	color:white;
 }
 
-footer{
-    position:absolute;
+div#bg{
+    position:fixed;
     bottom:0px;
-    width:100%;
-    height:50px;
-    text-align:center;
+    width:420px;
+    height:900px;
+    background-image:url('35503912-black-edge.png');
+    background-repeat:no-repeat;
+    background-position: 0% 200%;
+    background-size: 520px;
 }
 
-#dummy-footer{
-    height:50px;
+div#left-panel{
+    position:fixed;
+    top:100px;
+    left:270px;
+    width:120px;
 }
 
-header{
-	position:relative;
-	margin: auto;
-	height:100px;
-	width:970px;
-}
-
-header h1{
-    position:absolute;
-    left:10px;
-    top:10px;
-    margin:0px;
-    font-family: 'Iceberg', Geneva, sans-serif;
-    font-size: 3.5em;
+div#left-panel h1{
+    float:right;
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 3.0em;
     color: hotpink;
-}
-
-nav{
-    position:absolute;
-    right:10px;
-    bottom:10px;
 }
 
 nav ul{
     list-style-type:none;
-    margin:0;
-    padding:0;
+    margin-top:70px;
 }
 
 nav li{
-    float:left;
-    display:block;
-    width:100px;
+    float:right;
     font-weight:bold;
     color:white;
-    text-align:center;
+    text-align:right;
+    margin: 3px 0 3px 0;
     padding:4px;
     text-decoration:none;
     text-transform:uppercase;
+    font-size:1.2em;
 }
 
-nav li:hover{
+nav li:hover, nav li.selected{
     background-color:deeppink;
     cursor:pointer;
 }
 
-div.content{
-	margin:auto;
-	width:970px;
-	background-color:gray;
+div#fill-bg{
+    position:fixed;
+    left:420px;
+    width:800px;
+    height:900px;
+    background-color:gray;
 }
 
-div#play h2{
-    padding-bottom:20px;
+div#right-panel{
+    width:800px;
+    padding-top:170px;
+    margin-left:420px;
+    background-color:gray;
+}
+
+div#right-panel>div{
+    padding-left:30px;
+    display:none;
+}
+
+div#right-panel>div.selected{
+    display:block;
 }
 
 div#play p{
     padding:4px;
 }
 
-div#playing-box{
-    margin:0 auto 0 auto;
-    padding: 30px 0 30px 0;
-    width:500px;
+div#play span#status{
+    padding:2px 4px 2px 4px;
+    font-weight:bold;
+    background-color:red;
+}
+
+div#play audio{
+    padding:5px 0 5px 0;
 }
 
 div#thumbnail{
@@ -101,6 +105,6 @@ div#thumbnail{
     height:144px;
     background-color: rgba(0,0,0,0.5);
     margin:0 0 10px 0;
-    border-radius:20px;
+    border-radius:10px;
     text-align:center;
 }
