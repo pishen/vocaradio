@@ -15,7 +15,7 @@ body{
 	color:white;
 }
 
-div#bg{
+div#left-bg{
     position:fixed;
     bottom:0px;
     width:420px;
@@ -24,6 +24,7 @@ div#bg{
     background-repeat:no-repeat;
     background-position: 0% 200%;
     background-size: 520px;
+    z-index:-2;
 }
 
 div#left-panel{
@@ -62,12 +63,15 @@ nav li:hover, nav li.selected{
     cursor:pointer;
 }
 
-div#fill-bg{
+div#right-bg{
     position:fixed;
     left:420px;
     width:800px;
+    top:0px;
     height:900px;
     background-color:gray;
+    z-index:-1;
+    box-shadow: 0 0 10px black;
 }
 
 div#right-panel{

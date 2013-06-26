@@ -32,7 +32,7 @@ public class Playlist {
 			}
 			
 			Path nextMusicPath = allMusic.get((int)(Math.random() * allMusic.size()));
-			currentMusicTitle = nextMusicPath.getFileName().toString().replaceAll("\\.\\w{3}", "");
+			setCurrentMusicTitle(nextMusicPath.getFileName().toString().replaceAll("\\.\\w{3}", ""));
 			
 			return nextMusicPath.toString();
 		}else{
@@ -41,7 +41,11 @@ public class Playlist {
 		}
 	}
 	
-	public String getCurrentMusicTitle(){
+	private synchronized void setCurrentMusicTitle(String value){
+		currentMusicTitle = value;
+	}
+	
+	public synchronized String getCurrentMusicTitle(){
 		return currentMusicTitle;
 	}
 	

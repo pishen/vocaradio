@@ -33,6 +33,8 @@ public class Controller extends HttpServlet {
 				} catch (EmptyMusicDirException e) {
 					out.println("music dir is empty.");
 				}
+			}else if(req.getPathInfo().equals("/current")){
+				out.println(playlist.getCurrentMusicTitle());
 			}else if(req.getPathInfo().equals("/")){
 				req.getRequestDispatcher("/index.jsp").forward(req, resp);
 			}else{
