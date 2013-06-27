@@ -19,17 +19,26 @@ $(document).ready(function(){
 		}, 10000);
 	});
 	
-	getTitle();
+	getInfo();
 });
 
-function getTitle(){
+function getInfo(){
+	$.get("listen-num", function(data){
+		if(data == "null"){
+			$("#listen-num").text("N/A");
+		}else if(data == "1"){
+			$("#listen-num").text("1 listener.");
+		}else{
+			$("#listen-num").text(data + " listeners.");
+		}
+	});
 	$.get("current", function(data){
 		var title = $("#title");
-		if(data == null){
-			title.text("");
+		if(data == "null"){
+			title.text("N/A");
 		}else if(title.text() != data){
 			title.text(data);
 		}
 	});
-	window.setTimeout(getTitle, 20000);
+	window.setTimeout(getInfo, 20000);
 }

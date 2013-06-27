@@ -25,7 +25,7 @@
 	<div id="right-bg"></div>
 	<div id="right-panel">
 		<div id="play" class="selected">
-			<p>Status: <span id="status">ON AIR</span> - <b>1/20</b> listeners.</p>
+			<p>Status: <span id="status">ON AIR</span> - <span id="listen-num"></span></p>
 			<p>Now playing: <b id="title"></b></p>
 			<audio controls preload="none">
 				<source src="http://dg.pishen.info:8000/stream.ogg" type="audio/ogg"></source>

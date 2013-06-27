@@ -14,6 +14,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
 @WebServlet(urlPatterns={"/servlets/*"})
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -34,7 +38,9 @@ public class Controller extends HttpServlet {
 					out.println("music dir is empty.");
 				}
 			}else if(req.getPathInfo().equals("/current")){
-				out.println(playlist.getCurrentMusicTitle());
+				out.print(playlist.getCurrentMusicTitle());
+			}else if(req.getPathInfo().equals("/listen-num")){
+				out.print(getListenerNumber());
 			}else if(req.getPathInfo().equals("/")){
 				req.getRequestDispatcher("/index.jsp").forward(req, resp);
 			}else{
@@ -58,6 +64,21 @@ public class Controller extends HttpServlet {
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
 				//out.println("POST method: " + req.getMethod());
 			}
+		}
+	}
+	
+	private String getListenerNumber(){
+		try {
+			Document doc = Jsoup.connect("http://localhost:8000/").get();
+			Elements elements = doc.select("td.streamdata");
+			if(elements.size() >= 6){
+				return elements.get(5).text();
+			}else{
+				return null;
+			}
+		} catch (IOException e) {
+			//TODO log error
+			return null;
 		}
 	}
 
