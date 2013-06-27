@@ -10,14 +10,26 @@ $(document).ready(function(){
 	
 	$("audio").on("error", function(e){
 		errorCount++;
-		//console.log("errorCount: " + errorCount);
-		if(errorCount < 3){
+		if(errorCount < 5){
 			this.load();
 			this.play();
 		}
 		window.setTimeout(function(){
 			errorCount--;
-			//console.log("errorCount: " + errorCount);
 		}, 10000);
 	});
+	
+	getTitle();
 });
+
+function getTitle(){
+	$.get("current", function(data){
+		var title = $("#title");
+		if(data == null){
+			title.text("");
+		}else if(title.text() != data){
+			title.text(data);
+		}
+	});
+	window.setTimeout(getTitle, 20000);
+}

@@ -3,9 +3,10 @@
 <html>
 <head>
 <meta charset="utf-8"></meta>
-<title>VOCARADIO</title>
+<title>VocaRadio</title>
 <link type="text/css" rel="stylesheet" href="resources/style.css" />
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+<link rel="icon" type="image/png" href="resources/favicon.png">
 </head>
 <body>
 	<div id="left-bg"></div>
@@ -25,7 +26,7 @@
 	<div id="right-panel">
 		<div id="play" class="selected">
 			<p>Status: <span id="status">ON AIR</span> - <b>1/20</b> listeners.</p>
-			<p>Now playing: <b>タイトル</b></p>
+			<p>Now playing: <b id="title"></b></p>
 			<audio controls preload="none">
 				<source src="http://dg.pishen.info:8000/stream.ogg" type="audio/ogg"></source>
 			</audio>
@@ -34,7 +35,7 @@
 		<div id="order">test3</div>
 	</div>
 	
-	<script src="http://code.jquery.com/jquery-2.0.0.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
 	<script src="resources/all.js"></script>
 </body>
 </html>
