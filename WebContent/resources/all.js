@@ -1,4 +1,5 @@
 var errorCount = 0;
+var fadingOn = false;
 
 $(document).ready(function(){
 	$("nav li").on("click", function(){
@@ -19,26 +20,46 @@ $(document).ready(function(){
 		}, 10000);
 	});
 	
-	getInfo();
+	$("audio").on("pause", function(e){
+		var source = $("audio source");
+		var temp = source.src;
+		source.src = "";
+		this.load();
+		source.src = temp;
+	});
+	
+	getStatus();
+	//fadeStatus();
 });
 
-function getInfo(){
-	$.get("listen-num", function(data){
-		if(data == "null"){
-			$("#listen-num").text("N/A");
-		}else if(data == "1"){
-			$("#listen-num").text("1 listener.");
+function getStatus(){
+	$.getJSON("status", function(data){		
+		if(data.onAir == "false"){
+			$("#air").toggleClass("on", false).text("OFF AIR");
+			$("#listen-num").text("0 listener.");
+			$("#title").text("--");
 		}else{
-			$("#listen-num").text(data + " listeners.");
+			$("#air").toggleClass("on", true).text("ON AIR");
+			if(data.num == "0" || data.num == "1"){
+				$("#listen-num").text(data.num + " listener.");
+			}else{
+				$("#listen-num").text(data.num + " listeners.");
+			}
+			if($("#title").text() != data.title){
+				$("#title").text(data.title);
+			}
 		}
 	});
-	$.get("current", function(data){
-		var title = $("#title");
-		if(data == "null"){
-			title.text("N/A");
-		}else if(title.text() != data){
-			title.text(data);
-		}
-	});
-	window.setTimeout(getInfo, 20000);
+	window.setTimeout(getStatus, 12000);
 }
+
+/*function fadeStatus(){
+	if($("#air").hasClass("on")){
+		$("#air").fadeTo('slow', 0.6, function(){
+			$(this).fadeTo('slow', 1.0);
+			fadeStatus();
+		});
+	}else{
+		window.setTimeout(fadeStatus, 1000);
+	}
+}*/

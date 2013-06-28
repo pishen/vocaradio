@@ -94,10 +94,24 @@ div#play p{
     padding:4px;
 }
 
-div#play span#status{
+@keyframes glowing{
+    from {background:red}
+    to {background:darkred}
+}
+
+#air.on{
     padding:2px 4px 2px 4px;
     font-weight:bold;
-    background-color:red;
+    animation-name: glowing;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+#air{
+	padding:2px 4px 2px 4px;
+    background-color:black;
 }
 
 div#play audio{

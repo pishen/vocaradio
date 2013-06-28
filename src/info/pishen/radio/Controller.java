@@ -37,15 +37,13 @@ public class Controller extends HttpServlet {
 				} catch (EmptyMusicDirException e) {
 					out.println("music dir is empty.");
 				}
-			}else if(req.getPathInfo().equals("/current")){
-				out.print(playlist.getCurrentMusicTitle());
-			}else if(req.getPathInfo().equals("/listen-num")){
-				out.print(getListenerNumber());
+			}else if(req.getPathInfo().equals("/status")){
+				resp.setContentType("application/json");
+				out.print(getStatus());
 			}else if(req.getPathInfo().equals("/")){
 				req.getRequestDispatcher("/index.jsp").forward(req, resp);
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "PathInfo: " + req.getPathInfo());
-				//out.println("GET method: " + req.getMethod());
 			}
 		}
 	}
@@ -62,19 +60,20 @@ public class Controller extends HttpServlet {
 				out.println("music dir '" + line + "' has been set.");
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
-				//out.println("POST method: " + req.getMethod());
 			}
 		}
 	}
 	
-	private String getListenerNumber(){
+	private String getStatus(){
 		try {
 			Document doc = Jsoup.connect("http://localhost:8000/").get();
 			Elements elements = doc.select("td.streamdata");
 			if(elements.size() >= 6){
-				return elements.get(5).text();
+				String title = playlist.getCurrentMusicTitle();
+				String numOfListeners = elements.get(5).text();
+				return "{\"onAir\":\"true\",\"title\":\"" + title + "\",\"num\":\"" + numOfListeners + "\"}";
 			}else{
-				return null;
+				return "{\"onAir\":\"false\"}";
 			}
 		} catch (IOException e) {
 			//TODO log error
