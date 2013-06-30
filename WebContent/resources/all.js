@@ -1,5 +1,6 @@
 var errorCount = 0;
-var fadingOn = false;
+var glowing = true;
+var chatSocket = null;
 
 $(document).ready(function(){
 	$("nav li").on("click", function(){
@@ -21,25 +22,53 @@ $(document).ready(function(){
 	});
 	
 	$("audio").on("pause", function(e){
-		var source = $("audio source");
-		var temp = source.src;
-		source.src = "";
+		var source = $("audio > source");
+		var streamUrl = source.attr("src");
+		source.attr("src", "");
 		this.load();
-		source.src = temp;
+		source.attr("src", streamUrl);
+	});
+	
+	$("span#air").on("click", function(e){
+		if(glowing){
+			glowing = false;
+			$("#air").toggleClass("glow", false);
+		}else{
+			glowing = true;
+			if($("span#air").hasClass("on")){
+				$("#air").toggleClass("glow", true);
+			}
+		}
+	});
+	
+	chatSocket = new WebSocket("ws://" + window.location.host + "/vocaradio/chat");
+	chatSocket.onmessage = function(message){
+		$("div#chat-log").append("<p>" + message.data + "</p>");
+	};
+	
+	$("textarea#new-chat").keydown(function(e){
+		if(e.which == 13 && $(this).val() != ""){
+			chatSocket.send($(this).val());
+			$(this).val("");
+			return false;
+		}
 	});
 	
 	getStatus();
-	//fadeStatus();
 });
 
 function getStatus(){
-	$.getJSON("status", function(data){		
+	$.getJSON("status", function(data){
 		if(data.onAir == "false"){
-			$("#air").toggleClass("on", false).text("OFF AIR");
+			$("#air").toggleClass("on", false).toggleClass("glow", false).text("OFF AIR");		
 			$("#listen-num").text("0 listener.");
 			$("#title").text("--");
 		}else{
 			$("#air").toggleClass("on", true).text("ON AIR");
+			if(glowing){
+				$("#air").toggleClass("glow", true);
+			}
+			
 			if(data.num == "0" || data.num == "1"){
 				$("#listen-num").text(data.num + " listener.");
 			}else{
@@ -52,14 +81,3 @@ function getStatus(){
 	});
 	window.setTimeout(getStatus, 12000);
 }
-
-/*function fadeStatus(){
-	if($("#air").hasClass("on")){
-		$("#air").fadeTo('slow', 0.6, function(){
-			$(this).fadeTo('slow', 1.0);
-			fadeStatus();
-		});
-	}else{
-		window.setTimeout(fadeStatus, 1000);
-	}
-}*/

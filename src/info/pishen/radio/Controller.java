@@ -40,6 +40,8 @@ public class Controller extends HttpServlet {
 			}else if(req.getPathInfo().equals("/status")){
 				resp.setContentType("application/json");
 				out.print(getStatus());
+			}else if(req.getPathInfo().equals("/chat")){
+				req.getRequestDispatcher("/chat").forward(req, resp);
 			}else if(req.getPathInfo().equals("/")){
 				req.getRequestDispatcher("/index.jsp").forward(req, resp);
 			}else{

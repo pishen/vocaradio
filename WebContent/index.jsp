@@ -10,14 +10,13 @@
 </head>
 <body>
 	<div id="left-bg"></div>
-	
 	<div id="left-panel">
 		<h1>VocaRadio</h1>
 		<nav>
 			<ul>
-				<li class="selected">Play</li>
-				<li>History</li>
+				<li class="selected">Listen</li>
 				<li>Order</li>
+				<li>Chat</li>
 			</ul>
 		</nav>
 	</div>
@@ -31,11 +30,16 @@
 				<source src="http://dg.pishen.info:8000/stream.ogg" type="audio/ogg"></source>
 			</audio>
 		</div>
-		<div id="history">test2</div>
-		<div id="order">test3</div>
+		<div id="order"></div>
+		<div id="chat">
+			<div id="chat-log">
+				<!-- <p><span class="username"></span><span class="chat-content"></span></p> -->
+			</div>
+			<textarea id="new-chat" placeholder="Your message..."></textarea>
+		</div>
 	</div>
 	
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+	<script src="resources/jquery.min.js"></script>
 	<script src="resources/all.js"></script>
 </body>
 </html>
