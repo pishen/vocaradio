@@ -16,7 +16,7 @@
 	</target>
 	
 	<target name="war" depends="compile">
-		<war destfile="vocaradio.war" needxmlfile='false'>
+		<war destfile="vocaradio.war">
 			<lib dir="lib"/>
 			<fileset dir="WebContent"/>
 			<classes dir="bin"/>

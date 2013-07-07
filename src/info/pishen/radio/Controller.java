@@ -7,6 +7,8 @@ import info.pishen.radio.Playlist.NoMusicDirException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +24,13 @@ import org.jsoup.select.Elements;
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Playlist playlist = new Playlist();
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		Path musicDir = Paths.get(this.getServletContext().getRealPath("/"), "..", "music-dir").normalize();
+		playlist.setMusicDir(musicDir.toString());
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException{

@@ -41,7 +41,7 @@ $(document).ready(function(){
 		}
 	});
 	
-	chatSocket = new WebSocket("ws://" + window.location.host + "/vocaradio/chat");
+	chatSocket = new WebSocket("ws://dg.pishen.info/vocaradio/chat");
 	chatSocket.onmessage = function(message){
 		$("div#chat-log").append("<p>" + message.data + "</p>");
 	};
