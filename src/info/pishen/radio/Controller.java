@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -23,6 +25,7 @@ import org.jsoup.select.Elements;
 @WebServlet(urlPatterns={"/servlets/*"})
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static Logger log = LogManager.getLogger(Controller.class);
 	private Playlist playlist = new Playlist();
 
 	@Override
@@ -37,6 +40,7 @@ public class Controller extends HttpServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
 			if(req.getPathInfo().equals("/next") && req.getRemoteAddr().equals("127.0.0.1")){
+				log.error("logtest");
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
