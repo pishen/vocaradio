@@ -31,7 +31,7 @@ public class Controller extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		Path musicDir = Paths.get(this.getServletContext().getRealPath("/"), "..", "music-dir").normalize();
+		Path musicDir = Paths.get(System.getenv("TOMCAT_HOME"), "vocaradio-music-dir");
 		playlist.setMusicDir(musicDir.toString());
 	}
 
@@ -40,7 +40,7 @@ public class Controller extends HttpServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
 			if(req.getPathInfo().equals("/next") && req.getRemoteAddr().equals("127.0.0.1")){
-				log.error("logtest");
+				log.error(System.getenv().containsKey("TOMCAT_HOME"));
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
