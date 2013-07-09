@@ -5,7 +5,7 @@
 	version="3.0">
 	<context-param>
 		<param-name>log4jConfiguration</param-name>
-		<param-value>/home/pishen/log4j2.xml</param-value>
+		<param-value>../log4j2.xml</param-value>
 	</context-param>
 	<listener>
 		<listener-class>org.apache.logging.log4j.core.web.Log4jContextListener</listener-class>
