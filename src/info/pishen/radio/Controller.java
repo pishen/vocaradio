@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -40,7 +41,10 @@ public class Controller extends HttpServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
 			if(req.getPathInfo().equals("/next") && req.getRemoteAddr().equals("127.0.0.1")){
-				log.error(System.getenv().containsKey("TOMCAT_HOME"));
+				Map<String, String> env = System.getenv();
+		        for (String envName: env.keySet()) {
+		            log.error("{}={}", envName, env.get(envName));
+		        }
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
