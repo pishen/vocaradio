@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration status="INFO">
 	<appenders>
-		<File name="File" fileName="/home/pishen/vocaradio.log">
+		<File name="File" fileName="${env:TOMCAT_HOME}/logs/vocaradio.log">
 			<PatternLayout pattern="%d{HH:mm:ss}{GMT+8} [%level] %logger{1} - %msg%n" />
 		</File>
 	</appenders>
