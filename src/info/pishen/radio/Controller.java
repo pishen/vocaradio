@@ -40,11 +40,6 @@ public class Controller extends HttpServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
 			if(req.getPathInfo().equals("/next") && req.getRemoteAddr().equals("127.0.0.1")){
-				/*Map<String, String> env = System.getenv();
-		        for (String envName: env.keySet()) {
-		            log.error("{}={}", envName, env.get(envName));
-		        }*/
-				log.error("logtest");
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
@@ -95,7 +90,7 @@ public class Controller extends HttpServlet {
 				return "{\"onAir\":\"false\"}";
 			}
 		} catch (IOException e) {
-			//TODO log error
+			log.error("Icecast status checking error", e);
 			return null;
 		}
 	}
