@@ -32,16 +32,16 @@ $(document).ready(function(){
 	$("span#air").on("click", function(e){
 		if(glowing){
 			glowing = false;
-			$("#air").toggleClass("glow", false);
+			$(this).toggleClass("glow", false);
 		}else{
 			glowing = true;
 			if($("span#air").hasClass("on")){
-				$("#air").toggleClass("glow", true);
+				$(this).toggleClass("glow", true);
 			}
 		}
 	});
 	
-	chatSocket = new WebSocket("ws://dg.pishen.info/vocaradio/chat");
+	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/chat");
 	chatSocket.onmessage = function(message){
 		$("div#chat-log").append("<p>" + message.data + "</p>");
 	};
@@ -53,6 +53,14 @@ $(document).ready(function(){
 			return false;
 		}
 	});
+	
+	/*$("div#auth").on("click", function(e){
+		if($(this).hasClass("loggedin") == false){
+			navigator.id.request();
+		}else{
+			navigator.id.logout();
+		}
+	});*/
 	
 	getStatus();
 });

@@ -4,7 +4,8 @@
 <head>
 <meta charset="utf-8"></meta>
 <title>VocaRadio</title>
-<link type="text/css" rel="stylesheet" href="resources/style.css" />
+<link rel="stylesheet" href="resources/style.css" />
+<link rel="stylesheet" href="resources/persona-buttons.css" />
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
 <link rel="icon" type="image/png" href="resources/favicon.png">
 </head>
@@ -39,7 +40,8 @@
 		</div>
 	</div>
 	
-	<script src="resources/jquery.min.js"></script>
+	<script src="https://login.persona.org/include.js"></script>
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 	<script src="resources/all.js"></script>
 </body>
 </html>

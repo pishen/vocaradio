@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration monitorInterval="30">
+<configuration>
 	<appenders>
-		<File name="File" fileName="${env:TOMCAT_HOME}/logs/vocaradio.log">
-			<PatternLayout pattern="%d{HH:mm:ss}{GMT+8} [%level] %logger{1} - %msg%n" />
-		</File>
+		<!--<File name="File" fileName="${env:TOMCAT_HOME}/logs/vocaradio.log" append="false">
+			<PatternLayout pattern="%d{HH:mm:ss} [%level] %logger{1} - %msg%n" />
+		</File>-->
+		<RollingFile name="RollingFile" filename="${env:TOMCAT_HOME}/logs/vocaradio.log"
+			filePattern="${env:TOMCAT_HOME}/logs/vocaradio-%d{yyyy-MM-dd}.log">
+			<PatternLayout pattern="%d{HH:mm:ss} [%level] %logger{1} - %msg%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
 	</appenders>
 	<loggers>
 		<root level="error">
-			<appender-ref ref="File" />
+			<appender-ref ref="RollingFile" />
 		</root>
 	</loggers>
 </configuration>
