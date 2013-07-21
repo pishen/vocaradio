@@ -54,13 +54,26 @@ $(document).ready(function(){
 		}
 	});
 	
-	/*$("div#auth").on("click", function(e){
+	$("div#auth").on("click", function(e){
 		if($(this).hasClass("loggedin") == false){
 			navigator.id.request();
 		}else{
 			navigator.id.logout();
 		}
-	});*/
+	});
+	
+	navigator.id.watch({
+		onlogin: function(assertion){
+			$.post("login", assertion).done(function(data){
+				console.log(data);
+				window.location.reload();
+			}).fail(function(){
+				navigator.id.logout();
+				alert("login failed.");
+			});
+		},
+		onlogout: function(){}
+	});
 	
 	getStatus();
 });

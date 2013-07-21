@@ -18,6 +18,7 @@
 				<li class="selected">Listen</li>
 				<li>Order</li>
 				<li>Chat</li>
+				<li>Setting</li>
 			</ul>
 		</nav>
 	</div>
@@ -37,6 +38,10 @@
 				<!-- <p><span class="username"></span><span class="chat-content"></span></p> -->
 			</div>
 			<textarea id="new-chat" placeholder="Your message..."></textarea>
+		</div>
+		<div id="setting">
+			<div id="login" class="persona-button"><span>Sign in</span></div>
+			<div id="logout" class="persona-button"><span>Log out</span></div>
 		</div>
 	</div>
 	

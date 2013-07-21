@@ -7,17 +7,22 @@ import info.pishen.radio.Playlist.NoMusicDirException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -66,12 +71,19 @@ public class Controller extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter(); BufferedReader in = req.getReader()){
-			if(req.getPathInfo().equals("/music-dir") && req.getRemoteAddr().equals("127.0.0.1")){
-				String line = in.readLine();
-				if(line != null){
-					playlist.setMusicDir(line);
+			if(req.getPathInfo().equals("/login")){
+				StringBuffer assertion = new StringBuffer();
+				String line = null;
+				while((line = in.readLine()) != null){
+					assertion.append(line);
 				}
-				out.println("music dir '" + line + "' has been set.");
+				String verifyResult = Request.Post("https://verifier.login.persona.org/verify")
+					.bodyForm(Form.form()
+							.add("assertion", assertion.toString())
+							.add("audience", "http://dg.pishen.info").build())
+							.execute().returnContent().asString();
+				JSONObject jsonObject = new JSONObject(verifyResult);
+				//TODO
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
 			}

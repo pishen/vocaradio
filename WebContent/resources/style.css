@@ -17,8 +17,8 @@ body{
 div#left-bg{
     position: fixed;
     bottom: 0;
-    right: 66%;
-    width: 420px;
+    right: 65%;
+    width: 450px;
     height: 1080px;
     background-image: url('35503912-black-edge.png');
     background-repeat: no-repeat;
@@ -29,7 +29,7 @@ div#left-bg{
 div#left-panel{
     position: fixed;
     top: 100px;
-    right: 66%;
+    right: 65%;
     width: 120px;
 }
 
@@ -64,7 +64,7 @@ nav li:hover, nav li.selected{
 
 div#right-bg{
     position: fixed;
-    left: 34%;
+    left: 35%;
     width: 800px;
     top: 0;
     height: 100%;
@@ -75,7 +75,7 @@ div#right-bg{
 div#right-panel{
     position: relative;
     width: 800px;
-    margin-left: 34%;
+    margin-left: 35%;
 }
 
 div#right-panel > div{
