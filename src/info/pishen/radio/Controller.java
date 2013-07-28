@@ -51,10 +51,13 @@ public class Controller extends WebSocketServlet {
 			if(req.getPathInfo().equals("/next") && isFromLocal(req)){
 				out.print(playlist.getReturnMessage());
 			}else if(req.getPathInfo().equals("/status")){
+				log.error("get status");
+				resp.setContentType("application/json");
 				out.print(getStatus());
 			}else if(req.getPathInfo().equals("/ws")){
 				super.doGet(req, resp);
 			}else if(req.getPathInfo().equals("/user-info")){
+				resp.setContentType("application/json");
 				out.print(getUserInfo(req));
 			}else if(req.getPathInfo().equals("/logout")){
 				req.getSession().invalidate();
@@ -69,6 +72,9 @@ public class Controller extends WebSocketServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter(); BufferedReader in = req.getReader()){
 			if(req.getPathInfo().equals("/login")){
+				log.error("post right");
+				resp.setContentType("application/json");
+				JSONObject resultJSON = new JSONObject();
 				StringBuffer assertion = new StringBuffer();
 				String line = null;
 				while((line = in.readLine()) != null){
@@ -81,9 +87,16 @@ public class Controller extends WebSocketServlet {
 							.execute().returnContent().asString();
 				JSONObject verifyResultJSON = new JSONObject(verifyResult);
 				if(verifyResultJSON.getString("status").equals("okay")){
-					req.getSession(true).setAttribute(EMAIL, verifyResultJSON.getString("email"));
+					log.error("email: " + verifyResultJSON.getString("email"));
+					req.getSession().setAttribute(EMAIL, verifyResultJSON.getString("email"));
+					resultJSON.put("status", "okay");
+				}else{
+					log.error("status not okay");
+					resultJSON.put("status", "failure");
 				}
+				out.print(resultJSON.toString());
 			}else{
+				log.error("post wrong");
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		}

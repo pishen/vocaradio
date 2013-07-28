@@ -62,18 +62,21 @@ $(document).ready(function(){
 function getUserInfo(){
 	$.getJSON("s/user-info", function(userInfoJSON){
 		var userEmail = userInfoJSON.email;
+		console.log("email: " + userEmail);
 		
 		navigator.id.watch({
 			loggedInUser: userEmail,
 			onlogin: function(assertion){
+				console.log("login");
 				$.post("s/login", assertion).done(function(data){
-					window.location.reload();
+					console.log("done");
 				}).fail(function(){
+					console.log("post fail");
 					navigator.id.logout();
-					alert("login failed.");
 				});
 			},
 			onlogout: function(){
+				console.log("logout");
 				$.get("s/logout", function(data){
 					window.location.reload();
 				});
