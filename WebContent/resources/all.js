@@ -41,7 +41,7 @@ $(document).ready(function(){
 		}
 	});
 	
-	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/chat");
+	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/chat");
 	chatSocket.onmessage = function(message){
 		$("div#chat-log").append("<p>" + message.data + "</p>");
 	};
@@ -64,7 +64,7 @@ $(document).ready(function(){
 	
 	navigator.id.watch({
 		onlogin: function(assertion){
-			$.post("login", assertion).done(function(data){
+			$.post("s/login", assertion).done(function(data){
 				console.log(data);
 				window.location.reload();
 			}).fail(function(){
@@ -79,7 +79,7 @@ $(document).ready(function(){
 });
 
 function getStatus(){
-	$.getJSON("status", function(data){
+	$.getJSON("s/status", function(data){
 		if(data.onAir == "false"){
 			$("#air").toggleClass("on", false).toggleClass("glow", false).text("OFF AIR");		
 			$("#listen-num").text("0 listener.");

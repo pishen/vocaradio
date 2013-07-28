@@ -7,11 +7,9 @@ import info.pishen.radio.Playlist.NoMusicDirException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -27,7 +25,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-@WebServlet(urlPatterns={"/servlets/*"})
+@WebServlet(urlPatterns={"/s/*"})
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static Logger log = LogManager.getLogger(Controller.class);
@@ -44,7 +42,9 @@ public class Controller extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException{
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
-			if(req.getPathInfo().equals("/next") && req.getRemoteAddr().equals("127.0.0.1")){
+			if(req.getPathInfo().equals("/next") && 
+					req.getRemoteAddr().equals("127.0.0.1") &&
+					req.getHeader("X-Forwarded-For") == null){
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
@@ -59,10 +59,8 @@ public class Controller extends HttpServlet {
 				out.print(getStatus());
 			}else if(req.getPathInfo().equals("/chat")){
 				req.getRequestDispatcher("/chat").forward(req, resp);
-			}else if(req.getPathInfo().equals("/")){
-				req.getRequestDispatcher("/index.html").forward(req, resp);
 			}else{
-				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "PathInfo: " + req.getPathInfo());
+				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
 	}

@@ -17,12 +17,12 @@ body{
 div#left-bg{
     position: fixed;
     right: 65%;
-    bottom: -230px; /*TODO: adjust this value dynamically*/
+    bottom: -130px; /*TODO: adjust this value dynamically*/
     width: 600px; /*should be larger than the bg img*/
     height: 1080px;
-    background-image: url('35503912-black-edge.png');
+    background-image: url('E2F2VU-crop-lossy.png');
     background-repeat: no-repeat;
-    background-position: 130% 100%;
+    background-position: 150% 100%;
     background-size: 520px;
 }
 
