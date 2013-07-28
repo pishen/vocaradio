@@ -42,9 +42,7 @@ public class Controller extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException{
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
-			if(req.getPathInfo().equals("/next") && 
-					req.getRemoteAddr().equals("127.0.0.1") &&
-					req.getHeader("X-Forwarded-For") == null){
+			if(req.getPathInfo().equals("/next") && isFromLocal(req)){
 				try {
 					out.println(playlist.getNext());
 				} catch (NoMusicDirException e) {
@@ -85,6 +83,15 @@ public class Controller extends HttpServlet {
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
 			}
+		}
+	}
+	
+	private boolean isFromLocal(HttpServletRequest req){
+		String ip = req.getHeader("X-Forwarded-For");
+		if(ip != null && ip.equals("127.0.0.1")){
+			return true;
+		}else{
+			return false;
 		}
 	}
 	
