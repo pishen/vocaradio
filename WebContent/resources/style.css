@@ -16,20 +16,20 @@ body{
 
 div#left-bg{
     position: fixed;
-    bottom: 0;
     right: 65%;
-    width: 450px;
+    bottom: -230px; /*TODO: adjust this value dynamically*/
+    width: 600px; /*should be larger than the bg img*/
     height: 1080px;
     background-image: url('35503912-black-edge.png');
     background-repeat: no-repeat;
-    background-position: 0% 155%;
+    background-position: 130% 100%;
     background-size: 520px;
 }
 
 div#left-panel{
     position: fixed;
-    top: 100px;
     right: 65%;
+    top: 100px;
     width: 120px;
 }
 
@@ -74,8 +74,8 @@ div#right-bg{
 
 div#right-panel{
     position: relative;
+    left: 35%;
     width: 800px;
-    margin-left: 35%;
 }
 
 div#right-panel > div{

@@ -60,7 +60,7 @@ public class Controller extends HttpServlet {
 			}else if(req.getPathInfo().equals("/chat")){
 				req.getRequestDispatcher("/chat").forward(req, resp);
 			}else if(req.getPathInfo().equals("/")){
-				req.getRequestDispatcher("/index.jsp").forward(req, resp);
+				req.getRequestDispatcher("/index.html").forward(req, resp);
 			}else{
 				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "PathInfo: " + req.getPathInfo());
 			}
