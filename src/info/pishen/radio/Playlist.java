@@ -12,7 +12,21 @@ public class Playlist {
 	private ArrayList<Path> musicQueue = new ArrayList<Path>();
 	private String currentMusicTitle;
 	
-	public String getNext() throws NoMusicDirException, MusicDirReadingException, EmptyMusicDirException{
+	public String getReturnMessage(){
+		String returnMessage = null;
+		try {
+			returnMessage = getNext();
+		} catch (NoMusicDirException e) {
+			returnMessage = "music dir is not assigned.";
+		} catch (MusicDirReadingException e) {
+			returnMessage = "error when reading music dir.";
+		} catch (EmptyMusicDirException e) {
+			returnMessage = "music dir is empty.";
+		}
+		return returnMessage;
+	}
+	
+	private String getNext() throws NoMusicDirException, MusicDirReadingException, EmptyMusicDirException{
 		if(musicDir == null){
 			throw new NoMusicDirException();
 		}

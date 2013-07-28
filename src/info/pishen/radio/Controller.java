@@ -1,9 +1,5 @@
 package info.pishen.radio;
 
-import info.pishen.radio.Playlist.EmptyMusicDirException;
-import info.pishen.radio.Playlist.MusicDirReadingException;
-import info.pishen.radio.Playlist.NoMusicDirException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.catalina.websocket.MessageInbound;
 import org.apache.catalina.websocket.StreamInbound;
@@ -38,6 +35,7 @@ public class Controller extends WebSocketServlet {
 	private static Logger log = LogManager.getLogger(Controller.class);
 	private Playlist playlist = new Playlist();
 	private Set<VocaMessageInbound> connections = new CopyOnWriteArraySet<VocaMessageInbound>();
+	private static final String EMAIL = "email";
 
 	@Override
 	public void init() throws ServletException {
@@ -51,20 +49,15 @@ public class Controller extends WebSocketServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter()){
 			if(req.getPathInfo().equals("/next") && isFromLocal(req)){
-				try {
-					out.println(playlist.getNext());
-				} catch (NoMusicDirException e) {
-					out.println("music dir is not assigned.");
-				} catch (MusicDirReadingException e) {
-					out.println("error when reading music dir.");
-				} catch (EmptyMusicDirException e) {
-					out.println("music dir is empty.");
-				}
+				out.print(playlist.getReturnMessage());
 			}else if(req.getPathInfo().equals("/status")){
-				resp.setContentType("application/json");
 				out.print(getStatus());
 			}else if(req.getPathInfo().equals("/ws")){
 				super.doGet(req, resp);
+			}else if(req.getPathInfo().equals("/user-info")){
+				out.print(getUserInfo(req));
+			}else if(req.getPathInfo().equals("/logout")){
+				req.getSession().invalidate();
 			}else{
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
@@ -86,8 +79,10 @@ public class Controller extends WebSocketServlet {
 							.add("assertion", assertion.toString())
 							.add("audience", "http://dg.pishen.info").build())
 							.execute().returnContent().asString();
-				JSONObject jsonObject = new JSONObject(verifyResult);
-				//TODO
+				JSONObject verifyResultJSON = new JSONObject(verifyResult);
+				if(verifyResultJSON.getString("status").equals("okay")){
+					req.getSession(true).setAttribute(EMAIL, verifyResultJSON.getString("email"));
+				}
 			}else{
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
@@ -137,6 +132,17 @@ public class Controller extends WebSocketServlet {
 		}else{
 			return false;
 		}
+	}
+	
+	private String getUserInfo(HttpServletRequest req){
+		HttpSession session = req.getSession();
+		JSONObject jsonObject = new JSONObject();
+		if(session.getAttribute(EMAIL) == null){
+			jsonObject.put(EMAIL, JSONObject.NULL);
+		}else{
+			jsonObject.put(EMAIL, session.getAttribute(EMAIL));
+		}
+		return jsonObject.toString();
 	}
 	
 	private String getStatus(){

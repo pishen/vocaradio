@@ -55,29 +55,45 @@ $(document).ready(function(){
 		}
 	});
 	
-	$("div#auth").on("click", function(e){
-		if($(this).hasClass("loggedin") == false){
-			navigator.id.request();
-		}else{
-			navigator.id.logout();
-		}
-	});
-	
-	navigator.id.watch({
-		onlogin: function(assertion){
-			$.post("s/login", assertion).done(function(data){
-				console.log(data);
-				window.location.reload();
-			}).fail(function(){
-				navigator.id.logout();
-				alert("login failed.");
-			});
-		},
-		onlogout: function(){}
-	});
-	
+	getUserInfo();
 	getStatus();
 });
+
+function getUserInfo(){
+	$.getJSON("s/user-info", function(userInfoJSON){
+		var userEmail = userInfoJSON.email;
+		
+		navigator.id.watch({
+			loggedInUser: userEmail,
+			onlogin: function(assertion){
+				$.post("s/login", assertion).done(function(data){
+					window.location.reload();
+				}).fail(function(){
+					navigator.id.logout();
+					alert("login failed.");
+				});
+			},
+			onlogout: function(){
+				$.get("s/logout", function(data){
+					window.location.reload();
+				});
+			}
+		});
+		
+		if(userEmail == null){
+			$("#auth span").text("Sign in");
+			$("#auth").on("click", function(e){
+				navigator.id.request();
+			});
+		}else{
+			$("#auth span").text("Log out");
+			$("#user-email").text(userEmail);
+			$("#auth").on("click", function(e){
+				navigator.id.logout();
+			});
+		}
+	});
+}
 
 function getStatus(){
 	$.getJSON("s/status", function(statusJSON){
