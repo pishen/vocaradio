@@ -63,6 +63,8 @@ public class Controller extends WebSocketServlet {
 			}else if(req.getPathInfo().equals("/status")){
 				resp.setContentType("application/json");
 				out.print(getStatus());
+			}else if(req.getPathInfo().equals("/ws")){
+				super.doGet(req, resp);
 			}else{
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
@@ -103,7 +105,6 @@ public class Controller extends WebSocketServlet {
 		@Override
 		protected void onOpen(WsOutbound outbound) {
 			connections.add(this);
-			broadcast(new JSONObject().put("msg", "hi"));
 		}
 		
 		@Override

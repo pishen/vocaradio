@@ -41,7 +41,7 @@ $(document).ready(function(){
 		}
 	});
 	
-	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/");
+	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
 	chatSocket.onmessage = function(evt){
 		var json = JSON.parse(evt.data);
 		$("div#chat-log").append("<p>" + json.msg + "</p>");
