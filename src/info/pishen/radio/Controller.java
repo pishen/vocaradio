@@ -7,15 +7,22 @@ import info.pishen.radio.Playlist.NoMusicDirException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.catalina.websocket.MessageInbound;
+import org.apache.catalina.websocket.StreamInbound;
+import org.apache.catalina.websocket.WebSocketServlet;
+import org.apache.catalina.websocket.WsOutbound;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
@@ -26,10 +33,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 @WebServlet("/s/*")
-public class Controller extends HttpServlet {
+public class Controller extends WebSocketServlet {
 	private static final long serialVersionUID = 1L;
 	private static Logger log = LogManager.getLogger(Controller.class);
 	private Playlist playlist = new Playlist();
+	private Set<VocaMessageInbound> connections = new CopyOnWriteArraySet<VocaMessageInbound>();
 
 	@Override
 	public void init() throws ServletException {
@@ -80,6 +88,43 @@ public class Controller extends HttpServlet {
 				//TODO
 			}else{
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+			}
+		}
+	}
+	
+	@Override
+	protected StreamInbound createWebSocketInbound(String subProtocol,
+			HttpServletRequest req) {
+		return new VocaMessageInbound();
+	}
+	
+	private class VocaMessageInbound extends MessageInbound{
+
+		@Override
+		protected void onOpen(WsOutbound outbound) {
+			connections.add(this);
+			broadcast(new JSONObject().put("msg", "hi"));
+		}
+		
+		@Override
+		protected void onClose(int status) {
+			connections.remove(this);
+		}
+
+		@Override
+		protected void onBinaryMessage(ByteBuffer message){}
+		
+		@Override
+		protected void onTextMessage(CharBuffer message){}
+	}
+	
+	private void broadcast(JSONObject jsonObj){
+		for(VocaMessageInbound connection: connections){
+			CharBuffer buffer = CharBuffer.wrap(jsonObj.toString());
+			try {
+				connection.getWsOutbound().writeTextMessage(buffer);
+			} catch (IOException e) {
+				log.error("ws send fail", e);
 			}
 		}
 	}
