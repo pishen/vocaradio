@@ -41,7 +41,7 @@ $(document).ready(function(){
 		}
 	});
 	
-	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/chat");
+	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
 	chatSocket.onmessage = function(message){
 		$("div#chat-log").append("<p>" + message.data + "</p>");
 	};
@@ -79,8 +79,8 @@ $(document).ready(function(){
 });
 
 function getStatus(){
-	$.getJSON("s/status", function(data){
-		if(data.onAir == "false"){
+	$.getJSON("s/status", function(statusJSON){
+		if(statusJSON.onAir == false){
 			$("#air").toggleClass("on", false).toggleClass("glow", false).text("OFF AIR");		
 			$("#listen-num").text("0 listener.");
 			$("#title").text("--");
@@ -90,13 +90,13 @@ function getStatus(){
 				$("#air").toggleClass("glow", true);
 			}
 			
-			if(data.num == "0" || data.num == "1"){
-				$("#listen-num").text(data.num + " listener.");
+			if(statusJSON.num == "0" || statusJSON.num == "1"){
+				$("#listen-num").text(statusJSON.num + "/20 listener.");
 			}else{
-				$("#listen-num").text(data.num + " listeners.");
+				$("#listen-num").text(statusJSON.num + "/20 listeners.");
 			}
-			if($("#title").text() != data.title){
-				$("#title").text(data.title);
+			if($("#title").text() != statusJSON.title){
+				$("#title").text(statusJSON.title);
 			}
 		}
 	});

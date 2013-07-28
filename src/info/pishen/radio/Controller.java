@@ -25,7 +25,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-@WebServlet(urlPatterns={"/s/*"})
+@WebServlet("/s/*")
 public class Controller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static Logger log = LogManager.getLogger(Controller.class);
@@ -81,7 +81,7 @@ public class Controller extends HttpServlet {
 				JSONObject jsonObject = new JSONObject(verifyResult);
 				//TODO
 			}else{
-				resp.sendError(HttpServletResponse.SC_FORBIDDEN, "You've got to the wrong place.");
+				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
 	}
@@ -102,9 +102,9 @@ public class Controller extends HttpServlet {
 			if(elements.size() >= 6){
 				String title = playlist.getCurrentMusicTitle();
 				String numOfListeners = elements.get(5).text();
-				return "{\"onAir\":\"true\",\"title\":\"" + title + "\",\"num\":\"" + numOfListeners + "\"}";
+				return new JSONObject().put("onAir", true).put("title", title).put("num", numOfListeners).toString();
 			}else{
-				return "{\"onAir\":\"false\"}";
+				return new JSONObject().put("onAir", false).toString();
 			}
 		} catch (IOException e) {
 			log.error("Icecast status checking error", e);

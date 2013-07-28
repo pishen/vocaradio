@@ -3,7 +3,8 @@ package info.pishen.radio;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -15,25 +16,20 @@ import org.apache.catalina.websocket.WsOutbound;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@WebServlet(urlPatterns={"/chat"})
-public class ChatServlet extends WebSocketServlet {
+@WebServlet(urlPatterns={"/s/ws"})
+public class WSServlet extends WebSocketServlet {
 	private static final long serialVersionUID = 1L;
 	private static Logger log = LogManager.getLogger(WebSocketServlet.class);
-	private ArrayList<ClientMessageInbound> clientList = new ArrayList<ClientMessageInbound>();
+	private List<ClientMessageInbound> clientList = new CopyOnWriteArrayList<ClientMessageInbound>();
 
 	@Override
 	protected StreamInbound createWebSocketInbound(String subProtocol,
 			HttpServletRequest req) {
-		return new ClientMessageInbound("client" + req.getSession().getId());
+		return new ClientMessageInbound();
 	}
 	
 	private class ClientMessageInbound extends MessageInbound{
 		private WsOutbound outbound;
-		private String clientName;
-		
-		public ClientMessageInbound(String clientName){
-			this.clientName = clientName;
-		}
 
 		@Override
 		protected void onOpen(WsOutbound outbound) {
@@ -63,7 +59,7 @@ public class ChatServlet extends WebSocketServlet {
 			synchronized(clientList){
 				for(ClientMessageInbound client: clientList){
 					try {
-						client.outbound.writeTextMessage(CharBuffer.wrap(clientName + ": " + message.toString()));
+						client.outbound.writeTextMessage(CharBuffer.wrap(message.toString()));
 						client.outbound.flush();
 					} catch (IOException e) {
 						log.error("writing text", e);
