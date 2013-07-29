@@ -2,6 +2,7 @@ package info.pishen.radio;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -9,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,8 +22,6 @@ import org.apache.catalina.websocket.MessageInbound;
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsOutbound;
-import org.apache.http.client.fluent.Form;
-import org.apache.http.client.fluent.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -51,7 +51,6 @@ public class Controller extends WebSocketServlet {
 			if(req.getPathInfo().equals("/next") && isFromLocal(req)){
 				out.print(playlist.getReturnMessage());
 			}else if(req.getPathInfo().equals("/status")){
-				log.error("get status");
 				resp.setContentType("application/json");
 				out.print(getStatus());
 			}else if(req.getPathInfo().equals("/ws")){
@@ -70,22 +69,37 @@ public class Controller extends WebSocketServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.setCharacterEncoding("UTF-8");
-		try(PrintWriter out = resp.getWriter(); BufferedReader in = req.getReader()){
+		try(PrintWriter out = resp.getWriter(); BufferedReader postReader = req.getReader()){
 			if(req.getPathInfo().equals("/login")){
-				log.error("post right");
-				resp.setContentType("application/json");
-				JSONObject resultJSON = new JSONObject();
-				StringBuffer assertion = new StringBuffer();
-				String line = null;
-				while((line = in.readLine()) != null){
-					assertion.append(line);
-				}
-				String verifyResult = Request.Post("https://verifier.login.persona.org/verify")
+				//log.info("post right");
+				
+				String assertion = dumpReaderToString(postReader);
+				//log.info("assertion: " + assertion);
+				/*String verifyResult = Request.Post("https://verifier.login.persona.org/verify")
 					.bodyForm(Form.form()
 							.add("assertion", assertion.toString())
 							.add("audience", "http://dg.pishen.info").build())
-							.execute().returnContent().asString();
-				JSONObject verifyResultJSON = new JSONObject(verifyResult);
+							.execute().returnContent().asString();*/
+				
+				Process verify = new ProcessBuilder("curl", "-d", 
+						"assertion=" + assertion.toString() + "&audience=http://dg.pishen.info", 
+						"https://verifier.login.persona.org/verify").start();
+				
+				try(BufferedReader verifyReader = new BufferedReader(new InputStreamReader(verify.getInputStream()))) {
+					ProcessMonitor.waitProcessWithTimeout(verify, 10000);
+					String verifyResult = dumpReaderToString(verifyReader);
+					//log.info("verifyResult: " + verifyResult);
+					JSONObject verifyJSON = new JSONObject(verifyResult);
+					if(verifyJSON.getString("status").equals("okay")){
+						req.getSession().setAttribute(EMAIL, verifyJSON.getString("email"));
+					}else{
+						resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+					}
+				} catch (TimeoutException e) {
+					resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+				}
+				
+				/*JSONObject verifyResultJSON = new JSONObject(verifyResult);
 				if(verifyResultJSON.getString("status").equals("okay")){
 					log.error("email: " + verifyResultJSON.getString("email"));
 					req.getSession().setAttribute(EMAIL, verifyResultJSON.getString("email"));
@@ -94,9 +108,9 @@ public class Controller extends WebSocketServlet {
 					log.error("status not okay");
 					resultJSON.put("status", "failure");
 				}
-				out.print(resultJSON.toString());
+				out.print(resultJSON.toString());*/
 			}else{
-				log.error("post wrong");
+				//log.info("post wrong");
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
@@ -173,6 +187,15 @@ public class Controller extends WebSocketServlet {
 			log.error("Icecast status checking error", e);
 			return null;
 		}
+	}
+	
+	private String dumpReaderToString(BufferedReader in) throws IOException{
+		StringBuffer strBuffer = new StringBuffer();
+		String line = null;
+		while((line = in.readLine()) != null){
+			strBuffer.append(line);
+		}
+		return strBuffer.toString();
 	}
 
 }

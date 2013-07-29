@@ -70,6 +70,7 @@ function getUserInfo(){
 				console.log("login");
 				$.post("s/login", assertion).done(function(data){
 					console.log("done");
+					window.location.reload();
 				}).fail(function(){
 					console.log("post fail");
 					navigator.id.logout();
