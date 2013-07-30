@@ -131,8 +131,9 @@ div#play audio{
     padding:5px 0 5px 0;
 }
 
-div#right-panel > div#chat{
-    position: fixed;
+div#chat{
+	position: fixed;
+	left: 35%;
 }
 
 div#chat-log{
