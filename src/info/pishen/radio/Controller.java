@@ -71,15 +71,7 @@ public class Controller extends WebSocketServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter(); BufferedReader postReader = req.getReader()){
 			if(req.getPathInfo().equals("/login")){
-				//log.info("post right");
-				
 				String assertion = dumpReaderToString(postReader);
-				//log.info("assertion: " + assertion);
-				/*String verifyResult = Request.Post("https://verifier.login.persona.org/verify")
-					.bodyForm(Form.form()
-							.add("assertion", assertion.toString())
-							.add("audience", "http://dg.pishen.info").build())
-							.execute().returnContent().asString();*/
 				
 				Process verify = new ProcessBuilder("curl", "-d", 
 						"assertion=" + assertion.toString() + "&audience=http://dg.pishen.info", 
@@ -88,7 +80,7 @@ public class Controller extends WebSocketServlet {
 				try(BufferedReader verifyReader = new BufferedReader(new InputStreamReader(verify.getInputStream()))) {
 					ProcessMonitor.waitProcessWithTimeout(verify, 10000);
 					String verifyResult = dumpReaderToString(verifyReader);
-					//log.info("verifyResult: " + verifyResult);
+					
 					JSONObject verifyJSON = new JSONObject(verifyResult);
 					if(verifyJSON.getString("status").equals("okay")){
 						req.getSession().setAttribute(EMAIL, verifyJSON.getString("email"));
@@ -96,21 +88,10 @@ public class Controller extends WebSocketServlet {
 						resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 					}
 				} catch (TimeoutException e) {
+					verify.destroy();
 					resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 				}
-				
-				/*JSONObject verifyResultJSON = new JSONObject(verifyResult);
-				if(verifyResultJSON.getString("status").equals("okay")){
-					log.error("email: " + verifyResultJSON.getString("email"));
-					req.getSession().setAttribute(EMAIL, verifyResultJSON.getString("email"));
-					resultJSON.put("status", "okay");
-				}else{
-					log.error("status not okay");
-					resultJSON.put("status", "failure");
-				}
-				out.print(resultJSON.toString());*/
 			}else{
-				//log.info("post wrong");
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
