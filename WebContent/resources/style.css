@@ -17,13 +17,13 @@ body{
 div#left-bg{
     position: fixed;
     right: 65%;
-    bottom: -150px; /*TODO: adjust this value dynamically*/
+    top: 180px;
+    /*bottom: -150px; TODO: adjust this value dynamically*/
     width: 600px; /*should be larger than the bg img*/
     height: 1080px;
-    background-image: url('E2F2VU-crop-lossy.png');
+    background-image: url('DJ-girl.png');
     background-repeat: no-repeat;
-    background-position: 200% 100%;
-    background-size: 520px;
+    background-position: 180% 0%;
 }
 
 div#left-panel{
