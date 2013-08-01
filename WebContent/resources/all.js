@@ -15,13 +15,7 @@ $(document).ready(function(){
 	handleGlowingSwitch();
 	handleWebSocket();
 	
-	$("textarea#new-chat").keydown(function(e){
-		if(e.which == 13 && $(this).val() != ""){
-			chatSocket.send($(this).val());
-			$(this).val("");
-			return false;
-		}
-	});
+	
 	
 	getUserInfo(); //along with Persona setting
 	getStatus(); //self-invoking function
@@ -69,7 +63,9 @@ function handleWebSocket(){
 	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
 	chatSocket.onmessage = function(evt){
 		var json = JSON.parse(evt.data);
-		$("div#chat-log").append("<p>" + json.msg + "</p>");
+		if(json.type == "chat"){
+			$("div#chat-log").append("<p>" + json.name + ": " + json.content + "</p>");
+		}
 	};
 }
 
@@ -101,18 +97,30 @@ function getUserInfo(){
 				navigator.id.request();
 			});
 			
-			$("div#user-info").hide();
+			$("textarea#new-chat").attr("placeholder", "Sign in to chat");
 		}else{
 			$("div#auth > span").text("Log out");
 			$("div#auth").on("click", function(e){
 				navigator.id.logout();
 			});
 			
-			$("div#user-info > li#user-email").text("email: " + userEmail);
+			$("li#user-email").text("email: " + userEmail);
+			
+			//open the chat sending handler
+			$("textarea#new-chat").attr("placeholder", "Your message...").prop("disabled", false);
+			$("textarea#new-chat").keydown(function(e){
+				if(e.which == 13 && $(this).val() != ""){
+					$.post("s/new-chat", $(this).val());
+					$(this).val("");
+					return false;
+				}
+			});
+			
+			$("div#user-info").toggleClass("not-ready", false);
 		}
 		
 		//display the info
-		$("div#user").show();
+		$("div#user").toggleClass("not-ready", false);
 	});
 }
 

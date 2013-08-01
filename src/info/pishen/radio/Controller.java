@@ -71,7 +71,7 @@ public class Controller extends WebSocketServlet {
 		resp.setCharacterEncoding("UTF-8");
 		try(PrintWriter out = resp.getWriter(); BufferedReader postReader = req.getReader()){
 			if(req.getPathInfo().equals("/login")){
-				String assertion = dumpReaderToString(postReader);
+				String assertion = dumpReaderToString(postReader, 0);
 				
 				Process verify = new ProcessBuilder("curl", "-d", 
 						"assertion=" + assertion.toString() + "&audience=http://dg.pishen.info", 
@@ -79,7 +79,7 @@ public class Controller extends WebSocketServlet {
 				
 				try(BufferedReader verifyReader = new BufferedReader(new InputStreamReader(verify.getInputStream()))) {
 					ProcessMonitor.waitProcessWithTimeout(verify, 10000);
-					String verifyResult = dumpReaderToString(verifyReader);
+					String verifyResult = dumpReaderToString(verifyReader, 0);
 					
 					JSONObject verifyJSON = new JSONObject(verifyResult);
 					if(verifyJSON.getString("status").equals("okay")){
@@ -90,6 +90,13 @@ public class Controller extends WebSocketServlet {
 				} catch (TimeoutException e) {
 					verify.destroy();
 					resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+				}
+			}else if(req.getPathInfo().equals("/new-chat")){
+				String email = (String)req.getSession().getAttribute(EMAIL);
+				if(email != null){
+					String chat = dumpReaderToString(postReader, 1000);
+					JSONObject bcastJson = new JSONObject().put("type", "chat").put("name", email.split("@")[0]).put("content", chat);
+					broadcast(bcastJson);
 				}
 			}else{
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -170,11 +177,12 @@ public class Controller extends WebSocketServlet {
 		}
 	}
 	
-	private String dumpReaderToString(BufferedReader in) throws IOException{
+	private String dumpReaderToString(BufferedReader in, int sizeLimit) throws IOException{
 		StringBuffer strBuffer = new StringBuffer();
 		String line = null;
-		while((line = in.readLine()) != null){
+		while((line = in.readLine()) != null){ 
 			strBuffer.append(line);
+			if(sizeLimit > 0 && strBuffer.length() > sizeLimit){break;}
 		}
 		return strBuffer.toString();
 	}

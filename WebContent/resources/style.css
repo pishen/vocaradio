@@ -88,6 +88,10 @@ div#right-panel > div.selected{
     display: block;
 }
 
+div#right-panel div.not-ready{
+	display: none;
+}
+
 div#play p{
     padding: 4px;
 }
@@ -159,10 +163,6 @@ textarea#new-chat{
     padding: 5px;
     border: 0px;
     resize: none;
-}
-
-div#right-panel > div#user{
-	display: none;
 }
 
 div#user-info{
