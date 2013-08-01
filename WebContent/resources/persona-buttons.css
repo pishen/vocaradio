@@ -156,42 +156,6 @@
 }
 
 /* ========================================================
- *    Dark button 
- * ===================================================== */
-.persona-button.dark{
-  background: #3c3c3c;
-  background: -moz-linear-gradient(top, #606060, #3c3c3c);
-  background: -ms-linear-gradient(top, #606060, #3c3c3c);
-  background: -o-linear-gradient(top, #606060, #3c3c3c);
-  background: -webkit-linear-gradient(top, #606060, #3c3c3c);
-  background: linear-gradient(top, #606060, #3c3c3c);
-}
-.persona-button.dark:hover{
-  background: #2d2d2d;
-  background: -moz-linear-gradient(top, #484848, #2d2d2d);
-  background: -ms-linear-gradient(top, #484848, #2d2d2d);
-  background: -o-linear-gradient(top, #484848, #2d2d2d);
-  background: -webkit-linear-gradient(top, #484848, #2d2d2d);
-  background: linear-gradient(top, #484848, #2d2d2d);
-}
-.persona-button.dark span:before{ /* Icon BG */
-  background: #d34f2d;
-  background: -moz-linear-gradient(top, #ebac45, #d34f2d);
-  background: -ms-linear-gradient(top, #ebac45, #d34f2d);
-  background: -o-linear-gradient(top, #ebac45, #d34f2d);
-  background: -webkit-linear-gradient(top, #ebac45, #d34f2d);
-  background: linear-gradient(top, #ebac45, #d34f2d);
-}
-.persona-button.dark:before{ /* Triangle */
-  background: #d34f2d;
-  background: -moz-linear-gradient(-45deg, #ebac45, #d34f2d);
-  background: -ms-linear-gradient(-45deg, #ebac45, #d34f2d);
-  background: -o-linear-gradient(-45deg, #ebac45, #d34f2d);
-  background: -webkit-linear-gradient(-45deg, #ebac45, #d34f2d);
-  background: linear-gradient(-45deg, #d34f2d, #ebac45); /* flipped for updated spec */
-}
-
-/* ========================================================
  *    Orange button 
  * ===================================================== */
 .persona-button.orange{

@@ -3,6 +3,7 @@ var glowing = true;
 var chatSocket = null;
 
 $(document).ready(function(){
+	//tab selection handler
 	$("nav li").on("click", function(){
 		$("nav li.selected").removeClass("selected");
 		$("#right-panel > div.selected").removeClass("selected");
@@ -10,6 +11,24 @@ $(document).ready(function(){
 		$("#right-panel > div").eq($(this).index()).addClass("selected");
 	});
 	
+	handleStream();
+	handleGlowingSwitch();
+	handleWebSocket();
+	
+	$("textarea#new-chat").keydown(function(e){
+		if(e.which == 13 && $(this).val() != ""){
+			chatSocket.send($(this).val());
+			$(this).val("");
+			return false;
+		}
+	});
+	
+	getUserInfo(); //along with Persona setting
+	getStatus(); //self-invoking function
+});
+
+function handleStream(){
+	//handle the music stopping problem of Chrome
 	$("audio").on("error", function(e){
 		errorCount++;
 		if(errorCount < 5){
@@ -21,6 +40,7 @@ $(document).ready(function(){
 		}, 10000);
 	});
 	
+	//clean the cache when music is paused
 	$("audio").on("pause", function(e){
 		var source = $("audio > source");
 		var streamUrl = source.attr("src");
@@ -28,7 +48,9 @@ $(document).ready(function(){
 		this.load();
 		source.attr("src", streamUrl);
 	});
-	
+}
+
+function handleGlowingSwitch(){
 	$("span#air").on("click", function(e){
 		if(glowing){
 			glowing = false;
@@ -40,44 +62,32 @@ $(document).ready(function(){
 			}
 		}
 	});
-	
+}
+
+function handleWebSocket(){
+	//WebSocket only for receiving
 	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
 	chatSocket.onmessage = function(evt){
 		var json = JSON.parse(evt.data);
 		$("div#chat-log").append("<p>" + json.msg + "</p>");
 	};
-	
-	$("textarea#new-chat").keydown(function(e){
-		if(e.which == 13 && $(this).val() != ""){
-			chatSocket.send($(this).val());
-			$(this).val("");
-			return false;
-		}
-	});
-	
-	getUserInfo();
-	getStatus();
-});
+}
 
 function getUserInfo(){
 	$.getJSON("s/user-info", function(userInfoJSON){
 		var userEmail = userInfoJSON.email;
-		console.log("email: " + userEmail);
 		
+		//Persona watcher
 		navigator.id.watch({
 			loggedInUser: userEmail,
 			onlogin: function(assertion){
-				console.log("login");
 				$.post("s/login", assertion).done(function(data){
-					console.log("done");
 					window.location.reload();
 				}).fail(function(){
-					console.log("post fail");
 					navigator.id.logout();
 				});
 			},
 			onlogout: function(){
-				console.log("logout");
 				$.get("s/logout", function(data){
 					window.location.reload();
 				});
