@@ -18,7 +18,6 @@ div#left-bg{
     position: fixed;
     right: 65%;
     top: 180px;
-    /*bottom: -150px; TODO: adjust this value dynamically*/
     width: 600px; /*should be larger than the bg img*/
     height: 1080px;
     background-image: url('DJ-girl.png');
@@ -162,4 +161,19 @@ textarea#new-chat{
     resize: none;
 }
 
+div#right-panel > div#user{
+	display: none;
+}
 
+div#user-info{
+    margin: 15px;
+}
+
+div#user-info > ul{
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+div#user-info > ul > li{
+    margin-bottom: 5px;
+}

@@ -30,7 +30,7 @@
 				<source src="http://dg.pishen.info:8000/stream.ogg" type="audio/ogg"></source>
 			</audio>
 		</div>
-<!-- 		<div id="order"></div> -->
+<!-- 		<div id="order" class="ready"></div> -->
 		<div id="chat">
 			<div id="chat-log">
 				<!-- <p><span class="username"></span><span class="chat-content"></span></p> -->
@@ -38,8 +38,13 @@
 			<textarea id="new-chat" placeholder="Your message..."></textarea>
 		</div>
 		<div id="user">
-			<div id="auth" class="persona-button orange"><span>--</span></div>
-			<p><b id="user-email">--</b></p>
+			<div  id="auth" class="persona-button orange"><span>Sign in</span></div>
+			<div id="user-info">
+				User info:
+				<ul>
+					<li id="user-email"></li>
+				</ul>
+			</div>
 		</div>
 	</div>
 	

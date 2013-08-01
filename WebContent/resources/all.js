@@ -94,18 +94,25 @@ function getUserInfo(){
 			}
 		});
 		
+		//settle the info to display
 		if(userEmail == null){
-			$("#auth span").text("Sign in");
-			$("#auth").on("click", function(e){
+			$("div#auth > span").text("Sign in");
+			$("div#auth").on("click", function(e){
 				navigator.id.request();
 			});
+			
+			$("div#user-info").hide();
 		}else{
-			$("#auth span").text("Log out");
-			$("#user-email").text(userEmail);
-			$("#auth").on("click", function(e){
+			$("div#auth > span").text("Log out");
+			$("div#auth").on("click", function(e){
 				navigator.id.logout();
 			});
+			
+			$("div#user-info > li#user-email").text("email: " + userEmail);
 		}
+		
+		//display the info
+		$("div#user").show();
 	});
 }
 
