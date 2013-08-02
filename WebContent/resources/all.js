@@ -1,5 +1,6 @@
 var errorCount = 0;
 var glowing = true;
+var chatStickToButtom = true;
 var chatSocket = null;
 
 $(document).ready(function(){
@@ -11,17 +12,23 @@ $(document).ready(function(){
 		$("#right-panel > div").eq($(this).index()).addClass("selected");
 	});
 	
-	handleStream();
+	$("div#chat-log").mouseup(function(){
+		if($(this).scrollTop() + $(this).innerHeight() == $(this)[0].scrollHeight){
+			chatStickToButtom = true;
+		}else{
+			chatStickToButtom = false;
+		}
+	});
+	
+	handleAudioStream();
 	handleGlowingSwitch();
 	handleWebSocket();
-	
-	
 	
 	getUserInfo(); //along with Persona setting
 	getStatus(); //self-invoking function
 });
 
-function handleStream(){
+function handleAudioStream(){
 	//handle the music stopping problem of Chrome
 	$("audio").on("error", function(e){
 		errorCount++;
@@ -65,6 +72,11 @@ function handleWebSocket(){
 		var json = JSON.parse(evt.data);
 		if(json.type == "chat"){
 			$("div#chat-log").append("<p>" + json.name + ": " + json.content + "</p>");
+			if(chatStickToButtom){
+				$("div#chat-log").animate({
+					scrollTop: $("div#chat-log")[0].scrollHeight - $("div#chat-log").innerHeight()
+				});
+			}
 		}
 	};
 }
