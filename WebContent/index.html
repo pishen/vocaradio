@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="style.css" />
 <link rel="stylesheet" href="persona-buttons.css" />
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Cabin+Condensed' rel='stylesheet' type='text/css'>
 <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
@@ -17,20 +18,22 @@
 				<li class="selected">Listen</li>
 				<li>Chat</li>
 				<li>User</li>
+				<li>About</li>
 			</ul>
 		</nav>
+		
 	</div>
 	
 	<div id="right-bg"></div>
 	<div id="right-panel">
 		<div id="play">
 			<p>Status: <span id="air">OFF AIR</span> - <span id="listen-num">0 listener.</span></p>
-			<p>Now playing: <b id="title"></b></p>
+			<p>Now playing: <span id="title"></span></p>
 			<audio controls preload="none">
 				<source src="http://dg.pishen.info:8000/stream.ogg" type="audio/ogg"></source>
 			</audio>
 		</div>
-<!-- 		<div id="order" class="ready"></div> -->
+		<!-- <div id="order" class="ready"></div> -->
 		<div id="chat" class="hidden">
 			<div id="chat-log">
 				<!-- <p><span class="username"></span><span class="chat-content"></span></p> -->
@@ -39,12 +42,21 @@
 		</div>
 		<div id="user" class="hidden">
 			<div id="auth" class="persona-button"><span>Sign in with Persona</span></div>
-			<div id="user-info" class="hidden">
-				User info:
+			<div id="user-info">
 				<ul>
 					<li id="user-email"></li>
+					<!-- <li>nickname: <input id="nickname" type="text"></li> -->
 				</ul>
 			</div>
+		</div>
+		<div id="about" class="hidden">
+			<h3>a simple VOCALOID radio station</h3>
+			<ul>
+				<li>built by: pishen tsai</li>
+				<li>illustrator: 有熊黑白</li>
+				<li>facebook: <a href="https://www.facebook.com/pages/VocaRadio/617848234912641">pages/VocaRadio/617848234912641</a></li>
+				<li>github: <a href="https://github.com/pishen/vocaradio">pishen/vocaradio</a></li>
+			</ul>
 		</div>
 	</div>
 	
