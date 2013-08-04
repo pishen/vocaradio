@@ -98,10 +98,10 @@ function handleAuth(){
 			loggedInUser: userInfo.email,
 			onlogin: function(assertion){
 				console.log("login");
-				$.post("s/login", assertion).done(function(newUserInfo){
+				$.post("s/login", assertion, function(newUserInfo){
 					console.log("login success");
-					updateUserInfo(JSON.parse(newUserInfo));
-				}).fail(function(){
+					updateUserInfo(newUserInfo);
+				}, "json").fail(function(){
 					console.log("login fail");
 					navigator.id.logout();
 				});
