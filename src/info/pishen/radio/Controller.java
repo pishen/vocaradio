@@ -84,7 +84,9 @@ public class Controller extends WebSocketServlet {
 					JSONObject verifyJSON = new JSONObject(verifyResult);
 					if(verifyJSON.getString("status").equals("okay")){
 						req.getSession().setAttribute(EMAIL, verifyJSON.getString("email"));
+						out.print(getUserInfo(req));
 					}else{
+						log.error("status not okay: " + verifyResult);
 						resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 					}
 				} catch (TimeoutException e) {

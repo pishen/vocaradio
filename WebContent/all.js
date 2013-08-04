@@ -7,9 +7,9 @@ $(document).ready(function(){
 	//tab selection handler
 	$("nav li").on("click", function(){
 		$("nav li.selected").removeClass("selected");
-		$("#right-panel > div.selected").removeClass("selected");
+		$("#right-panel > div").toggleClass("hidden", true);
 		$(this).addClass("selected");
-		$("#right-panel > div").eq($(this).index()).addClass("selected");
+		$("#right-panel > div").eq($(this).index()).removeClass("hidden");
 	});
 	
 	$("div#chat-log").mouseup(function(){
@@ -20,11 +20,19 @@ $(document).ready(function(){
 		}
 	});
 	
+	$("textarea#new-chat").keydown(function(e){
+		if(e.which == 13 && $(this).val() != ""){
+			$.post("s/new-chat", $(this).val());
+			$(this).val("");
+			return false;
+		}
+	});
+	
 	handleAudioStream();
 	handleGlowingSwitch();
 	handleWebSocket();
+	handleAuth(); //update userInfo and Persona setting
 	
-	getUserInfo(); //along with Persona setting
 	getStatus(); //self-invoking function
 });
 
@@ -81,59 +89,60 @@ function handleWebSocket(){
 	};
 }
 
-function getUserInfo(){
-	$.getJSON("s/user-info", function(userInfoJSON){
-		var userEmail = userInfoJSON.email;
+function handleAuth(){
+	$.getJSON("s/user-info", function(userInfo){
+		console.log("email:"+ userInfo.email);
 		
 		//Persona watcher
 		navigator.id.watch({
-			loggedInUser: userEmail,
+			loggedInUser: userInfo.email,
 			onlogin: function(assertion){
-				$.post("s/login", assertion).done(function(data){
-					window.location.reload();
+				console.log("login");
+				$.post("s/login", assertion).done(function(newUserInfo){
+					console.log("login success");
+					updateUserInfo(JSON.parse(newUserInfo));
 				}).fail(function(){
+					console.log("login fail");
 					navigator.id.logout();
 				});
 			},
 			onlogout: function(){
-				$.get("s/logout", function(data){
-					window.location.reload();
-				});
+				console.log("logout");
+				$.get("s/logout");
+				updateUserInfo({});
 			}
 		});
 		
-		//settle the info to display
-		if(userEmail == null){
-			$("div#auth > span").text("Sign in");
-			$("div#auth").on("click", function(e){
-				navigator.id.request();
-			});
-			
-			$("textarea#new-chat").attr("placeholder", "Sign in to chat");
-		}else{
-			$("div#auth > span").text("Log out");
-			$("div#auth").on("click", function(e){
-				navigator.id.logout();
-			});
-			
-			$("li#user-email").text("email: " + userEmail);
-			
-			//open the chat sending handler
-			$("textarea#new-chat").attr("placeholder", "Your message...").prop("disabled", false);
-			$("textarea#new-chat").keydown(function(e){
-				if(e.which == 13 && $(this).val() != ""){
-					$.post("s/new-chat", $(this).val());
-					$(this).val("");
-					return false;
-				}
-			});
-			
-			$("div#user-info").toggleClass("not-ready", false);
-		}
-		
-		//display the info
-		$("div#user").toggleClass("not-ready", false);
+		updateUserInfo(userInfo);
 	});
+}
+
+function updateUserInfo(userInfo){
+	//settle the info to display
+	$("div#auth").off();
+	if(userInfo.email == null){
+		$("div#auth > span").text("Sign in with Persona");
+		$("div#auth").on("click", function(e){
+			navigator.id.request();
+		});
+		
+		//disable chat box
+		$("textarea#new-chat").attr("placeholder", "Sign in to chat").prop("disabled", true);
+		
+		$("div#user-info").toggleClass("hidden", true);
+	}else{
+		$("div#auth > span").text("Log out");
+		$("div#auth").on("click", function(e){
+			navigator.id.logout();
+		});
+		
+		$("li#user-email").text("email: " + userInfo.email);
+		
+		//open the chat sending handler
+		$("textarea#new-chat").attr("placeholder", "Your message...").prop("disabled", false);
+		
+		$("div#user-info").toggleClass("hidden", false);
+	}
 }
 
 function getStatus(){

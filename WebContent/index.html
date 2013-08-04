@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8"></meta>
 <title>VocaRadio</title>
-<link rel="stylesheet" href="resources/style.css" />
-<link rel="stylesheet" href="resources/persona-buttons.css" />
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="persona-buttons.css" />
 <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
-<link rel="icon" type="image/png" href="resources/favicon.png">
+<link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
 	<div id="left-bg" class="left"></div>
@@ -23,7 +23,7 @@
 	
 	<div id="right-bg"></div>
 	<div id="right-panel">
-		<div id="play" class="selected">
+		<div id="play">
 			<p>Status: <span id="air">OFF AIR</span> - <span id="listen-num">0 listener.</span></p>
 			<p>Now playing: <b id="title"></b></p>
 			<audio controls preload="none">
@@ -31,15 +31,15 @@
 			</audio>
 		</div>
 <!-- 		<div id="order" class="ready"></div> -->
-		<div id="chat">
+		<div id="chat" class="hidden">
 			<div id="chat-log">
 				<!-- <p><span class="username"></span><span class="chat-content"></span></p> -->
 			</div>
-			<textarea id="new-chat" autocomplete="off" disabled></textarea>
+			<textarea id="new-chat" autocomplete="off" disabled="false"></textarea>
 		</div>
-		<div id="user" class="not-ready">
-			<div id="auth" class="persona-button"><span>Sign in</span></div>
-			<div id="user-info" class="not-ready">
+		<div id="user" class="hidden">
+			<div id="auth" class="persona-button"><span>Sign in with Persona</span></div>
+			<div id="user-info" class="hidden">
 				User info:
 				<ul>
 					<li id="user-email"></li>
@@ -50,6 +50,6 @@
 	
 	<script src="https://login.persona.org/include.js"></script>
 	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-	<script src="resources/all.js"></script>
+	<script src="all.js"></script>
 </body>
 </html>

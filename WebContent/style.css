@@ -14,13 +14,17 @@ body{
 	color: white;
 }
 
+div.hidden{
+	display: none;
+}
+
 div#left-bg{
     position: fixed;
     right: 65%;
     top: 180px;
     width: 600px; /*should be larger than the bg img*/
     height: 1080px;
-    background-image: url('DJ-girl.png');
+    background-image: url('../images/DJ-girl.png');
     background-repeat: no-repeat;
     background-position: 180% 0%;
 }
@@ -81,15 +85,6 @@ div#right-panel > div{
     padding-top: 170px;
     padding-left: 30px;
     padding-right: 30px;
-    display: none;
-}
-
-div#right-panel > div.selected{
-    display: block;
-}
-
-div#right-panel div.not-ready{
-	display: none;
 }
 
 div#play p{
