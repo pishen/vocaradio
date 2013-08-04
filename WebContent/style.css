@@ -29,12 +29,12 @@ div.hidden{
 div#left-bg{
     position: fixed;
     right: 65%;
-    top: 180px;
+    top: 150px;
     width: 600px; /*should be larger than the bg img*/
     height: 1080px;
     background-image: url('../images/DJ-girl.png');
     background-repeat: no-repeat;
-    background-position: 180% 0%;
+    background-position: 220% 0%;
 }
 
 div#left-panel{

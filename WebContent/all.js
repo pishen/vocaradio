@@ -91,10 +91,11 @@ function updateWebSocket(){
 		}
 	};
 	newChatSocket.onerror = function(error){
+		$("div#chat-log").append("<p>Sorry, the connection is lost, will retry in 5s</p>");
 		console.log("ws error: " + error);
 	};
 	newChatSocket.onclose = function(e){
-		window.setTimeout(updateWebSocket, 10000);
+		window.setTimeout(updateWebSocket, 5000);
 	};
 	
 	chatSocket = newChatSocket;
