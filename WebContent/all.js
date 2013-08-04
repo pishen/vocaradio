@@ -30,7 +30,7 @@ $(document).ready(function(){
 	
 	handleAudioStream();
 	handleGlowingSwitch();
-	handleWebSocket();
+	updateWebSocket();
 	handleAuth(); //update userInfo and Persona setting
 	
 	getStatus(); //self-invoking function
@@ -73,10 +73,13 @@ function handleGlowingSwitch(){
 	});
 }
 
-function handleWebSocket(){
+function updateWebSocket(){
 	//WebSocket only for receiving
-	chatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
-	chatSocket.onmessage = function(evt){
+	var newChatSocket = new WebSocket("ws://dg.pishen.info:8080/vocaradio/s/ws");
+	newChatSocket.onopen = function(e){
+		console.log("ws opened");
+	};
+	newChatSocket.onmessage = function(evt){
 		var json = JSON.parse(evt.data);
 		if(json.type == "chat"){
 			$("div#chat-log").append("<p>" + json.name + ": " + json.content + "</p>");
@@ -87,6 +90,14 @@ function handleWebSocket(){
 			}
 		}
 	};
+	newChatSocket.onerror = function(error){
+		console.log("ws error: " + error);
+	};
+	newChatSocket.onclose = function(e){
+		window.setTimeout(updateWebSocket, 10000);
+	};
+	
+	chatSocket = newChatSocket;
 }
 
 function handleAuth(){

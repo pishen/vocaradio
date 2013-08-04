@@ -155,6 +155,10 @@ div#chat-log{
     overflow-y: auto;
 }
 
+div#chat-log > p{
+	padding-bottom: 3px;
+}
+
 span.username{
     font-weight: bold;
 }
