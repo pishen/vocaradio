@@ -29,7 +29,7 @@ class Playlist extends Actor {
         + googleKey)
         .get
         .map(response => (response.json \ "items" \ "id" \ "videoId").as[String])
-    val id = Await.result(futureId, 5 seconds).asInstanceOf[String]
+    val id = Await.result(futureId, 5.seconds).asInstanceOf[String]
     val futureDuration =
       WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
         + id
@@ -41,7 +41,7 @@ class Playlist extends Actor {
           val mAndS = str.replaceAll("[PTS]", "").split("M")
           mAndS.head.toInt * 60 + mAndS.last.toInt
         })
-    val duration = Await.result(futureId, 5 seconds).asInstanceOf[Int]
+    val duration = Await.result(futureId, 5.seconds).asInstanceOf[Int]
     Song(id, duration)
   }
 }
