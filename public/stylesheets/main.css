@@ -1,3 +1,5 @@
+@import url(http://fonts.googleapis.com/css?family=Redressed);
+
 body {
 	background-color: #413839;
 	font-family: 'Cabin Condensed', sans-serif;
@@ -15,6 +17,7 @@ body {
 	text-align: center;
 	color: hotpink;
 	font-size: 3.2em;
+	font-family: 'Redressed', cursive;
 }
 
 #player-wrapper {

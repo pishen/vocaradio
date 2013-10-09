@@ -5,24 +5,29 @@ $(document).ready(function() {
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 	
 	$("#sync").on("click", function(){
-		player.loadVideoById('WiUjG9fF3zw', 20);
+		$.getJSON("sync", function(jsObj){
+			player.loadVideoById(jsObj.id);
+		});
 	});
 });
 
 var player;
 function onYouTubeIframeAPIReady() {
-	player = new YT.Player('player', {
-		height : '360',
-		width : '640',
-		videoId : '243vPl8HdVk',
-		playerVars : {
-			'autoplay' : 1,
-			'start' : 20
-		},
-		events : {
-			'onReady' : onPlayerReady,
-			'onStateChange' : onPlayerStateChange
-		}
+	
+	$.getJSON("sync", function(jsObj){
+		player = new YT.Player('player', {
+			height : '360',
+			width : '640',
+			videoId : jsObj.id,
+			playerVars : {
+				'autoplay' : 1,
+				'start' : 0
+			},
+			events : {
+				'onReady' : onPlayerReady,
+				'onStateChange' : onPlayerStateChange
+			}
+		});
 	});
 }
 
@@ -31,6 +36,8 @@ function onPlayerReady(event) {
 
 function onPlayerStateChange(event) {
 	if(event.data == YT.PlayerState.ENDED){
-		player.loadVideoById('z0KPuuAz0Yc');
+		$.getJSON("sync", function(jsObj){
+			player.loadVideoById(jsObj.id);
+		});
 	}
 }
