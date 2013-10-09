@@ -43,3 +43,14 @@ iframe {
 	display: block;
 	margin: 1% auto 0 auto;
 }
+
+@media only screen and (max-width: 480px) {
+	#player-wrapper {
+		height: 207px;
+	}
+	
+	iframe { 
+		width: 368px;
+		height: 207px;
+	}
+}
