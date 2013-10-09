@@ -13,7 +13,6 @@ $(document).ready(function() {
 
 var player;
 function onYouTubeIframeAPIReady() {
-	
 	$.getJSON("sync", function(jsObj){
 		player = new YT.Player('player', {
 			height : '360',

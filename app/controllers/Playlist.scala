@@ -4,6 +4,7 @@ import akka.actor.Actor
 import scala.util.Random
 import scala.io.Source
 import play.api.libs.ws.WS
+import views.html.helper
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import akka.util.Timeout
@@ -21,14 +22,14 @@ class Playlist extends Actor {
   }
 
   private def randomPick = {
-    val title = titles(Random.nextInt(titles.length))
+    val title = helper.urlEncode(titles(Random.nextInt(titles.length)))
     val futureId =
       WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
         + title
         + "&type=video&fields=items%2Fid&key="
         + googleKey)
         .get
-        .map(response => (response.json \ "items" \ "id" \ "videoId").as[String])
+        .map(response => (response.json \\ "videoId").head.as[String])
     val id = Await.result(futureId, 5.seconds).asInstanceOf[String]
     val futureDuration =
       WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
@@ -36,12 +37,12 @@ class Playlist extends Actor {
         + "&fields=items%2FcontentDetails&key="
         + googleKey)
         .get
-        .map(response => (response.json \ "items" \ "contentDetails" \ "duration").as[String])
+        .map(response => (response.json \\ "duration").head.as[String])
         .map(str => {
           val mAndS = str.replaceAll("[PTS]", "").split("M")
           mAndS.head.toInt * 60 + mAndS.last.toInt
         })
-    val duration = Await.result(futureId, 5.seconds).asInstanceOf[Int]
+    val duration = Await.result(futureDuration, 5.seconds).asInstanceOf[Int]
     Song(id, duration)
   }
 }
