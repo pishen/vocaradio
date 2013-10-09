@@ -3,9 +3,9 @@ $(document).ready(function() {
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-	
-	$("#sync").on("click", function(){
-		$.getJSON("sync", function(jsObj){
+
+	$("#sync").on("click", function() {
+		$.getJSON("sync", function(jsObj) {
 			player.loadVideoById(jsObj.id);
 		});
 	});
@@ -13,14 +13,15 @@ $(document).ready(function() {
 
 var player;
 function onYouTubeIframeAPIReady() {
-	$.getJSON("sync", function(jsObj){
+	$.getJSON("sync", function(jsObj) {
 		player = new YT.Player('player', {
 			height : '360',
 			width : '640',
 			videoId : jsObj.id,
 			playerVars : {
 				'autoplay' : 1,
-				'start' : 0
+				'rel' : 0,
+				'iv_load_policy' : 3
 			},
 			events : {
 				'onReady' : onPlayerReady,
@@ -34,8 +35,8 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-	if(event.data == YT.PlayerState.ENDED){
-		$.getJSON("sync", function(jsObj){
+	if (event.data == YT.PlayerState.ENDED) {
+		$.getJSON("sync", function(jsObj) {
 			player.loadVideoById(jsObj.id);
 		});
 	}
