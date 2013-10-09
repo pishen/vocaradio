@@ -22,8 +22,8 @@ object Application extends Controller {
   }
   
   def sync = Action.async {
-    (playlistActor ? Playlist.Current).mapTo[Song].map(s => {
-      Ok(Json.obj("id" -> s.id, "duration" -> s.duration))
+    (playlistActor ? Playlist.Current).mapTo[(String, Int)].map(p => {
+      Ok(Json.obj("id" -> p._1, "start" -> p._2))
     })
   }
   

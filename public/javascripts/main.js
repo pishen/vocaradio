@@ -6,7 +6,7 @@ $(document).ready(function() {
 
 	$("#sync").on("click", function() {
 		$.getJSON("sync", function(jsObj) {
-			player.loadVideoById(jsObj.id);
+			player.loadVideoById(jsObj.id, jsObj.start);
 		});
 	});
 });
@@ -20,18 +20,15 @@ function onYouTubeIframeAPIReady() {
 			videoId : jsObj.id,
 			playerVars : {
 				'autoplay' : 1,
+				'start' : jsObj.start,
 				'rel' : 0,
 				'iv_load_policy' : 3
 			},
 			events : {
-				'onReady' : onPlayerReady,
 				'onStateChange' : onPlayerStateChange
 			}
 		});
 	});
-}
-
-function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {

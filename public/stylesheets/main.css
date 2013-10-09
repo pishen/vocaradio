@@ -38,3 +38,8 @@ iframe {
 	bottom: 0;
 	right: 0;
 }
+
+#sync {
+	display: block;
+	margin: 1% auto 0 auto;
+}

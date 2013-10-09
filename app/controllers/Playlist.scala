@@ -10,18 +10,29 @@ import scala.concurrent.Await
 import akka.util.Timeout
 import scala.concurrent.duration._
 import models.Song
+import java.util.Date
 
 class Playlist extends Actor {
   private val titles = Source.fromFile("titles").getLines.toIndexedSeq
   private val googleKey = Source.fromFile("google-api-key").getLines.toSeq.head
+  
+  private var playing: Song = randomPick()
+  private var startTime: Long = getCurrentTimeInSecond()
 
   def receive = {
     case Playlist.Current => {
-      sender ! randomPick
+      val timePassed = getCurrentTimeInSecond() - startTime
+      if(timePassed < playing.duration){
+        sender ! (playing.id, timePassed.toInt)
+      }else{
+        playing = randomPick()
+        startTime = getCurrentTimeInSecond()
+        sender ! (playing.id, 0)
+      }
     }
   }
 
-  private def randomPick = {
+  private def randomPick() = {
     val title = helper.urlEncode(titles(Random.nextInt(titles.length)))
     val futureId =
       WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
@@ -45,6 +56,8 @@ class Playlist extends Actor {
     val duration = Await.result(futureDuration, 5.seconds).asInstanceOf[Int]
     Song(id, duration)
   }
+  
+  private def getCurrentTimeInSecond() = new Date().getTime() / 1000
 }
 
 object Playlist {
