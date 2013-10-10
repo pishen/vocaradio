@@ -41,15 +41,33 @@ iframe {
 
 #sync {
 	display: block;
-	margin: 1% auto 0 auto;
+	margin: 1.5em auto;
+}
+
+hr {
+	border: 0;
+	height: 1px;
+	background-image: linear-gradient(to right, rgba(255, 255, 255, 0),
+		rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+	text-align: center;
+}
+
+hr:after {
+	content: "♪";
+    display: inline-block;
+    position: relative; 
+    top: -0.6em;
+    font-size: 1.5em;
+    padding: 0 0.25em;
+    color: white;
+    background: #413839;
 }
 
 @media only screen and (max-width: 480px) {
 	#player-wrapper {
 		height: 207px;
 	}
-	
-	iframe { 
+	iframe {
 		width: 368px;
 		height: 207px;
 	}
