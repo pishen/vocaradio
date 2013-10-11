@@ -14,7 +14,7 @@ import models.Song
 
 object Application extends Controller {
 
-  implicit val timeout = Timeout(15.seconds)
+  implicit val timeout = Timeout(5.seconds)
   val playlistActor = Akka.system.actorOf(Props[Playlist], "playlistActor")
   
   def index = Action {
@@ -22,7 +22,7 @@ object Application extends Controller {
   }
   
   def sync = Action.async {
-    (playlistActor ? Playlist.Current).mapTo[(String, Int)].map(p => {
+    (playlistActor ? Playlist.AskSong).mapTo[(String, Int)].map(p => {
       Ok(Json.obj("id" -> p._1, "start" -> p._2))
     })
   }
