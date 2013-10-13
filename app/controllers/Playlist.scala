@@ -14,22 +14,24 @@ import models.Song
 import java.util.Date
 import scala.concurrent.Future
 import scala.util.Success
+import scala.util.Failure
 
 class Playlist extends Actor {
   private val titles = Source.fromFile("titles").getLines.toIndexedSeq
   private val googleKey = Source.fromFile("google-api-key").getLines.toSeq.head
-  
+
   private def currentSecond() = new Date().getTime() / 1000
-  private var futureSong = randomPick().map(song => (song, currentSecond)) 
+  private var futureSong = randomPick().map(song => (song, currentSecond))
 
   def receive = {
     case Playlist.AskSong => {
       futureSong.value match {
         case Some(Success(p)) =>
-          if(p._1.duration < currentSecond - p._2){
+          if (currentSecond - p._2 >= p._1.duration - 1) {
             futureSong = randomPick().map(song => (song, currentSecond))
           }
-        case _ => //future song not fetched yet, do nothing
+        case Some(Failure(e)) =>
+          futureSong = randomPick().map(song => (song, currentSecond))
       }
       futureSong.map(p => (p._1.id, (currentSecond - p._2).toInt)) pipeTo sender
     }
@@ -37,8 +39,8 @@ class Playlist extends Actor {
 
   private def randomPick(): Future[Song] = {
     val title = helper.urlEncode(titles(Random.nextInt(titles.length)))
-    
-    val futureSong = for {
+
+    for {
       id <- WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
         + title
         + "&type=video&fields=items%2Fid&key="
@@ -56,10 +58,6 @@ class Playlist extends Actor {
           mAndS.head.toInt * 60 + mAndS.last.toInt
         })
     } yield Song(id, duration)
-    
-    futureSong recoverWith {
-      case ex: Exception => randomPick()
-    }
   }
 }
 
