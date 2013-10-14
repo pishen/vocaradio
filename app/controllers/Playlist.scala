@@ -21,23 +21,23 @@ class Playlist extends Actor {
   private val googleKey = Source.fromFile("google-api-key").getLines.toSeq.head
 
   private def currentSecond() = new Date().getTime() / 1000
-  private var futureSong = randomPick().map(song => (song, currentSecond))
+  private var futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
 
   def receive = {
     case Playlist.AskSong => {
       futureSong.value match {
-        case Some(Success(p)) =>
-          if (currentSecond - p._2 >= p._1.duration - 1) {
-            futureSong = randomPick().map(song => (song, currentSecond))
+        case Some(Success(t)) =>
+          if (currentSecond - t._2 >= t._1.duration - 2) {
+            futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
           }
         case Some(Failure(e)) =>
-          futureSong = randomPick().map(song => (song, currentSecond))
+          futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
       }
-      futureSong.map(p => (p._1.id, (currentSecond - p._2).toInt)) pipeTo sender
+      futureSong.map(t => (t._1.id, (currentSecond - t._2).toInt, t._3)) pipeTo sender
     }
   }
 
-  private def randomPick(): Future[Song] = {
+  private def randomPick(): Future[(Song, String)] = {
     val title = helper.urlEncode(titles(Random.nextInt(titles.length)))
 
     for {
@@ -57,7 +57,7 @@ class Playlist extends Actor {
           val mAndS = str.replaceAll("[PTS]", "").split("M")
           mAndS.head.toInt * 60 + mAndS.last.toInt
         })
-    } yield Song(id, duration)
+    } yield (Song(id, duration), title)
   }
 }
 

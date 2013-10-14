@@ -7,6 +7,7 @@ $(document).ready(function() {
 	$("#sync").on("click", function() {
 		$.getJSON("sync", function(jsObj) {
 			player.loadVideoById(jsObj.id, jsObj.start);
+			console.log("origin title: " + jsObj.originTitle)
 		});
 	});
 });
@@ -28,6 +29,7 @@ function onYouTubeIframeAPIReady() {
 				'onStateChange' : onPlayerStateChange
 			}
 		});
+		console.log("origin title: " + jsObj.originTitle)
 	});
 }
 
@@ -35,6 +37,7 @@ function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
 		$.getJSON("sync", function(jsObj) {
 			player.loadVideoById(jsObj.id);
+			console.log("origin title: " + jsObj.originTitle)
 		});
 	}
 }
