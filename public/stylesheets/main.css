@@ -13,10 +13,6 @@ body {
 	margin: auto;
 }
 
-.large p, .large ul, .large ol {
-	font-size: 1.2em;
-}
-
 #logo {
 	text-align: center;
 	color: hotpink;
@@ -65,6 +61,15 @@ hr:after {
     padding: 0 0.25em;
     color: white;
     background: #413839;
+}
+
+#client-count {
+	font-size: 1.2em;
+	text-align: center;
+}
+
+#client-count span {
+	font-size: 4em;
 }
 
 @media only screen and (max-width: 480px) {

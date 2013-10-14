@@ -20,7 +20,7 @@ function updateWebSocket() {
 		webSocket.send("join");
 	};
 	webSocket.onmessage = function(e){
-		$("#listening").text(e.data)
+		$("#client-count span").text(e.data)
 	};
 	webSocket.onerror = function(error){
 		console.log("ws error: " + error);
