@@ -3,6 +3,8 @@ $(document).ready(function() {
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+	
+	updateWebSocket();
 
 	$("#sync").on("click", function() {
 		$.getJSON("sync", function(jsObj) {
@@ -10,6 +12,23 @@ $(document).ready(function() {
 		});
 	});
 });
+
+var webSocket;
+function updateWebSocket() {
+	webSocket = new WebSocket("ws://" + window.location.host + "/ws");
+	webSocket.onopen = function(){
+		webSocket.send("join");
+	};
+	webSocket.onmessage = function(e){
+		$("#listening").text(e.data)
+	};
+	webSocket.onerror = function(error){
+		console.log("ws error: " + error);
+	};
+	webSocket.onclose = function(e){
+		window.setTimeout(updateWebSocket, 2000);
+	};
+}
 
 var player;
 function onYouTubeIframeAPIReady() {

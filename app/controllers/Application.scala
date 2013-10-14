@@ -14,11 +14,15 @@ import models.Song
 import play.api.mvc.WebSocket
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.iteratee.Concurrent
+import controllers.ClientCounter._
 
 object Application extends Controller {
 
   implicit val timeout = Timeout(5.seconds)
   val playlistActor = Akka.system.actorOf(Props[Playlist], "playlistActor")
+  val clientCounter = Akka.system.actorOf(Props[ClientCounter], "clientCounter")
+  val (out, channel) = Concurrent.broadcast[String]
 
   def index = Action {
     Ok(views.html.index())
@@ -29,5 +33,19 @@ object Application extends Controller {
       Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
     })
   }
+  
+  def ws = WebSocket.using[String](request => {
+    val in = Iteratee.foreach[String](msg => {
+      if(msg == "join"){
+        clientCounter ! AddClient
+        (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
+      }
+    }).map(_ => {
+      clientCounter ! RemoveClient
+      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
+    })
+    
+    (in, out)
+  })
 
 }

@@ -13,6 +13,10 @@ body {
 	margin: auto;
 }
 
+.large p, .large ul, .large ol {
+	font-size: 1.2em;
+}
+
 #logo {
 	text-align: center;
 	color: hotpink;
