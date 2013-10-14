@@ -35,12 +35,10 @@ object Application extends Controller {
   }
   
   def ws = WebSocket.using[String](request => {
-    val in = Iteratee.foreach[String](msg => {
-      if(msg == "join"){
-        clientCounter ! AddClient
-        (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
-      }
-    }).map(_ => {
+    clientCounter ! AddClient
+    (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
+    
+    val in = Iteratee.ignore[String].map(_ => {
       clientCounter ! RemoveClient
       (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
     })

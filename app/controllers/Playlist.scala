@@ -32,6 +32,7 @@ class Playlist extends Actor {
           }
         case Some(Failure(e)) =>
           futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
+        case _ => //do nothing
       }
       futureSong.map(t => (t._1.id, (currentSecond - t._2).toInt, t._3)) pipeTo sender
     }
