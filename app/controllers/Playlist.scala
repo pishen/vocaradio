@@ -38,11 +38,12 @@ class Playlist extends Actor {
   }
 
   private def randomPick(): Future[(Song, String)] = {
-    val title = helper.urlEncode(titles(Random.nextInt(titles.length)))
+    val title = titles(Random.nextInt(titles.length))
+    val urlEncodedTitle = helper.urlEncode(title)
 
     for {
       id <- WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
-        + title
+        + urlEncodedTitle
         + "&type=video&fields=items%2Fid&key="
         + googleKey)
         .get
