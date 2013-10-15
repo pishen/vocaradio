@@ -18,6 +18,7 @@ import scala.util.Failure
 
 class Playlist extends Actor {
   private val titles = Source.fromFile("titles").getLines.toIndexedSeq
+  private val replaces = Source.fromFile("replaces").getLines.map(_.split(">>>")).map(a => (a.head, a.last)).toMap
   private val googleKey = Source.fromFile("google-api-key").getLines.toSeq.head
 
   private def currentSecond() = new Date().getTime() / 1000
@@ -40,15 +41,17 @@ class Playlist extends Actor {
 
   private def randomPick(): Future[(Song, String)] = {
     val title = titles(Random.nextInt(titles.length))
-    val urlEncodedTitle = helper.urlEncode(title)
 
     for {
-      id <- WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
-        + urlEncodedTitle
-        + "&type=video&fields=items%2Fid&key="
-        + googleKey)
-        .get
-        .map(response => (response.json \\ "videoId").head.as[String])
+      id <- replaces.get(title) match {
+        case Some(id) => Future.successful(id)
+        case None => WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
+          + helper.urlEncode(title)
+          + "&type=video&fields=items%2Fid&key="
+          + googleKey)
+          .get
+          .map(response => (response.json \\ "videoId").head.as[String])
+      }
       duration <- WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
         + id
         + "&fields=items%2FcontentDetails&key="
