@@ -4,8 +4,6 @@
 <head>
 <meta name="viewport" content="width=device-width, user-scalable=false;">
 <title>VocaRadio</title>
-<link href='http://fonts.googleapis.com/css?family=Cabin+Condensed'
-	rel='stylesheet' type='text/css'>
 <link rel="stylesheet" media="screen"
 	href="assets/stylesheets/normalize.css">
 <link rel="stylesheet" media="screen" href="assets/stylesheets/col.css">
@@ -22,7 +20,7 @@
 <body>
 	<div class="wrapper">
 		<header class="section group">
-			<h1 id="logo">VocaRadio</h1>
+			<div class="logo">VocaRadio</div>
 		</header>
 	</div>
 	<div id="player-wrapper">
@@ -30,10 +28,12 @@
 	</div>
 	<div class="wrapper">
 		<button id="sync" class="dark-red">Sync</button>
-		<hr/>
-		<div class="section group">	
+		<hr />
+		<div class="section group">
 			<div class="module col span_4_of_4">
-				<div id="client-count"><span></span> listener(s)</div>
+				<div id="client-count">
+					<span></span> listener(s)
+				</div>
 			</div>
 		</div>
 	</div>

@@ -1,8 +1,10 @@
-@import url(http://fonts.googleapis.com/css?family=Redressed);
+@import url(http://fonts.googleapis.com/css?family=Bad+Script);
+
+@import url(http://fonts.googleapis.com/css?family=Belleza);
 
 body {
 	background-color: #413839;
-	font-family: 'Cabin Condensed', sans-serif;
+	font-family: 'Belleza', sans-serif;
 	color: white;
 }
 
@@ -13,11 +15,12 @@ body {
 	margin: auto;
 }
 
-#logo {
+.logo {
 	text-align: center;
-	color: hotpink;
-	font-size: 3.2em;
-	font-family: 'Redressed', cursive;
+	color: #ff8080;
+	font-size: 3em;
+	font-weight: 700;
+	font-family: 'Bad Script', cursive;
 }
 
 #player-wrapper {
@@ -54,13 +57,13 @@ hr {
 
 hr:after {
 	content: "♪";
-    display: inline-block;
-    position: relative; 
-    top: -0.6em;
-    font-size: 1.5em;
-    padding: 0 0.25em;
-    color: white;
-    background: #413839;
+	display: inline-block;
+	position: relative;
+	top: -0.6em;
+	font-size: 1.5em;
+	padding: 0 0.25em;
+	color: white;
+	background: #413839;
 }
 
 #client-count {
@@ -69,7 +72,7 @@ hr:after {
 }
 
 #client-count span {
-	font-size: 4em;
+	font-size: 3em;
 }
 
 @media only screen and (max-width: 480px) {
