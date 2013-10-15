@@ -25,7 +25,8 @@ function updateWebSocket() {
 		var jsObj = JSON.parse(e.data);
 		switch (jsObj.type) {
 		case "client-count":
-			$("#client-count span").text(jsObj.value);
+			var follow = jsObj.value <= 1 ? " listener" : " listeners";
+			$("#client-count").html("<span>" + jsObj.value + "</span>" + follow);
 			break;
 		case "chat":
 			console.log(jsObj.value);
