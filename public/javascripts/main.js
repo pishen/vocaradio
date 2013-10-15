@@ -3,7 +3,7 @@ $(document).ready(function() {
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-	
+
 	updateWebSocket();
 
 	$("#sync").on("click", function() {
@@ -13,19 +13,29 @@ $(document).ready(function() {
 	});
 });
 
+var name = Math.random().toString(36).substring(7);
 var webSocket;
 function updateWebSocket() {
 	webSocket = new WebSocket("ws://" + window.location.host + "/ws");
-	webSocket.onopen = function(){
-		webSocket.send("join");
+	webSocket.onopen = function() {
+		var msg = {type: "join"};
+		webSocket.send(JSON.stringify(msg));
 	};
-	webSocket.onmessage = function(e){
-		$("#client-count span").text(e.data)
+	webSocket.onmessage = function(e) {
+		var jsObj = JSON.parse(e.data);
+		switch (jsObj.type) {
+		case "client-count":
+			$("#client-count span").text(jsObj.value);
+			break;
+		case "chat":
+			console.log(jsObj.value);
+			break;
+		}
 	};
-	webSocket.onerror = function(error){
+	webSocket.onerror = function(error) {
 		console.log("ws error: " + error);
 	};
-	webSocket.onclose = function(e){
+	webSocket.onclose = function(e) {
 		window.setTimeout(updateWebSocket, 2000);
 	};
 }

@@ -38,13 +38,18 @@ object Application extends Controller {
     clientCounter ! AddClient
     
     val in = Iteratee.foreach[String](msg => {
-      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
+      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(clientCountJsonStr(i)))
+      channel.push(msg)
     }).map(_ => {
       clientCounter ! RemoveClient
-      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(i.toString))
+      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(clientCountJsonStr(i)))
     })
     
     (in, out)
   })
+  
+  private def clientCountJsonStr(count: Int) = {
+    Json.stringify(Json.obj("type" -> "client-count", "value" -> count))
+  }
 
 }
