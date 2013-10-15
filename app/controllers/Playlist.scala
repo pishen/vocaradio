@@ -15,11 +15,12 @@ import java.util.Date
 import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Failure
+import scalax.io.Resource
 
 class Playlist extends Actor {
-  private val titles = Source.fromFile("titles").getLines.toIndexedSeq
-  private val replaces = Source.fromFile("replaces").getLines.map(_.split(">>>")).map(a => (a.head, a.last)).toMap
-  private val googleKey = Source.fromFile("google-api-key").getLines.toSeq.head
+  private val titles = Resource.fromFile("titles").lines().toIndexedSeq
+  private val replaces = Resource.fromFile("replaces").lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
+  private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   private def currentSecond() = new Date().getTime() / 1000
   private var futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
@@ -41,28 +42,43 @@ class Playlist extends Actor {
 
   private def randomPick(): Future[(Song, String)] = {
     val title = titles(Random.nextInt(titles.length))
-
     for {
       id <- replaces.get(title) match {
         case Some(id) => Future.successful(id)
-        case None => WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
-          + helper.urlEncode(title)
-          + "&type=video&fields=items%2Fid&key="
-          + googleKey)
-          .get
-          .map(response => (response.json \\ "videoId").head.as[String])
+        case None     => getFutureId(title)
       }
-      duration <- WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
-        + id
-        + "&fields=items%2FcontentDetails&key="
-        + googleKey)
-        .get
-        .map(response => (response.json \\ "duration").head.as[String])
-        .map(str => {
-          val mAndS = str.replaceAll("[PTS]", "").split("M")
-          mAndS.head.toInt * 60 + mAndS.last.toInt
-        })
+      duration <- getFutureDuration(id)
     } yield (Song(id, duration), title)
+  }
+
+  private def getFutureId(title: String): Future[String] = {
+    val futureId = WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
+      + helper.urlEncode(title)
+      + "&type=video&fields=items%2Fid&key="
+      + googleKey)
+      .get
+      .map(response => (response.json \\ "videoId").head.as[String])
+    futureId.onFailure {
+      case e: Exception => Resource.fromFile("problem-title").write(title)
+    }
+    futureId
+  }
+
+  private def getFutureDuration(id: String): Future[Int] = {
+    val futureDuration = WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
+      + id
+      + "&fields=items%2FcontentDetails&key="
+      + googleKey)
+      .get
+      .map(response => (response.json \\ "duration").head.as[String])
+      .map(str => {
+        val mAndS = str.replaceAll("[PTS]", "").split("M")
+        mAndS.head.toInt * 60 + mAndS.last.toInt
+      })
+    futureDuration.onFailure {
+      case e: Exception => Resource.fromFile("problem-id").write(id)
+    }
+    futureDuration
   }
 }
 

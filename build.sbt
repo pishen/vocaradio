@@ -8,6 +8,8 @@ libraryDependencies ++= Seq(
   cache
 )
 
+libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2"
+
 scalacOptions ++= Seq("-deprecation", "-feature")
 
 play.Project.playScalaSettings
