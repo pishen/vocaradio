@@ -27,9 +27,10 @@ body {
 	position: relative;
 	width: 100%;
 	height: 500px;
-	background-image: url('/assets/images/38669514_p14.jpg');
-	background-size: 100%;
+	background-image: url('http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg');
+	background-size: cover;
 	background-position: center;
+	box-shadow: 0 0 10px black;
 }
 
 iframe {
