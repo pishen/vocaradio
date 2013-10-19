@@ -59,7 +59,7 @@ class Playlist extends Actor {
       .get
       .map(response => (response.json \\ "videoId").head.as[String])
     futureId.onFailure {
-      case e: Exception => Resource.fromFile("problem-title").write(title)
+      case e: Exception => Resource.fromFile("problem-title").write(title + "\n")
     }
     futureId
   }
@@ -76,7 +76,7 @@ class Playlist extends Actor {
         mAndS.head.toInt * 60 + mAndS.last.toInt
       })
     futureDuration.onFailure {
-      case e: Exception => Resource.fromFile("problem-id").write(id)
+      case e: Exception => Resource.fromFile("problem-id").write(id + "\n")
     }
     futureDuration
   }
