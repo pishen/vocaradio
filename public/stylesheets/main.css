@@ -6,8 +6,17 @@ body {
 	color: white;
 }
 
-a:link {color: white;}
-a:visited {color: white;}
+a:hover {
+	background-color: gray;
+}
+
+a:link {
+	color: white;
+}
+
+a:visited {
+	color: white;
+}
 
 .wrapper {
 	width: 95%;
@@ -28,7 +37,8 @@ a:visited {color: white;}
 	position: relative;
 	width: 100%;
 	height: 500px;
-	background-image: url('http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg');
+	background-image:
+		url('http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg');
 	background-size: cover;
 	background-position: center;
 	box-shadow: 0 0 10px black;
@@ -77,10 +87,42 @@ hr:after {
 	font-size: 3em;
 }
 
+#chat-log {
+	max-height: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+#chat-log p {
+	margin: 0.1em 0;
+}
+
+#new-msg {
+	margin: 5px 0; 
+	padding: 5px;
+	background-color: white;
+	padding: 5px;
+}
+
+#new-msg textarea {
+	width: 100%; border : 0px;
+	resize: none;
+	border: 0px;
+}
+
+#user-name strong:hover {
+	background-color: gray;
+	cursor: pointer;
+}
+
+#user-name input {
+	display: none;
+}
+
 .about {
 	text-align: center;
 	max-width: 600px;
-	margin-bottom: 1em;
+	margin: 1em auto;
 }
 
 @media only screen and (max-width: 480px) {

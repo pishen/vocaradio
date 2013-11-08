@@ -16,40 +16,58 @@ import play.api.libs.iteratee.Iteratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Concurrent
 import controllers.ClientCounter._
+import controllers.ChatLogger._
 
 object Application extends Controller {
-
   implicit val timeout = Timeout(5.seconds)
-  val playlistActor = Akka.system.actorOf(Props[Playlist], "playlistActor")
+  val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
   val clientCounter = Akka.system.actorOf(Props[ClientCounter], "clientCounter")
-  val (out, channel) = Concurrent.broadcast[String]
+  val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
+  val (counterOut, counterChannel) = Concurrent.broadcast[String]
+  val (chatOut, chatChannel) = Concurrent.broadcast[String]
 
   def index = Action {
     Ok(views.html.index())
   }
 
   def sync = Action.async {
-    (playlistActor ? Playlist.AskSong).mapTo[(String, Int, String)].map(t => {
+    (playlist ? Playlist.AskSong).mapTo[(String, Int, String)].map(t => {
       Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
     })
   }
-  
-  def ws = WebSocket.using[String](request => {
+
+  def wsCounter = WebSocket.using[String](request => {
     clientCounter ! AddClient
-    
-    val in = Iteratee.foreach[String](msg => {
-      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(clientCountJsonStr(i)))
-      channel.push(msg)
+
+    def broadcast() =
+      (clientCounter ? Count).mapTo[Int]
+        .foreach(count => counterChannel.push(Json.stringify(Json.obj("clientCount" -> count))))
+
+    val in = Iteratee.foreach[String](wsMsg => {
+      broadcast()
     }).map(_ => {
       clientCounter ! RemoveClient
-      (clientCounter ? Count).mapTo[Int].foreach(i => channel.push(clientCountJsonStr(i)))
+      broadcast()
     })
-    
-    (in, out)
+
+    (in, counterOut)
   })
   
-  private def clientCountJsonStr(count: Int) = {
-    Json.stringify(Json.obj("type" -> "client-count", "value" -> count))
+  def wsChat = WebSocket.using[String](request => {
+    val in = Iteratee.foreach[String](wsMsg => {
+      val json = Json.parse(wsMsg)
+      val log = Log((json \ "user").as[String], (json \ "msg").as[String])
+      chatLogger ! log
+      chatChannel.push(Json.stringify(log.toJsObj))
+    })
+
+    (in, chatOut)
+  })
+  
+  def chatHistory = Action.async {
+    (chatLogger ? GetHistory).mapTo[Seq[ChatLogger.Log]].map(logs => {
+      Ok(Json.obj("logs" -> Json.toJson(logs.map(_.toJsObj))))
+    })
   }
 
 }
