@@ -1,3 +1,5 @@
+@(bgUrl: String)
+
 <!DOCTYPE html>
 
 <html>
@@ -16,6 +18,11 @@
 <link rel="stylesheet" media="screen" href="assets/stylesheets/main.css">
 <link rel="shortcut icon" type="image/png"
 	href="assets/images/favicon.png">
+<style type="text/css">
+#player-background {
+	background-image: url('@bgUrl');
+}
+</style>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="assets/javascripts/main.js"></script>
 </head>
@@ -23,7 +30,7 @@
 	<header class="wrapper">
 		<div class="logo">VocaRadio</div>
 	</header>
-	<div id="player-wrapper">
+	<div id="player-background">
 		<div id="player"></div>
 	</div>
 	<div class="wrapper">

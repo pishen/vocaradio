@@ -17,6 +17,7 @@ import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Concurrent
 import controllers.ClientCounter._
 import controllers.ChatLogger._
+import scala.util.Random
 
 object Application extends Controller {
   implicit val timeout = Timeout(5.seconds)
@@ -25,9 +26,14 @@ object Application extends Controller {
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
   val (counterOut, counterChannel) = Concurrent.broadcast[String]
   val (chatOut, chatChannel) = Concurrent.broadcast[String]
+  val bgUrls = Seq("http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg",
+      "http://res.nimg.jp/img/watch_zero/walls/wall_night_cruise.jpg",
+      "http://res.nimg.jp/img/watch_zero/walls/wall_kabuki.png",
+      "http://res.nimg.jp/img/watch_zero/walls/wall_cloud.jpg",
+      "http://res.nimg.jp/img/watch_zero/walls/wall_night.jpg")
 
   def index = Action {
-    Ok(views.html.index())
+    Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length))))
   }
 
   def sync = Action.async {

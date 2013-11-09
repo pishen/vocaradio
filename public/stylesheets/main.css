@@ -33,18 +33,16 @@ a:visited {
 	font-family: 'Bad Script', cursive;
 }
 
-#player-wrapper {
+#player-background {
 	position: relative;
 	width: 100%;
 	height: 500px;
-	background-image:
-		url('http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg');
 	background-size: cover;
 	background-position: center;
 	box-shadow: 0 0 10px black;
 }
 
-iframe {
+#player {
 	display: block;
 	position: absolute;
 	margin: auto;
@@ -127,10 +125,10 @@ hr:after {
 }
 
 @media only screen and (max-width: 480px) {
-	#player-wrapper {
+	#player-background {
 		height: 207px;
 	}
-	iframe {
+	#player-wrapper, iframe {
 		width: 368px;
 		height: 207px;
 	}
