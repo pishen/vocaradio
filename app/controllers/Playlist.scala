@@ -18,8 +18,8 @@ import scala.util.Failure
 import scalax.io.Resource
 
 class Playlist extends Actor {
-  private val titles = Resource.fromFile("titles").lines().toIndexedSeq
-  private val replaces = Resource.fromFile("replaces").lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
+  private val titlesResource = Resource.fromFile("titles")
+  private val replacesResource = Resource.fromFile("replaces")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   private def currentSecond() = new Date().getTime() / 1000
@@ -41,6 +41,8 @@ class Playlist extends Actor {
   }
 
   private def randomPick(): Future[(Song, String)] = {
+    val titles = titlesResource.lines().toSeq
+    val replaces = replacesResource.lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
     val title = titles(Random.nextInt(titles.length))
     for {
       id <- replaces.get(title) match {

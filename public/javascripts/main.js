@@ -20,8 +20,9 @@ $(document).ready(function() {
 var userName;
 function setupUserName() {
 	userName = $("#user-name strong");
-	userName.text("(" + Math.random().toString(36).substring(7) + ")");
+	userName.text(getInitUserName());
 	userName.on("click", function() {
+		$(".tip").remove();
 		var userNameStr = $(this).text();
 		$(this).hide();
 		$("#user-name input").val(userNameStr).show().select();
@@ -30,8 +31,9 @@ function setupUserName() {
 	$("#user-name input").keyup(function(e) {
 		if (e.keyCode == 13) {
 			var newNameStr = $(this).val();
-			if (newNameStr != "" && newNameStr != null) {
+			if (newNameStr != "") {
 				userName.text(newNameStr).show();
+				localStorage.userName = newNameStr;
 				$(this).hide();
 			}
 		} else if (e.keyCode == 27) {
@@ -41,14 +43,26 @@ function setupUserName() {
 	});
 }
 
+function getInitUserName() {
+	if (typeof (Storage) !== "undefined") {
+		if (!localStorage.userName) {
+			localStorage.userName = "(" + Math.random().toString(36).substring(7) + ")";
+		}
+		return localStorage.userName;
+	} else {
+		return "(" + Math.random().toString(36).substring(7) + ")";
+	}
+}
+
 function chatLogToHtml(logJsObj) {
-	return "<strong>" + logJsObj.user + "</strong>" + "<p>" + logJsObj.msg + "</p>"
+	return "<strong>" + logJsObj.user + "</strong>" + "<p>" + logJsObj.msg
+			+ "</p>";
 }
 
 function getHistory() {
 	$.getJSON("chat-history", function(jsObj) {
 		var logs = jsObj.logs;
-		for(var i = 0; i < logs.length; i++){
+		for (var i = 0; i < logs.length; i++) {
 			var log = logs[i];
 			$("#chat-log").prepend(chatLogToHtml(log));
 		}
@@ -57,14 +71,19 @@ function getHistory() {
 }
 
 var wsChat;
-function updateWsChat() { 
+var wsChatReconnect = false;
+function updateWsChat() {
 	wsChat = new WebSocket("ws://" + window.location.host + "/ws/chat");
 	wsChat.onopen = function() {
+		if (wsChatReconnect) {
+			$("#chat-log").append("<p>(connected)</p>");
+			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		}
 		$("#new-msg textarea").keydown(function(e) {
 			if (e.keyCode == 13 && $(this).val() != "") {
 				var log = {
-					user: userName.text(), 
-					msg: $(this).val()
+					user : userName.text(),
+					msg : $(this).val()
 				};
 				wsChat.send(JSON.stringify(log));
 				$(this).val("");
@@ -78,6 +97,9 @@ function updateWsChat() {
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 	};
 	wsChat.onclose = function() {
+		$("#chat-log").append("<p>(connection lost, reconnect in 2 secs)</p>");
+		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		wsChatReconnect = true;
 		window.setTimeout(updateWsChat, 2000);
 	};
 }
