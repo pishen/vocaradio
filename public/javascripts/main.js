@@ -13,10 +13,10 @@ $(document).ready(function() {
 	});
 
 	setupUserName();
-	getHistory();
 	updateWsChat();
 });
 
+//websocket chatroom
 var userName;
 function setupUserName() {
 	userName = $("#user-name strong");
@@ -61,6 +61,7 @@ function chatLogToHtml(logJsObj) {
 
 function getHistory() {
 	$.getJSON("chat-history", function(jsObj) {
+		$("#chat-log").children(".old").remove();
 		var logs = jsObj.logs;
 		for (var i = 0; i < logs.length; i++) {
 			var log = logs[i];
@@ -76,9 +77,10 @@ function updateWsChat() {
 	wsChat = new WebSocket("ws://" + window.location.host + "/ws/chat");
 	wsChat.onopen = function() {
 		if (wsChatReconnect) {
-			$("#chat-log").append("<p>(connected)</p>");
+			$("#chat-log").append("<p>(connected, recovering history...)</p>");
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		}
+		getHistory();
 		$("#new-msg textarea").keydown(function(e) {
 			if (e.keyCode == 13 && $(this).val() != "") {
 				var log = {
@@ -98,12 +100,14 @@ function updateWsChat() {
 	};
 	wsChat.onclose = function() {
 		$("#chat-log").append("<p>(connection lost, reconnect in 2 secs)</p>");
+		$("#chat-log").children().addClass("old");
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		wsChatReconnect = true;
 		window.setTimeout(updateWsChat, 2000);
 	};
 }
 
+//listener counter
 var wsCounter;
 function updateWsCounter() {
 	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");
@@ -121,6 +125,7 @@ function updateWsCounter() {
 	};
 }
 
+//YouTube player
 var player;
 function onYouTubeIframeAPIReady() {
 	$.getJSON("sync", function(jsObj) {
