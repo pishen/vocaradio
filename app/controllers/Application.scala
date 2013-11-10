@@ -63,8 +63,9 @@ object Application extends Controller {
   def wsChat = WebSocket.using[String](request => {
     val in = Iteratee.foreach[String](wsMsg => {
       val json = Json.parse(wsMsg)
+      val filteredName = Utility.escape((json \ "user").as[String])
       val filteredMsg = Utility.escape((json \ "msg").as[String])
-      val log = Log((json \ "user").as[String], filteredMsg)
+      val log = Log(filteredName, filteredMsg)
       chatLogger ! log
       chatChannel.push(Json.stringify(log.toJsObj))
     })
