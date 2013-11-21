@@ -4,6 +4,8 @@ $(document).ready(function() {
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+	
+	$(window).focus(function(){document.title = "VocaRadio"});
 
 	updateWsCounter();
 	setupUserName();
@@ -88,6 +90,9 @@ function updateWsChat() {
 		var log = JSON.parse(e.data);
 		$("#chat-log").append(chatLogToHtml(log));
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		if(typeof document.hidden !== "undefined" && document["hidden"]){
+			document.title = "VocaRadio (new message)";
+		}
 	};
 	wsChat.onclose = function() {
 		$("#chat-log").append("<p>(connection lost, reconnect in 2 secs)</p>");
@@ -103,7 +108,10 @@ var wsCounter;
 function updateWsCounter() {
 	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");
 	wsCounter.onopen = function() {
-		wsCounter.send("ready");
+		wsCounter.send("hi");
+		window.setInterval(function(){
+			wsCounter.send("still alive");
+		}, 300000);
 	};
 	wsCounter.onmessage = function(e) {
 		var jsObj = JSON.parse(e.data);
@@ -159,13 +167,13 @@ function onPlayerStateChange(event) {
 
 function onPlayerReady(event) {
 	player.setVolume($("#volume").prop("value"));
-	$("#volume").change(function(){
+	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"));
 	});
 	syncAndPlay(true);
 }
 
-function onPlayerError(event){
+function onPlayerError(event) {
 	console.log("player error: " + event.data);
 	$("#playback").text("Play").off().click(function() {
 		syncAndPlay(true);

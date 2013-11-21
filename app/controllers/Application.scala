@@ -29,7 +29,6 @@ object Application extends Controller {
   val (chatOut, chatChannel) = Concurrent.broadcast[String]
   val bgUrls = Seq("http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg",
       "http://res.nimg.jp/img/watch_zero/walls/wall_night_cruise.jpg",
-      "http://res.nimg.jp/img/watch_zero/walls/wall_kabuki.png",
       "http://res.nimg.jp/img/watch_zero/walls/wall_cloud.jpg",
       "http://res.nimg.jp/img/watch_zero/walls/wall_night.jpg")
 
