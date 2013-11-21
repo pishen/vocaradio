@@ -158,7 +158,10 @@ function onPlayerStateChange(event) {
 }
 
 function onPlayerReady(event) {
-	player.setVolume(50);
+	player.setVolume($("#volume").prop("value"));
+	$("#volume").change(function(){
+		player.setVolume($(this).prop("value"));
+	});
 	syncAndPlay(true);
 }
 

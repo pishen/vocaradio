@@ -52,9 +52,24 @@ a:visited {
 	right: 0;
 }
 
+.controls-wrapper {
+	width: 95%;
+	max-width: 640px;
+	position: relative;
+	margin: 0.8em auto 0.7em auto;
+}
+
 #playback {
 	display: block;
-	margin: 1.5em auto;
+	margin: auto;
+}
+
+#volume {
+	display: block;
+	background-color: #413839;
+	width: 80%;
+	height: 35px;
+	margin: auto;
 }
 
 hr {
@@ -129,7 +144,7 @@ hr:after {
 	#player-background {
 		height: 207px;
 	}
-	#player-wrapper, iframe {
+	iframe {
 		width: 368px;
 		height: 207px;
 	}
