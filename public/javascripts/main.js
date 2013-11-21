@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	//insert script for ytplayer
 	var tag = document.createElement('script');
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -107,7 +108,7 @@ function updateWsChat() {
 	};
 }
 
-//listener counter
+//client counter
 var wsCounter;
 function updateWsCounter() {
 	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");

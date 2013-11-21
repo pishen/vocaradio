@@ -104,7 +104,8 @@ hr:after {
 }
 
 #new-msg textarea {
-	width: 100%; border : 0px;
+	width: 100%; 
+	outline: none;
 	resize: none;
 	border: 0px;
 }
