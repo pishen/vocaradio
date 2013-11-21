@@ -1,23 +1,16 @@
 $(document).ready(function() {
-	//insert script for ytplayer
+	// insert script for ytplayer
 	var tag = document.createElement('script');
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 	updateWsCounter();
-
-	$("#sync").on("click", function() {
-		$.getJSON("sync", function(jsObj) {
-			player.loadVideoById(jsObj.id, jsObj.start);
-		});
-	});
-
 	setupUserName();
 	updateWsChat();
 });
 
-//websocket chatroom
+// websocket chatroom
 var userName;
 function setupUserName() {
 	userName = $("#user-name strong");
@@ -47,7 +40,8 @@ function setupUserName() {
 function getInitUserName() {
 	if (typeof (Storage) !== "undefined") {
 		if (!localStorage.userName) {
-			localStorage.userName = "(" + Math.random().toString(36).substring(7) + ")";
+			localStorage.userName = "("
+					+ Math.random().toString(36).substring(7) + ")";
 		}
 		return localStorage.userName;
 	} else {
@@ -77,10 +71,6 @@ var wsChatReconnect = false;
 function updateWsChat() {
 	wsChat = new WebSocket("ws://" + window.location.host + "/ws/chat");
 	wsChat.onopen = function() {
-		if (wsChatReconnect) {
-			$("#chat-log").append("<p>(connected, recovering history...)</p>");
-			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		}
 		getHistory();
 		$("#new-msg textarea").keydown(function(e) {
 			if (e.keyCode == 13 && $(this).val() != "") {
@@ -108,7 +98,7 @@ function updateWsChat() {
 	};
 }
 
-//client counter
+// client counter
 var wsCounter;
 function updateWsCounter() {
 	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");
@@ -126,38 +116,62 @@ function updateWsCounter() {
 	};
 }
 
-//YouTube player
+// YouTube player
 var player;
 function onYouTubeIframeAPIReady() {
-	$.getJSON("sync", function(jsObj) {
-		player = new YT.Player('player', {
-			height : '360',
-			width : '640',
-			videoId : jsObj.id,
-			playerVars : {
-				'autoplay' : 1,
-				'start' : jsObj.start,
-				'rel' : 0,
-				'iv_load_policy' : 3
-			},
-			events : {
-				'onReady' : onPlayerReady,
-				'onStateChange' : onPlayerStateChange
-			}
-		});
-
+	player = new YT.Player('player', {
+		height : '360',
+		width : '640',
+		playerVars : {
+			'rel' : 0,
+			'iv_load_policy' : 3,
+			'controls' : 0,
+			'autohide' : 1,
+			'disablekb' : 1
+		},
+		events : {
+			'onReady' : onPlayerReady,
+			'onStateChange' : onPlayerStateChange,
+			'onError' : onPlayerError
+		}
 	});
 }
 
+var prePlayerState;
 function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
-		$.getJSON("sync", function(jsObj) {
-			player.loadVideoById(jsObj.id, 0);
-			console.log("origin title: " + jsObj.originTitle)
+		syncAndPlay(false);
+	} else if (event.data == YT.PlayerState.PLAYING) {
+		if (prePlayerState == YT.PlayerState.PAUSED
+				|| prePlayerState == YT.PlayerState.ENDED) {
+			syncAndPlay(true);
+		}
+		$("#playback").text("Pause").off().click(function() {
+			player.pauseVideo();
+		});
+	} else if (event.data == YT.PlayerState.PAUSED) {
+		$("#playback").text("Play").off().click(function() {
+			syncAndPlay(true);
 		});
 	}
+	prePlayerState = event.data;
 }
 
 function onPlayerReady(event) {
 	player.setVolume(50);
+	syncAndPlay(true);
+}
+
+function onPlayerError(event){
+	console.log("player error: " + event.data);
+	$("#playback").text("Play").off().click(function() {
+		syncAndPlay(true);
+	});
+}
+
+function syncAndPlay(seek) {
+	console.log("seek: " + seek);
+	$.getJSON("sync", function(jsObj) {
+		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
+	});
 }
