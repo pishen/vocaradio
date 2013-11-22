@@ -91,7 +91,7 @@ function updateWsChat() {
 		$("#chat-log").append(chatLogToHtml(log));
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		if(typeof document.hidden !== "undefined" && document["hidden"]){
-			document.title = "VocaRadio (new message)";
+			document.title = "*VocaRadio";
 		}
 	};
 	wsChat.onclose = function() {
