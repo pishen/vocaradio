@@ -16,6 +16,7 @@ import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Failure
 import scalax.io.Resource
+import Playlist._
 
 class Playlist extends Actor {
   private val titlesResource = Resource.fromFile("titles")
@@ -23,27 +24,31 @@ class Playlist extends Actor {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   private def currentSecond() = new Date().getTime() / 1000
-  private var futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
+  private var titleSeq = Random.shuffle(titlesResource.lines().toSeq)
+  private var futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
 
   def receive = {
-    case Playlist.AskSong => {
+    case AskSong => {
       futureSong.value match {
         case Some(Success(t)) =>
           if (currentSecond - t._2 >= t._1.duration - 2) {
-            futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
+            futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
           }
         case Some(Failure(e)) =>
-          futureSong = randomPick().map(pair => (pair._1, currentSecond, pair._2))
+          futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
         case _ => //do nothing
       }
       futureSong.map(t => (t._1.id, (currentSecond - t._2).toInt, t._3)) pipeTo sender
     }
+    case Refill =>
+      titleSeq = titleSeq ++ Random.shuffle(titlesResource.lines().toSeq.filterNot(titleSeq contains _))
   }
 
-  private def randomPick(): Future[(Song, String)] = {
-    val titles = titlesResource.lines().toSeq
+  private def pick(): Future[(Song, String)] = {
     val replaces = replacesResource.lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
-    val title = titles(Random.nextInt(titles.length))
+    val title = titleSeq.head
+    titleSeq = titleSeq.tail
+    if (titleSeq.length < 11) self ! Refill
     for {
       id <- replaces.get(title) match {
         case Some(id) => Future.successful(id)
@@ -86,4 +91,5 @@ class Playlist extends Actor {
 
 object Playlist {
   case object AskSong
+  case object Refill
 }
