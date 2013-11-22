@@ -66,10 +66,10 @@ a:visited {
 
 #volume {
 	display: block;
-	background-color: #413839;
 	width: 80%;
 	height: 35px;
 	margin: auto;
+	background: transparent;
 }
 
 hr {
