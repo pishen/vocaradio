@@ -184,5 +184,6 @@ function syncAndPlay(seek) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
 		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
+		player.setVolume($("#volume").prop("value"));
 	});
 }
