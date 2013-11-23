@@ -21,6 +21,7 @@
 }
 </style>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="assets/javascripts/notify.js"></script>
 <script src="assets/javascripts/main.js"></script>
 </head>
 <body>
@@ -54,9 +55,10 @@
 				<div id="new-msg">
 					<textarea placeholder="Drop a message to DJ, or let's have a chat!"></textarea>
 				</div>
-				<div id="user-name">
-					<span>your name: </span> <strong>name</strong> <input> <span
-						class="tip"> &#8592; click to change</span>
+				<div id="chat-settings">
+					<span>your name: </span> <strong id="username">name</strong> <span
+						class="tip"> &#8592; click to change</span> &nbsp;&nbsp; <input
+						id="notify" type="checkbox"> notify
 				</div>
 			</div>
 		</div>

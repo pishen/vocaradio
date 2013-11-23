@@ -4,37 +4,44 @@ $(document).ready(function() {
 	tag.src = "https://www.youtube.com/iframe_api";
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-	
-	$(window).focus(function(){document.title = "VocaRadio"});
 
 	updateWsCounter();
 	setupUserName();
+	setupNotify();
 	updateWsChat();
 });
 
 // websocket chatroom
 var userName;
 function setupUserName() {
-	userName = $("#user-name strong");
+	userName = $("#username");
 	userName.text(getInitUserName());
 	userName.on("click", function() {
 		$(".tip").remove();
 		var userNameStr = $(this).text();
 		$(this).hide();
-		$("#user-name input").val(userNameStr).show().select();
-	});
-
-	$("#user-name input").keyup(function(e) {
-		if (e.keyCode == 13) {
-			var newNameStr = $(this).val();
-			if (newNameStr != "") {
-				userName.text(newNameStr).show();
-				localStorage.userName = newNameStr;
-				$(this).hide();
+		$("<input>").val(userNameStr).keyup(function(e) {
+			if (e.keyCode == 13) {
+				var newNameStr = $(this).val();
+				if (newNameStr != "") {
+					userName.text(newNameStr).show();
+					localStorage.userName = newNameStr;
+					$(this).remove();
+				}
+			} else if (e.keyCode == 27) {
+				userName.show();
+				$(this).remove();
 			}
-		} else if (e.keyCode == 27) {
-			userName.show();
-			$(this).hide();
+		}).insertAfter(userName).select();
+	});
+}
+
+function setupNotify() {
+	$("#notify").change(function(){
+		if($(this).prop("checked")){
+			new Notify("VocaRadio", {
+				body : "Notify is ON"
+			}).show();
 		}
 	});
 }
@@ -90,8 +97,10 @@ function updateWsChat() {
 		var log = JSON.parse(e.data);
 		$("#chat-log").append(chatLogToHtml(log));
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		if(typeof document.hidden !== "undefined" && document["hidden"]){
-			document.title = "*VocaRadio";
+		if ($("#notify").prop("checked")) {
+			new Notify("VocaRadio", {
+				body : log.user + ": " + log.msg
+			}).show();
 		}
 	};
 	wsChat.onclose = function() {
@@ -109,7 +118,7 @@ function updateWsCounter() {
 	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");
 	wsCounter.onopen = function() {
 		wsCounter.send("hi");
-		window.setInterval(function(){
+		window.setInterval(function() {
 			wsCounter.send("still alive");
 		}, 300000);
 	};

@@ -125,13 +125,9 @@ hr:after {
 	border: 0px;
 }
 
-#user-name strong:hover {
+#username:hover {
 	background-color: gray;
 	cursor: pointer;
-}
-
-#user-name input {
-	display: none;
 }
 
 .about {
