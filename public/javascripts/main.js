@@ -37,11 +37,9 @@ function setupUserName() {
 }
 
 function setupNotify() {
-	$("#notify").change(function(){
-		if($(this).prop("checked")){
-			new Notify("VocaRadio", {
-				body : "Notify is ON"
-			}).show();
+	$("#notify").change(function() {
+		if ($(this).prop("checked")) {
+			Notification.requestPermission();
 		}
 	});
 }
@@ -98,8 +96,10 @@ function updateWsChat() {
 		$("#chat-log").append(chatLogToHtml(log));
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		if ($("#notify").prop("checked")) {
-			new Notify("VocaRadio", {
-				body : log.user + ": " + log.msg
+			new Notification(log.user, {
+				body : log.msg,
+				icon : "assets/images/logo.png",
+				tag : "chat"
 			}).show();
 		}
 	};

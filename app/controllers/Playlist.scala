@@ -55,7 +55,7 @@ class Playlist extends Actor {
         case None     => getFutureId(title)
       }
       duration <- getFutureDuration(id)
-    } yield (Song(id, Seq(duration, 360).min), title)
+    } yield (Song(id, duration), title)
   }
 
   private def getFutureId(title: String): Future[String] = {
