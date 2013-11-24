@@ -79,7 +79,7 @@ function updateWsChat() {
 	wsChat = new WebSocket("ws://" + window.location.host + "/ws/chat");
 	wsChat.onopen = function() {
 		getHistory();
-		$("#new-msg textarea").keydown(function(e) {
+		$("#new-msg textarea").off().keydown(function(e) {
 			if (e.keyCode == 13 && $(this).val() != "") {
 				var log = {
 					user : userName.text(),
@@ -89,6 +89,9 @@ function updateWsChat() {
 				$(this).val("");
 				return false;
 			}
+			document.title = "VocaRadio";
+		}).click(function(){
+			document.title = "VocaRadio";
 		});
 	};
 	wsChat.onmessage = function(e) {
@@ -96,12 +99,16 @@ function updateWsChat() {
 		$("#chat-log").append(chatLogToHtml(log));
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		if ($("#notify").prop("checked")) {
-			new Notification(log.user, {
+			var notify = new Notification(log.user, {
 				body : log.msg,
 				icon : "assets/images/logo.png",
 				tag : "chat"
-			}).show();
+			});
+			window.setTimeout(function(){
+				notify.close();
+			}, 5000);
 		}
+		document.title = "*VocaRadio";
 	};
 	wsChat.onclose = function() {
 		$("#chat-log").append("<p>(connection lost, reconnect in 2 secs)</p>");
