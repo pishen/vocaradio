@@ -15,45 +15,54 @@ $(document).ready(function() {
 var userName;
 function setupUserName() {
 	userName = $("#username");
-	userName.text(getInitUserName());
-	userName.on("click", function() {
-		$(".tip").remove();
-		var userNameStr = $(this).text();
+	if (typeof (Storage) !== "undefined" && localStorage.userName) {
+		userName.text(localStorage.userName);
+	} else {
+		$("#new-msg").hide();
+		insertNewNameInput("");
+	}
+	userName.click(function() {
+		var oldNameStr = $(this).text();
 		$(this).hide();
-		$("<input>").val(userNameStr).keyup(function(e) {
-			if (e.keyCode == 13) {
-				var newNameStr = $(this).val();
-				if (newNameStr != "") {
-					userName.text(newNameStr).show();
-					localStorage.userName = newNameStr;
-					$(this).remove();
-				}
-			} else if (e.keyCode == 27) {
+		insertNewNameInput(oldNameStr);
+	});
+}
+
+function insertNewNameInput(oldNameStr) {
+	$("<input>").val(oldNameStr).keyup(function(e) {
+		if (e.keyCode == 13) {
+			var newNameStr = $(this).val();
+			if (newNameStr != "") {
+				userName.text(newNameStr).show();
+				localStorage.userName = newNameStr;
+				$(this).remove();
+				if (oldNameStr == "")
+					$("#new-msg").slideDown();
+			}
+		} else if (e.keyCode == 27) {
+			if (oldNameStr != "") {
 				userName.show();
 				$(this).remove();
 			}
-		}).insertAfter(userName).select();
-	});
+		}
+	}).insertAfter(userName).select();
 }
 
 function setupNotify() {
 	$("#notify").change(function() {
 		if ($(this).prop("checked")) {
-			Notification.requestPermission();
+			Notification.requestPermission(function() {
+				var notify = new Notification("VocaRadio", {
+					body : "訊息通知已啟動",
+					icon : "assets/images/logo.png"
+				});
+				window.setTimeout(function() {
+					notify.close();
+				}, 5000);
+			});
+			$(".tip").remove();
 		}
 	});
-}
-
-function getInitUserName() {
-	if (typeof (Storage) !== "undefined") {
-		if (!localStorage.userName) {
-			localStorage.userName = "("
-					+ Math.random().toString(36).substring(7) + ")";
-		}
-		return localStorage.userName;
-	} else {
-		return "(" + Math.random().toString(36).substring(7) + ")";
-	}
 }
 
 function chatLogToHtml(logJsObj) {
@@ -90,7 +99,7 @@ function updateWsChat() {
 				return false;
 			}
 			document.title = "VocaRadio";
-		}).click(function(){
+		}).click(function() {
 			document.title = "VocaRadio";
 		});
 	};
@@ -104,7 +113,7 @@ function updateWsChat() {
 				icon : "assets/images/logo.png",
 				tag : "chat"
 			});
-			window.setTimeout(function(){
+			window.setTimeout(function() {
 				notify.close();
 			}, 5000);
 		}
