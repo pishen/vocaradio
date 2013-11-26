@@ -152,22 +152,24 @@ function updateWsCounter() {
 // YouTube player
 var player;
 function onYouTubeIframeAPIReady() {
-	player = new YT.Player('player', {
-		height : '360',
-		width : '640',
-		playerVars : {
-			'rel' : 0,
-			'iv_load_policy' : 3,
-			'controls' : 1,
-			'autohide' : 1,
-			'disablekb' : 1
-		},
-		events : {
-			'onReady' : onPlayerReady,
-			'onStateChange' : onPlayerStateChange,
-			'onError' : onPlayerError
-		}
-	});
+	player = new YT.Player('player',
+			{
+				height : '360',
+				width : '640',
+				playerVars : {
+					'rel' : 0,
+					'iv_load_policy' : 3,
+					'controls' : /Android|iPhone|iPad|iPod/i
+							.test(navigator.userAgent) ? 1 : 0,
+					'autohide' : 1,
+					'disablekb' : 1
+				},
+				events : {
+					'onReady' : onPlayerReady,
+					'onStateChange' : onPlayerStateChange,
+					'onError' : onPlayerError
+				}
+			});
 }
 
 function onPlayerReady(event) {
