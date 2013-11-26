@@ -177,11 +177,6 @@ function onPlayerReady(event) {
 		player.setVolume($(this).prop("value"));
 	});
 	syncAndPlay(true);
-	if (isMobile) {
-		$("#playback").text("Sync").off().click(function() {
-			syncAndPlay(true);
-		});
-	}
 }
 
 var prePlayerState;

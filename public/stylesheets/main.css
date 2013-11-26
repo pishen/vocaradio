@@ -137,6 +137,9 @@ hr:after {
 }
 
 @media only screen and (max-width: 640px) {
+	#playback {
+		display: none;
+	}
 	#player-background {
 		height: 207px;
 	}
