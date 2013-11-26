@@ -159,8 +159,7 @@ function onYouTubeIframeAPIReady() {
 				playerVars : {
 					'rel' : 0,
 					'iv_load_policy' : 3,
-					'controls' : /Android|iPhone|iPad|iPod/i
-							.test(navigator.userAgent) ? 1 : 0,
+					'controls' : 0,
 					'autohide' : 1,
 					'disablekb' : 1
 				},
@@ -210,7 +209,11 @@ function onPlayerError(event) {
 function syncAndPlay(seek) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
+		if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+			player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);
+		}else{
+			player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
+		}
 		player.setVolume($("#volume").prop("value"));
 	});
 }
