@@ -150,29 +150,25 @@ function updateWsCounter() {
 }
 
 // YouTube player
+var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 var player;
 function onYouTubeIframeAPIReady() {
-	player = new YT.Player(
-			'player',
-			{
-				height : '360',
-				width : '640',
-				playerVars : {
-					'rel' : 0,
-					'iv_load_policy' : 3,
-					'controls' : /Android|iPhone|iPad|iPod/i
-							.test(navigator.userAgent) ? 1 : 0,
-					'autohide' : 1,
-					'disablekb' : 1
-				},
-				events : {
-					'onReady' : onPlayerReady,
-					'onStateChange' : /Android|iPhone|iPad|iPod/i
-							.test(navigator.userAgent) ? onMobilePlayerStateChange
-							: onPlayerStateChange,
-					'onError' : onPlayerError
-				}
-			});
+	player = new YT.Player('player', {
+		height : '360',
+		width : '640',
+		playerVars : {
+			'rel' : 0,
+			'iv_load_policy' : 3,
+			'controls' : isMobile ? 1 : 0,
+			'autohide' : 1,
+			'disablekb' : 1
+		},
+		events : {
+			'onReady' : onPlayerReady,
+			'onStateChange' : onPlayerStateChange,
+			'onError' : onPlayerError
+		}
+	});
 }
 
 function onPlayerReady(event) {
@@ -181,13 +177,18 @@ function onPlayerReady(event) {
 		player.setVolume($(this).prop("value"));
 	});
 	syncAndPlay(true);
+	if (isMobile) {
+		$("#playback").text("Sync").off().click(function() {
+			syncAndPlay(true);
+		});
+	}
 }
 
 var prePlayerState;
 function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
 		syncAndPlay(false);
-	} else if (event.data == YT.PlayerState.PLAYING) {
+	} else if (event.data == YT.PlayerState.PLAYING && !isMobile) {
 		if (prePlayerState == YT.PlayerState.PAUSED
 				|| prePlayerState == YT.PlayerState.ENDED) {
 			syncAndPlay(true);
@@ -195,18 +196,12 @@ function onPlayerStateChange(event) {
 		$("#playback").text("Pause").off().click(function() {
 			player.pauseVideo();
 		});
-	} else if (event.data == YT.PlayerState.PAUSED) {
+	} else if (event.data == YT.PlayerState.PAUSED && !isMobile) {
 		$("#playback").text("Play").off().click(function() {
 			syncAndPlay(true);
 		});
 	}
 	prePlayerState = event.data;
-}
-
-function onMobilePlayerStateChange(event) {
-	if (event.data == YT.PlayerState.ENDED) {
-		syncAndPlay(false);
-	}
 }
 
 function onPlayerError(event) {
