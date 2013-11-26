@@ -152,23 +152,24 @@ function updateWsCounter() {
 // YouTube player
 var player;
 function onYouTubeIframeAPIReady() {
-	player = new YT.Player('player',
-			{
-				height : '360',
-				width : '640',
-				playerVars : {
-					'rel' : 0,
-					'iv_load_policy' : 3,
-					'controls' : 0,
-					'autohide' : 1,
-					'disablekb' : 1
-				},
-				events : {
-					'onReady' : onPlayerReady,
-					'onStateChange' : onPlayerStateChange,
-					'onError' : onPlayerError
-				}
-			});
+	player = new YT.Player('player', {
+		height : '360',
+		width : '640',
+		playerVars : {
+			'rel' : 0,
+			'iv_load_policy' : 3,
+			'controls' : 0,
+			'autohide' : 1,
+			'disablekb' : 1
+		},
+		events : {
+			'onReady' : onPlayerReady,
+			'onStateChange' : /Android|iPhone|iPad|iPod/i
+					.test(navigator.userAgent) ? onMobilePlayerStateChange
+					: onPlayerStateChange,
+			'onError' : onPlayerError
+		}
+	});
 }
 
 function onPlayerReady(event) {
@@ -199,6 +200,12 @@ function onPlayerStateChange(event) {
 	prePlayerState = event.data;
 }
 
+function onMobilePlayerStateChange(event) {
+	if (event.data == YT.PlayerState.ENDED) {
+		syncAndPlay(false);
+	}
+}
+
 function onPlayerError(event) {
 	console.log("player error: " + event.data);
 	$("#playback").text("Play").off().click(function() {
@@ -209,11 +216,7 @@ function onPlayerError(event) {
 function syncAndPlay(seek) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
-			player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);
-		}else{
-			player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
-		}
+		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
 		player.setVolume($("#volume").prop("value"));
 	});
 }
