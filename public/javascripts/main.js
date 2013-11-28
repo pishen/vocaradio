@@ -151,6 +151,7 @@ function updateWsCounter() {
 
 // YouTube player
 var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 var player;
 function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
@@ -209,7 +210,8 @@ function onPlayerError(event) {
 function syncAndPlay(seek, auto) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);		
+		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);		
 		player.setVolume($("#volume").prop("value"));
+		if(!isIOS) player.playVideo();
 	});
 }
