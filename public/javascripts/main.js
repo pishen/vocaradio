@@ -206,11 +206,10 @@ function onPlayerError(event) {
 	});
 }
 
-function syncAndPlay(seek) {
+function syncAndPlay(seek, auto) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);		
+		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);		
 		player.setVolume($("#volume").prop("value"));
-		if(!isMobile) player.playVideo();
 	});
 }
