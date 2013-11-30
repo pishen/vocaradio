@@ -5,13 +5,14 @@ $(document).ready(function() {
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-	updateWsCounter();
 	setupUserName();
 	setupNotify();
-	updateWsChat();
+	setupNewMsg();
+	updateWS();
+	setupAliveMsg();
 });
 
-// websocket chatroom
+// username
 var userName;
 function setupUserName() {
 	userName = $("#username");
@@ -48,6 +49,7 @@ function insertNewNameInput(oldNameStr) {
 	}).insertAfter(userName).select();
 }
 
+// notification
 function setupNotify() {
 	$("#notify").change(function() {
 		if ($(this).prop("checked")) {
@@ -65,88 +67,81 @@ function setupNotify() {
 	});
 }
 
-function chatLogToHtml(logJsObj) {
-	return "<strong>" + logJsObj.user + "</strong>" + "<p>" + logJsObj.msg
-			+ "</p>";
-}
-
-function getHistory() {
-	$.getJSON("chat-history", function(jsObj) {
-		$("#chat-log").children(".old").remove();
-		var logs = jsObj.logs;
-		for (var i = 0; i < logs.length; i++) {
-			var log = logs[i];
-			$("#chat-log").prepend(chatLogToHtml(log));
+// new chat POST
+function setupNewMsg() {
+	$("#new-msg textarea").keydown(function(e) {
+		if (e.keyCode == 13 && $(this).val() != "") {
+			var chatLog = {
+				user : userName.text(),
+				msg : $(this).val()
+			};
+			$.ajax({
+				url : "chat",
+				type : "POST",
+				data : JSON.stringify(chatLog),
+				contentType : "application/json; charset=utf-8"
+			});
+			$(this).val("");
+			return false;
+		} else if (e.keyCode == 13) {
+			return false;
 		}
-		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		document.title = "VocaRadio";
+	}).click(function() {
+		document.title = "VocaRadio";
 	});
 }
 
-var wsChat;
-var wsChatReconnect = false;
-function updateWsChat() {
-	wsChat = new WebSocket("ws://" + window.location.host + "/ws/chat");
-	wsChat.onopen = function() {
-		getHistory();
-		$("#new-msg textarea").off().keydown(function(e) {
-			if (e.keyCode == 13 && $(this).val() != "") {
-				var log = {
-					user : userName.text(),
-					msg : $(this).val()
-				};
-				wsChat.send(JSON.stringify(log));
-				$(this).val("");
-				return false;
-			}
-			document.title = "VocaRadio";
-		}).click(function() {
-			document.title = "VocaRadio";
+// websocket
+var ws;
+function updateWS() {
+	ws = new WebSocket("ws://" + window.location.host + "/ws");
+	ws.onopen = function() {
+		// client counter
+		ws.send("still alive");
+		// chatroom
+		$.getJSON("chat-history", function(jsObj) {
+			$("#chat-log").children(".old").remove();
+			$("#chat-log").prepend(jsObj.history);
+			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		});
 	};
-	wsChat.onmessage = function(e) {
-		var log = JSON.parse(e.data);
-		$("#chat-log").append(chatLogToHtml(log));
-		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		if ($("#notify").prop("checked")) {
-			var notify = new Notification(log.user, {
-				body : log.msg,
-				icon : "assets/images/logo.png",
-				tag : "chat"
-			});
-			window.setTimeout(function() {
-				notify.close();
-			}, 5000);
+	ws.onmessage = function(e) {
+		var json = JSON.parse(e.data);
+		if (json.type == "clientCount") {
+			$("#client-count").html(
+					"<span>" + json.content + "</span>" + "listeners");
+		} else if (json.type == "chat") {
+			$("#chat-log").append(json.content);
+			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		} else if (json.type == "notify") {
+			if ($("#notify").prop("checked") && json.title != userName.text()) {
+				var notify = new Notification(json.title, {
+					body : json.body,
+					icon : "assets/images/logo.png",
+					tag : json.tag
+				});
+				window.setTimeout(function() {
+					notify.close();
+				}, 5000);
+				document.title = "*VocaRadio";
+			}
 		}
-		document.title = "*VocaRadio";
 	};
-	wsChat.onclose = function() {
-		$("#chat-log").append("<p>(connection lost, reconnect in 2 secs)</p>");
+	ws.onclose = function() {
+		// chatroom
+		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>");
 		$("#chat-log").children().addClass("old");
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		wsChatReconnect = true;
-		window.setTimeout(updateWsChat, 2000);
+		window.setTimeout(updateWS, 2000);
 	};
 }
 
-// client counter
-var wsCounter;
-function updateWsCounter() {
-	wsCounter = new WebSocket("ws://" + window.location.host + "/ws/counter");
-	wsCounter.onopen = function() {
-		wsCounter.send("hi");
-		window.setInterval(function() {
-			wsCounter.send("still alive");
-		}, 300000);
-	};
-	wsCounter.onmessage = function(e) {
-		var jsObj = JSON.parse(e.data);
-		var follow = jsObj.clientCount <= 1 ? " listener" : " listeners";
-		$("#client-count").html(
-				"<span>" + jsObj.clientCount + "</span>" + follow);
-	};
-	wsCounter.onclose = function() {
-		window.setTimeout(updateWsCounter, 2000);
-	};
+// keep websocket connected by nginx
+function setupAliveMsg() {
+	window.setInterval(function() {
+		ws.send("still alive");
+	}, 60000);
 }
 
 // YouTube player
@@ -210,8 +205,9 @@ function onPlayerError(event) {
 function syncAndPlay(seek, auto) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);		
+		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);
 		player.setVolume($("#volume").prop("value"));
-		if(!isIOS) player.playVideo();
+		if (!isIOS)
+			player.playVideo();
 	});
 }

@@ -1,24 +1,22 @@
 package controllers
 
 import akka.actor.Actor
-import ChatLogger._
-import play.api.libs.json.Json
+import akka.actor.actorRef2Scala
+import scalax.io.Resource
 
 class ChatLogger extends Actor {
-  var logs = Seq.empty[Log]
-  
+  private val logfile = Resource.fromFile("chat-logs")
+  private var chatLogs = logfile.lines().toSeq.takeRight(100)
+
   def receive = {
-    case l: Log => {
-      logs +:= l
-      if(logs.length > 100) logs = logs.init
+    case cl: ChatLog => {
+      chatLogs :+= cl.content
+      logfile.write(cl.content + "\n")
+      if (chatLogs.length > 100) chatLogs = chatLogs.tail
     }
-    case GetHistory => sender ! logs
+    case GetHistory => sender ! chatLogs
   }
 }
 
-object ChatLogger {
-  case class Log(user: String, msg: String){
-    def toJsObj = Json.obj("user" -> user, "msg" -> msg)
-  }
-  case object GetHistory
-}
+case class ChatLog(content: String)
+case object GetHistory

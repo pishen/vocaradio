@@ -1,22 +1,20 @@
 package controllers
 
-import akka.actor.Actor
-import akka.pattern.pipe
-import scala.util.Random
-import scala.io.Source
-import play.api.libs.ws.WS
-import views.html.helper
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import akka.util.Timeout
-import scala.concurrent.duration._
-import models.Song
 import java.util.Date
+
 import scala.concurrent.Future
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Random
+import scala.util.Success
+
+import akka.actor.Actor
+import akka.actor.actorRef2Scala
+import akka.pattern.pipe
+import models.Song
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.ws.WS
 import scalax.io.Resource
-import Playlist._
+import views.html.helper
 
 class Playlist extends Actor {
   private val titlesResource = Resource.fromFile("titles")
@@ -89,7 +87,5 @@ class Playlist extends Actor {
   }
 }
 
-object Playlist {
-  case object AskSong
-  case object Refill
-}
+case object AskSong
+case object Refill
