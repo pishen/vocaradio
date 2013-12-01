@@ -49,9 +49,9 @@ class Playlist extends Actor {
   private def pickWithTime() = {
     pick().map {
       case (song, originTitle) =>
-        val content = <p class="light">{ song.title }</p>.toString
-        broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))
-        chatLogger ! ChatLog(content)
+        //val content = <p class="light">{ song.title }</p>.toString
+        //broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))
+        //chatLogger ! ChatLog(content)
         (song, currentSecond, originTitle)
     }
   }

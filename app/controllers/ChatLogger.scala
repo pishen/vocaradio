@@ -13,7 +13,7 @@ class ChatLogger extends Actor {
     case cl: ChatLog => {
       chatLogs :+= cl.content
       //logfile.write(cl.content + "\n")
-      if (chatLogs.length > 100) chatLogs = chatLogs.tail
+      if (chatLogs.length > 500) chatLogs = chatLogs.tail
     }
     case GetHistory => sender ! chatLogs
   }
