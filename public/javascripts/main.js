@@ -94,6 +94,7 @@ function setupNewMsg() {
 
 // websocket
 var ws;
+var retryTimes = 0;
 function updateWS() {
 	ws = new WebSocket("ws://" + window.location.host + "/ws");
 	ws.onopen = function() {
@@ -132,7 +133,8 @@ function updateWS() {
 		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>");
 		$("#chat-log").children().addClass("old");
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		window.setTimeout(updateWS, 2000);
+		if(retryTimes < 10) window.setTimeout(updateWS, 2000);
+		retryTimes += 1;
 	};
 }
 
@@ -151,7 +153,9 @@ function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
 		height : '360',
 		width : '640',
+		videoId : '7NptssoOJ78',
 		playerVars : {
+			'autoplay' : 1,
 			'rel' : 0,
 			'iv_load_policy' : 3,
 			'controls' : isMobile ? 1 : 0,
@@ -171,13 +175,14 @@ function onPlayerReady(event) {
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"));
 	});
-	syncAndPlay(true);
 }
 
 var prePlayerState;
+var isFirst = true;
 function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
-		syncAndPlay(false);
+		syncAndPlay(isFirst);
+		isFirst = false;
 	} else if (event.data == YT.PlayerState.PLAYING && !isMobile) {
 		if (prePlayerState == YT.PlayerState.PAUSED
 				|| prePlayerState == YT.PlayerState.ENDED) {
@@ -201,7 +206,7 @@ function onPlayerError(event) {
 	});
 }
 
-function syncAndPlay(seek, auto) {
+function syncAndPlay(seek) {
 	console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
 		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);
