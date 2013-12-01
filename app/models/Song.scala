@@ -1,3 +1,3 @@
 package models
 
-case class Song(id: String, duration: Int)
+case class Song(id: String, title: String, duration: Int)

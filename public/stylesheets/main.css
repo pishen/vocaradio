@@ -92,11 +92,10 @@ hr:after {
 }
 
 #client-count {
-	font-size: 1.2em;
 	text-align: center;
 }
 
-#client-count span {
+#client-count .num {
 	font-size: 3em;
 }
 
@@ -108,6 +107,14 @@ hr:after {
 
 #chat-log p,#chat-settings p {
 	margin: 5px 0;
+}
+
+#chat-log .light {
+	background-color: dimgray;
+}
+
+#chat-log .color {
+	color: gold;
 }
 
 #new-msg {

@@ -61,7 +61,7 @@ object Application extends Controller {
     val msg = (json \ "msg").as[String]
 
     val chatLog =
-      <strong>{ user }</strong>
+      <strong class="color">{ user }</strong>
       <p>{
         //decorate the url
         msg.split(" ").map { s =>

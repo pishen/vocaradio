@@ -1,12 +1,10 @@
 package controllers
 
 import java.util.Date
-
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Random
 import scala.util.Success
-
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.pattern.pipe
@@ -15,45 +13,61 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
+import play.api.libs.json.Json
 
 class Playlist extends Actor {
   private val titlesResource = Resource.fromFile("titles")
   private val replacesResource = Resource.fromFile("replaces")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
+  private val broadcaster = context.actorSelection("../broadcaster")
+  private val chatLogger = context.actorSelection("../chatLogger")
 
   private def currentSecond() = new Date().getTime() / 1000
   private var titleSeq = Random.shuffle(titlesResource.lines().toSeq)
-  private var futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
+  private var futureSong = pickWithTime()
 
   def receive = {
     case AskSong => {
       futureSong.value match {
         case Some(Success(t)) =>
           if (currentSecond - t._2 >= t._1.duration - 2) {
-            futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
+            futureSong = pickWithTime()
           }
         case Some(Failure(e)) =>
-          futureSong = pick().map(pair => (pair._1, currentSecond, pair._2))
+          futureSong = pickWithTime()
         case _ => //do nothing
       }
-      futureSong.map(t => (t._1.id, (currentSecond - t._2).toInt, t._3)) pipeTo sender
+      futureSong.map {
+        case (song, startTime, originTitle) =>
+          (song.id, (currentSecond - startTime).toInt, originTitle)
+      } pipeTo sender
     }
     case Refill =>
       titleSeq = titleSeq ++ Random.shuffle(titlesResource.lines().toSeq.filterNot(titleSeq contains _))
   }
 
+  private def pickWithTime() = {
+    pick().map {
+      case (song, originTitle) =>
+        val content = <p class="light">{ song.title }</p>.toString
+        broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))
+        chatLogger ! ChatLog(content)
+        (song, currentSecond, originTitle)
+    }
+  }
+
   private def pick(): Future[(Song, String)] = {
     val replaces = replacesResource.lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
-    val title = titleSeq.head
+    val originTitle = titleSeq.head
     titleSeq = titleSeq.tail
     if (titleSeq.length < 11) self ! Refill
     for {
-      id <- replaces.get(title) match {
+      id <- replaces.get(originTitle) match {
         case Some(id) => Future.successful(id)
-        case None     => getFutureId(title)
+        case None     => getFutureId(originTitle)
       }
-      duration <- getFutureDuration(id)
-    } yield (Song(id, duration), title)
+      (title, duration) <- getFutureDetails(id)
+    } yield (Song(id, title, duration), originTitle)
   }
 
   private def getFutureId(title: String): Future[String] = {
@@ -69,21 +83,22 @@ class Playlist extends Actor {
     futureId
   }
 
-  private def getFutureDuration(id: String): Future[Int] = {
-    val futureDuration = WS.url("https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id="
+  private def getFutureDetails(id: String): Future[(String, Int)] = {
+    val futureDetails = WS.url("https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id="
       + id
-      + "&fields=items%2FcontentDetails&key="
+      + "&fields=items(contentDetails%2Csnippet)&key="
       + googleKey)
       .get
-      .map(response => (response.json \\ "duration").head.as[String])
-      .map(str => {
-        val mAndS = str.replaceAll("[PTS]", "").split("M")
-        mAndS.head.toInt * 60 + mAndS.last.toInt
-      })
-    futureDuration.onFailure {
+      .map { response =>
+        val title = (response.json \\ "title").head.as[String]
+        val mAndS = (response.json \\ "duration").head.as[String].replaceAll("[PTS]", "").split("M")
+        val duration = mAndS.head.toInt * 60 + mAndS.last.toInt
+        (title, duration)
+      }
+    futureDetails.onFailure {
       case e: Exception => Resource.fromFile("problem-id").write(id + "\n")
     }
-    futureDuration
+    futureDetails
   }
 }
 

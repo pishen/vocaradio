@@ -109,8 +109,7 @@ function updateWS() {
 	ws.onmessage = function(e) {
 		var json = JSON.parse(e.data);
 		if (json.type == "clientCount") {
-			$("#client-count").html(
-					"<span>" + json.content + "</span>" + "listeners");
+			$("#client-count").html(json.content);
 		} else if (json.type == "chat") {
 			$("#chat-log").append(json.content);
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
