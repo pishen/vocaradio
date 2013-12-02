@@ -156,9 +156,7 @@ function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
 		height : '360',
 		width : '640',
-		videoId : '7NptssoOJ78',
 		playerVars : {
-			'autoplay' : 1,
 			'rel' : 0,
 			'iv_load_policy' : 3,
 			'controls' : isMobile ? 1 : 0,
@@ -178,6 +176,7 @@ function onPlayerReady(event) {
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"));
 	});
+	player.loadVideoById('7NptssoOJ78', 0);
 }
 
 var prePlayerState;
@@ -210,11 +209,9 @@ function onPlayerError(event) {
 }
 
 function syncAndPlay(seek) {
-	console.log("seek: " + seek);
+	//console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		player.cueVideoById(jsObj.id, seek ? jsObj.start : 0);
+		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
 		player.setVolume($("#volume").prop("value"));
-		if (!isIOS)
-			player.playVideo();
 	});
 }
