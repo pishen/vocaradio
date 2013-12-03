@@ -176,7 +176,7 @@ function onPlayerReady(event) {
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"));
 	});
-	player.loadVideoById('7NptssoOJ78', 0);
+	player.loadVideoById('7NptssoOJ78');
 }
 
 var prePlayerState;
@@ -211,6 +211,7 @@ function onPlayerError(event) {
 function syncAndPlay(seek) {
 	//console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
+		console.log("id: " + jsObj.id);
 		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
 		player.setVolume($("#volume").prop("value"));
 	});
