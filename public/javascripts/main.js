@@ -86,9 +86,9 @@ function setupNewMsg() {
 		} else if (e.keyCode == 13) {
 			return false;
 		}
-		document.title = "VocaRadio";
+		document.title = document.title.replace("*", "");
 	}).click(function() {
-		document.title = "VocaRadio";
+		document.title = document.title.replace("*", "");
 	});
 }
 
@@ -125,7 +125,7 @@ function updateWS() {
 				window.setTimeout(function() {
 					notify.close();
 				}, 5000);
-				document.title = "*VocaRadio";
+				document.title = "*" + document.title;
 			}
 		}
 	};
