@@ -134,7 +134,7 @@ function updateWS() {
 		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>");
 		$("#chat-log").children().addClass("old");
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
-		if(retryTimes < 10){
+		if (retryTimes < 10) {
 			window.setTimeout(updateWS, 2000);
 			retryTimes += 1;
 		}
@@ -172,20 +172,24 @@ function onYouTubeIframeAPIReady() {
 }
 
 function onPlayerReady(event) {
+	console.log("ready");
 	player.setVolume($("#volume").prop("value"));
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"));
 	});
-	player.loadVideoById('7NptssoOJ78');
+	if (isFirst)
+		player.loadVideoById('7NptssoOJ78');
 }
 
 var prePlayerState;
 var isFirst = true;
 function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
+		console.log("ended");
 		syncAndPlay(isFirst);
 		isFirst = false;
 	} else if (event.data == YT.PlayerState.PLAYING && !isMobile) {
+		console.log("playing");
 		if (prePlayerState == YT.PlayerState.PAUSED
 				|| prePlayerState == YT.PlayerState.ENDED) {
 			syncAndPlay(true);
@@ -209,9 +213,9 @@ function onPlayerError(event) {
 }
 
 function syncAndPlay(seek) {
-	//console.log("seek: " + seek);
+	// console.log("seek: " + seek);
 	$.getJSON("sync", function(jsObj) {
-		console.log("id: " + jsObj.id);
+		console.log("sync id: " + jsObj.id);
 		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0);
 		player.setVolume($("#volume").prop("value"));
 	});
