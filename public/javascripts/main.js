@@ -1,3 +1,4 @@
+var originTitle;
 $(document).ready(function() {
 	// insert script for ytplayer
 	var tag = document.createElement('script');
@@ -5,6 +6,7 @@ $(document).ready(function() {
 	var firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+	originTitle = document.title;
 	setupUserName();
 	setupNotify();
 	setupNewMsg();
@@ -86,9 +88,9 @@ function setupNewMsg() {
 		} else if (e.keyCode == 13) {
 			return false;
 		}
-		document.title = document.title.replace("*", "");
+		document.title = originTitle;
 	}).click(function() {
-		document.title = document.title.replace("*", "");
+		document.title = originTitle;
 	});
 }
 
@@ -125,7 +127,8 @@ function updateWS() {
 				window.setTimeout(function() {
 					notify.close();
 				}, 5000);
-				document.title = "*" + document.title;
+				
+				document.title = "*" + originTitle;
 			}
 		}
 	};
@@ -179,6 +182,8 @@ function onPlayerReady(event) {
 	});
 	if (isFirst)
 		player.loadVideoById('7NptssoOJ78');
+	else
+		syncAndPlay(true);
 }
 
 var prePlayerState;
