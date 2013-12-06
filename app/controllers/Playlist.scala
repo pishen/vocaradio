@@ -38,8 +38,8 @@ class Playlist extends Actor {
         case _ => //do nothing
       }
       futureSong.map {
-        case (song, startTime, originTitle) =>
-          (song.id, (currentSecond - startTime).toInt, originTitle)
+        case (song, startTime) =>
+          (song.videoId, (currentSecond - startTime).toInt, song.originTitle)
       } pipeTo sender
     }
     case Refill =>
@@ -48,15 +48,15 @@ class Playlist extends Actor {
 
   private def pickWithTime() = {
     pick().map {
-      case (song, originTitle) =>
+      case song =>
         //val content = <p class="light">{ song.title }</p>.toString
         //broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))
         //chatLogger ! ChatLog(content)
-        (song, currentSecond, originTitle)
+        (song, currentSecond)
     }
   }
 
-  private def pick(): Future[(Song, String)] = {
+  private def pick(): Future[Song] = {
     val replaces = replacesResource.lines().map(_.split(">>>")).map(a => (a.head, a.last)).toMap
     val originTitle = titleSeq.head
     titleSeq = titleSeq.tail
@@ -67,7 +67,7 @@ class Playlist extends Actor {
         case None     => getFutureId(originTitle)
       }
       (title, duration) <- getFutureDetails(id)
-    } yield (Song(id, title, duration), originTitle)
+    } yield Song(originTitle, id, title, duration)
   }
 
   private def getFutureId(title: String): Future[String] = {
