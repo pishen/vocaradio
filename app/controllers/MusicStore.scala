@@ -5,37 +5,31 @@ import scala.concurrent.Future
 import org.anormcypher.Cypher
 import org.anormcypher.CypherRow
 
-import akka.actor.Actor
-import akka.actor.Props
-import akka.actor.actorRef2Scala
-import akka.pattern.pipe
 import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
 
-class MusicStore extends Actor {
-
+class MusicStore {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
-  def receive = {
-    case UpdateSong(originTitle) => {
-      //println("checking " + originTitle)
-      val inStore = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
-        .on("originTitle" -> originTitle).apply.collect {
-          case CypherRow(videoId: String) => videoId
-        }
+  def updateSong(originTitle: String): Future[Boolean] = {
+    //println("checking " + originTitle)
+    val inStore = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
+      .on("originTitle" -> originTitle).apply.collect {
+        case CypherRow(videoId: String) => videoId
+      }
 
-      //println("getting Song")
-      if (inStore.isEmpty) {
-        //add new song
-        getSong(originTitle).recover {
-          case e: Exception => Song.error(originTitle)
-        }.map {
-          song =>
-            //println("svaing")
-            val res = Cypher("""
+    //println("getting Song")
+    if (inStore.isEmpty) {
+      //add new song
+      getSong(originTitle).recover {
+        case e: Exception => Song.error(originTitle)
+      }.map {
+        song =>
+          //println("svaing")
+          Cypher("""
                 CREATE (s:Song {
                   originTitle : {originTitle},
                   videoId : {videoId},
@@ -43,17 +37,15 @@ class MusicStore extends Actor {
                   duration : {duration}
                 })
                 """)
-              .on("originTitle" -> originTitle,
-                "videoId" -> song.videoId,
-                "title" -> song.title,
-                "duration" -> song.duration)
-              .execute
-            UpdateComplete(originTitle, res)
-        } pipeTo sender
-      } else {
-        //check id status and update if needed
-        sender ! UpdateComplete(originTitle, false)
+            .on("originTitle" -> originTitle,
+              "videoId" -> song.videoId,
+              "title" -> song.title,
+              "duration" -> song.duration)
+            .execute
       }
+    } else {
+      //check id status and update if needed
+      Future.successful(false)
     }
   }
 
@@ -91,27 +83,18 @@ class MusicStore extends Actor {
 
 }
 
-case class UpdateSong(title: String)
+object BatchUpdater {
 
-class BatchUpdater extends Actor {
-
-  val titles = Resource.fromFile("titles").lines().toSeq
-
-  var numComplete = 0
-
-  override def preStart() = {
-    val musicStore = context.actorOf(Props[MusicStore], "musicStore")
-    titles.foreach(title => musicStore ! UpdateSong(title))
-  }
-
-  def receive = {
-    case uc: UpdateComplete => {
-      println((if (uc.result) "success" else "fail") + ": " + uc.originTitle)
-      numComplete += 1
-      if (numComplete == titles.length) context.stop(self)
+  def main(args: Array[String]): Unit = {
+    val titles = Resource.fromFile("titles").lines().toSeq
+    val musicStore = new MusicStore
+    titles.foreach {
+      title =>
+        musicStore.updateSong(title)
+          .map(res => (if (res) "success" else "fail") + ": " + title).foreach(println)
     }
+    println("main done")
   }
-}
 
-case class UpdateComplete(originTitle: String, result: Boolean)
+}
 
