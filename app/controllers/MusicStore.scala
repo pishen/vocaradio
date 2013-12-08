@@ -1,61 +1,70 @@
 package controllers
 
 import scala.concurrent.Future
-
 import org.anormcypher.Cypher
 import org.anormcypher.CypherRow
-
 import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
+import play.api.libs.concurrent.Akka
+import akka.actor.Actor
 
-class MusicStore {
+object MusicStore {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
-  def updateSong(originTitle: String): Future[Boolean] = {
-    //println("checking " + originTitle)
-    val inStore = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
+  def updateSong(originTitle: String): Future[Song] = {
+    val inDB = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
       .on("originTitle" -> originTitle).apply.collect {
-        case CypherRow(videoId: String) => videoId
+        case CypherRow(vid: String) => vid
       }
 
-    //println("getting Song")
-    if (inStore.isEmpty) {
-      //add new song
-      getSong(originTitle).recover {
-        case e: Exception => Song.error(originTitle)
-      }.map {
-        song =>
-          //println("svaing")
-          Cypher("""
-                CREATE (s:Song {
-                  originTitle : {originTitle},
-                  videoId : {videoId},
-                  title : {title},
-                  duration : {duration}
-                })
-                """)
-            .on("originTitle" -> originTitle,
-              "videoId" -> song.videoId,
-              "title" -> song.title,
-              "duration" -> song.duration)
-            .execute
-      }
+    if (inDB.nonEmpty) {
+      //update song in DB by the saved id if it's not error
+      val videoId = inDB.head
+      val songF = getSong(originTitle, if (videoId != "error") videoId else null)
+      songF.foreach(song => {
+        val res = Cypher("""
+          MATCH (s:Song)
+          WHERE s.originTitle = {originTitle}
+          SET s.videoId = {videoId}, s.title = {title}, s.duration = {duration}
+          """).on("originTitle" -> originTitle,
+          "videoId" -> song.videoId,
+          "title" -> song.title,
+          "duration" -> song.duration).execute
+        //TODO log the error for Cypher
+      })
+      songF
     } else {
-      //check id status and update if needed
-      Future.successful(false)
+      //add new song
+      val songF = getSong(originTitle)
+      songF.foreach(song => {
+        val res = Cypher("""
+          CREATE (s:Song {
+            originTitle : {originTitle},
+            videoId : {videoId},
+            title : {title},
+            duration : {duration}
+          })
+          """).on("originTitle" -> originTitle,
+          "videoId" -> song.videoId,
+          "title" -> song.title,
+          "duration" -> song.duration).execute
+        //TODO log the error for Cypher
+      })
+      songF
     }
   }
 
-  private def getSong(originTitle: String): Future[Song] = {
-    for {
-      videoId <- getVideoId(originTitle)
+  private def getSong(originTitle: String, videoId: String = null): Future[Song] = {
+    val f = for {
+      videoId <- if (videoId == null) getVideoId(originTitle) else Future.successful(videoId)
       (title, duration) <- getDetails(videoId)
     } yield {
       Song(originTitle, videoId, title, duration)
     }
+    f.recover { case e: Exception => Song.error(originTitle) }
   }
 
   private def getVideoId(originTitle: String): Future[String] = {
@@ -67,9 +76,9 @@ class MusicStore {
       .map(response => (response.json \\ "videoId").head.as[String])
   }
 
-  private def getDetails(id: String): Future[(String, Int)] = {
+  private def getDetails(videoId: String): Future[(String, Int)] = {
     WS.url("https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id="
-      + id
+      + videoId
       + "&fields=items(contentDetails%2Csnippet)&key="
       + googleKey)
       .get
@@ -87,12 +96,9 @@ object BatchUpdater {
 
   def main(args: Array[String]): Unit = {
     val titles = Resource.fromFile("titles").lines().toSeq
-    val musicStore = new MusicStore
-    titles.foreach {
-      title =>
-        musicStore.updateSong(title)
-          .map(res => (if (res) "success" else "fail") + ": " + title).foreach(println)
-    }
+    titles.foreach(title => {
+      MusicStore.updateSong(title).foreach(song => println(title + ": " + song.videoId))
+    })
     println("main done")
   }
 
