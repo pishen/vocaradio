@@ -43,7 +43,7 @@ class Playlist extends Actor {
   }
 
   private def getNextAndFill() = {
-    val nextSong = MusicStore.updateAndGetSong(titleSeq.head).map(song => {
+    val nextSong = MusicStore.getOrCreateSong(titleSeq.head).map(song => {
       //song changed notification
       /*val content = <p class="light">{ song.title }</p>.toString
       broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))

@@ -14,38 +14,50 @@ import views.html.helper
 object MusicStore {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
-  def updateAndGetSong(originTitle: String): Future[Song] = {
+  def getOrCreateSong(originTitle: String): Future[Song] = {
     val inDB = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
       .on("originTitle" -> originTitle).apply.collect {
         case CypherRow(vid: String) => vid
       }
+    //TODO log Cypher error?
 
     if (inDB.nonEmpty) {
-      //update song in DB by the saved id if it's not error
+      //use stored videoId and update the status
       val videoId = inDB.head
-      getSong(originTitle, videoId).recoverWith {
-        case ex: Exception => {
-          val recovered = getSong(originTitle).recover {
-            case ex: Exception => Song.error(originTitle)
-          }
-          recovered.foreach(song => {
-            val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.videoId = {videoId}")
-              .on("originTitle" -> originTitle, "videoId" -> song.videoId).execute
-            //TODO log the error for Cypher
-          })
-          recovered
+      val song = getSong(originTitle, videoId)
+      //TODO merge two Cyphers
+      song.onSuccess {
+        case song: Song => {
+          val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'OK'")
+            .on("originTitle" -> originTitle).execute
+          //TODO log Cypher error
         }
       }
+      song.onFailure {
+        case ex: Exception => {
+          val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'error'")
+            .on("originTitle" -> originTitle).execute
+          //TODO log Cypher error
+        }
+      }
+      song
     } else {
       //add new song
-      val newSong = getSong(originTitle).recover {
-        case ex: Exception => Song.error(originTitle)
+      val newSong = getSong(originTitle)
+      newSong.onSuccess {
+        case song: Song => {
+          val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:{videoId}, status:'OK'})")
+            .on("originTitle" -> originTitle, "videoId" -> song.videoId).execute
+          //TODO log Cypher error
+        }
       }
-      newSong.foreach(song => {
-        val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:{videoId}})")
-          .on("originTitle" -> originTitle, "videoId" -> song.videoId).execute
-        //TODO log the error for Cypher
-      })
+      newSong.onFailure {
+        case ex: Exception => {
+          val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:'error', status:'error'})")
+            .on("originTitle" -> originTitle).execute
+          //TODO log Cypher error
+        }
+      }
       newSong
     }
   }
