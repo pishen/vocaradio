@@ -1,24 +1,27 @@
 package controllers
 
 import scala.concurrent.Future
-
 import org.anormcypher.Cypher
 import org.anormcypher.CypherRow
-
 import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
+import play.api.libs.json.Json
 
 object MusicStore {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   def getOrCreateSong(originTitle: String): Future[Song] = {
-    val inDB = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
-      .on("originTitle" -> originTitle).apply.collect {
-        case CypherRow(vid: String) => vid
-      }
+    val inDB = try {
+      Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
+        .on("originTitle" -> originTitle).apply.collect {
+          case CypherRow(vid: String) => vid
+        }
+    } catch {
+      case ex: Exception => sys.error("indexing error " + originTitle)
+    }
     //TODO log Cypher error?
 
     if (inDB.nonEmpty) {
@@ -31,6 +34,7 @@ object MusicStore {
           val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'OK'")
             .on("originTitle" -> originTitle).execute
           //TODO log Cypher error
+          if (!res) println("success update error " + originTitle)
         }
       }
       song.onFailure {
@@ -38,6 +42,7 @@ object MusicStore {
           val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'error'")
             .on("originTitle" -> originTitle).execute
           //TODO log Cypher error
+          if (!res) println("fail update error " + originTitle)
         }
       }
       song
@@ -49,6 +54,7 @@ object MusicStore {
           val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:{videoId}, status:'OK'})")
             .on("originTitle" -> originTitle, "videoId" -> song.videoId).execute
           //TODO log Cypher error
+          if (!res) println("success create error " + originTitle)
         }
       }
       newSong.onFailure {
@@ -56,6 +62,7 @@ object MusicStore {
           val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:'error', status:'error'})")
             .on("originTitle" -> originTitle).execute
           //TODO log Cypher error
+          if (!res) println("fail create error " + originTitle)
         }
       }
       newSong
@@ -72,6 +79,7 @@ object MusicStore {
   }
 
   private def getVideoId(originTitle: String): Future[String] = {
+    //TODO change to queryString()
     WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
       + helper.urlEncode(originTitle)
       + "&type=video&videoEmbeddable=true&videoSyndicated=true&fields=items%2Fid&key="
@@ -111,19 +119,24 @@ object BatchUpdater {
     })*/
     //update by titles
     /*titles.foreach(title => {
-      MusicStore.updateAndGetSong(title).foreach(song => println(title + " updated as " + song.videoId))
+      val song = MusicStore.getOrCreateSong(title)
+      song.onSuccess {
+        case s: Song => println("OK")
+      }
+      song.onFailure {
+        case ex: Exception => println("ER")
+      }
     })*/
     //update by replaces
-    Resource.fromFile("replaces").lines().toSeq
+    /*Resource.fromFile("replaces").lines().toSeq
       .map(_.split(">>>")).foreach(s => {
         val originTitle = s.head
         val newId = s.last
         val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.videoId = {videoId}")
           .on("originTitle" -> originTitle, "videoId" -> newId).execute
         println("replace " + originTitle + " with status " + res)
-      })
-
-    println("main done")
+      })*/
+    
   }
 
 }
