@@ -1,72 +1,62 @@
 package controllers
 
 import scala.concurrent.Future
-import org.anormcypher.Cypher
-import org.anormcypher.CypherRow
 import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
 import play.api.libs.json.Json
+import models.Cypher
+import scala.util.Success
+import scala.util.Failure
+import org.slf4j.LoggerFactory
 
 object MusicStore {
+  val log = LoggerFactory.getLogger("MusicStore")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   def getOrCreateSong(originTitle: String): Future[Song] = {
-    val inDB = try {
-      Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} RETURN s.videoId")
-        .on("originTitle" -> originTitle).apply.collect {
-          case CypherRow(vid: String) => vid
+    Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} RETURN s.videoId")
+      .on("ot" -> originTitle).getData
+      .flatMap(data => {
+        if (data.nonEmpty) {
+          //use stored videoId and update the status
+          val videoId = data.head.head
+          val song = getSong(originTitle, videoId)
+          song.onComplete {
+            case Success(_) => {
+              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'OK'")
+                .on("ot" -> originTitle).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+            case Failure(ex) => {
+              log.error("YT error " + originTitle, ex)
+              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
+                .on("ot" -> originTitle).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+          }
+          song
+        } else {
+          //add new song
+          val newSong = getSong(originTitle)
+          newSong.onComplete {
+            case Success(s) => {
+              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
+                .on("ot" -> originTitle, "id" -> s.videoId).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+            case Failure(ex) => {
+              log.error("YT error " + originTitle, ex)
+              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
+                .on("ot" -> originTitle).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+          }
+          newSong
         }
-    } catch {
-      case ex: Exception => sys.error("indexing error " + originTitle)
-    }
-    //TODO log Cypher error?
-
-    if (inDB.nonEmpty) {
-      //use stored videoId and update the status
-      val videoId = inDB.head
-      val song = getSong(originTitle, videoId)
-      //TODO merge two Cyphers
-      song.onSuccess {
-        case song: Song => {
-          val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'OK'")
-            .on("originTitle" -> originTitle).execute
-          //TODO log Cypher error
-          if (!res) println("success update error " + originTitle)
-        }
-      }
-      song.onFailure {
-        case ex: Exception => {
-          val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.status = 'error'")
-            .on("originTitle" -> originTitle).execute
-          //TODO log Cypher error
-          if (!res) println("fail update error " + originTitle)
-        }
-      }
-      song
-    } else {
-      //add new song
-      val newSong = getSong(originTitle)
-      newSong.onSuccess {
-        case song: Song => {
-          val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:{videoId}, status:'OK'})")
-            .on("originTitle" -> originTitle, "videoId" -> song.videoId).execute
-          //TODO log Cypher error
-          if (!res) println("success create error " + originTitle)
-        }
-      }
-      newSong.onFailure {
-        case ex: Exception => {
-          val res = Cypher("CREATE (s:Song {originTitle:{originTitle}, videoId:'error', status:'error'})")
-            .on("originTitle" -> originTitle).execute
-          //TODO log Cypher error
-          if (!res) println("fail create error " + originTitle)
-        }
-      }
-      newSong
-    }
+      })
   }
 
   private def getSong(originTitle: String, videoId: String = null): Future[Song] = {
@@ -118,25 +108,22 @@ object BatchUpdater {
       println("delete " + originTitle + " with status " + res)
     })*/
     //update by titles
-    /*titles.foreach(title => {
-      val song = MusicStore.getOrCreateSong(title)
-      song.onSuccess {
-        case s: Song => println("OK")
-      }
-      song.onFailure {
-        case ex: Exception => println("ER")
-      }
-    })*/
+    titles.foreach(title => {
+      MusicStore.getOrCreateSong(title)
+    })
     //update by replaces
     /*Resource.fromFile("replaces").lines().toSeq
       .map(_.split(">>>")).foreach(s => {
         val originTitle = s.head
         val newId = s.last
-        val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} SET s.videoId = {videoId}")
-          .on("originTitle" -> originTitle, "videoId" -> newId).execute
-        println("replace " + originTitle + " with status " + res)
+        Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.videoId = {id}")
+          .on("ot" -> originTitle, "id" -> newId).execute
+          .foreach(json => {
+            println(originTitle)
+            println(json)
+          })
       })*/
-    
+
   }
 
 }

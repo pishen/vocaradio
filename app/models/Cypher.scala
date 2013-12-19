@@ -2,17 +2,24 @@ package models
 
 import play.api.libs.ws.WS
 import play.api.libs.json.JsObject
+import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsString
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import org.slf4j.LoggerFactory
+import Cypher.log
 
 class Cypher(json: JsObject) {
   def execute = {
-    Cypher.defaultReq.post(json).map(_.json)
+    val p = Cypher.defaultReq.post(json)
+    //p.onFailure { case ex: Exception => log.error("cypher", ex) }
+    p.map(_.json)
   }
-  def getSingle = {
-    Cypher.defaultReq.post(json).map(resp => (resp.json \ "data")(0)(0).asOpt[String])
+  def getData = {
+    val p = Cypher.defaultReq.post(json)
+    //p.onFailure { case ex: Exception => log.error("cypher", ex) }
+    p.map(resp => (resp.json \ "data").as[Array[Array[String]]])
   }
   def on(params: (String, String)*) = {
     new Cypher(json.+("params" -> JsObject(params.map { case (k, v) => (k, JsString(v)) })))
@@ -20,6 +27,7 @@ class Cypher(json: JsObject) {
 }
 
 object Cypher {
+  val log = LoggerFactory.getLogger("Cypher")
   val defaultReq = WS.url("http://localhost:7474/db/data/cypher")
     .withHeaders("Accept" -> "application/json", "Content-Type" -> "application/json")
 
@@ -31,10 +39,10 @@ object Cypher {
     //REST test
     println("pre-start")
     val f1 = Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} RETURN s.videoId")
-      .on("ot" -> "【初音ミク】 君の傷跡 【オリジナル曲】").getSingle
-    f1.foreach{
-      case Some(vid) => println("vid: " + vid)
-      case None => println("no this song")
+      .on("ot" -> "【初音ミク】 君の傷跡 【オリジナル曲】").execute
+    f1.foreach(println)
+    f1.onFailure {
+      case ex: Exception => println(ex)
     }
     println("main finished")
   }
