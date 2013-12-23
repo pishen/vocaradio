@@ -93,17 +93,8 @@ object Application extends Controller {
     })
   }
 
-  def listContent = Action.async(parse.json) { req =>
-    val json = req.body
-    println("parsing")
-    (json \ "ots").as[Array[String]].foreach(println)
-    /*val str = "<w>" + URLDecoder.decode(req.rawQueryString, "utf-8").replaceAll(">", "/>") + "</w>"
-    val t = xml.XML.loadString(str)
-    val res = (t \ "img").map(_ \ "@title").mkString(", ")
-    println(res)*/
-    (playlist ? ListContent).mapTo[(Seq[String], Seq[String])].map{
-      case (ots, imgs) => Ok(Json.obj("ots" -> ots, "imgs" -> imgs.mkString))
-    }
+  def listContent = Action.async {
+    (playlist ? ListContent).mapTo[Seq[String]].map(imgs => Ok(Json.obj("imgs" -> imgs)))
   }
 
 }

@@ -12,7 +12,6 @@ $(document).ready(function() {
 	setupNewMsg();
 	updateWS();
 	setupAliveMsg();
-	updatePlaylist()
 
 	// setupFB();
 });
@@ -98,21 +97,22 @@ function setupNewMsg() {
 }
 
 // playlist
-var otsJson = {
-	ots : []
-};
 function updatePlaylist() {
-	$.ajax({
-		url : "listContent",
-		type : "POST",
-		data : JSON.stringify(otsJson),
-		contentType : "application/json; charset=utf-8",
-		dataType: "json",
-		success: function(jsObj){
-			$("#playlist").prepend(jsObj.imgs);
-			otsJson = {
-				ots : jsObj.ots
-			};
+	$.getJSON("listContent", function(jsObj) {
+		var playlist = $("#playlist");
+		var imgs = playlist.children();
+		if(imgs.length == 0){
+			$.each(jsObj.imgs, function(i, imgStr){
+				$(imgStr).appendTo(playlist);
+			});
+		}else{
+			imgs.each(function(i){
+				var newImg = $(jsObj.imgs[i]).hide();
+				$(this).delay(i * 100).fadeOut(function(){
+					$(this).replaceWith(newImg);
+					newImg.fadeIn();
+				});
+			});
 		}
 	});
 }
@@ -132,6 +132,7 @@ function updateWS() {
 			$("#chat-log").prepend(jsObj.history);
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		});
+		updatePlaylist();
 	};
 	ws.onmessage = function(e) {
 		var json = JSON.parse(e.data);
@@ -141,7 +142,7 @@ function updateWS() {
 			$("#chat-log").append(json.content);
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
 		} else if (json.type == "updateList") {
-
+			updatePlaylist();
 		} else if (json.type == "notify") {
 			if ($("#notify").prop("checked") && json.title != userName.text()) {
 				var notify = new Notification(json.title, {
@@ -152,7 +153,6 @@ function updateWS() {
 				window.setTimeout(function() {
 					notify.close();
 				}, 5000);
-
 				document.title = "*" + originTitle;
 			}
 		}
@@ -229,8 +229,6 @@ function onPlayerStateChange(event) {
 		});
 	} else if (event.data == YT.PlayerState.PAUSED && !isMobile) {
 		$("#playback").text("Play").off().click(function() {
-			//TODO remove
-			updatePlaylist();
 			syncAndPlay(true);
 		});
 	}

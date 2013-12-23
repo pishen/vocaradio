@@ -21,7 +21,7 @@ class Playlist extends Actor {
   private val broadcaster = context.actorSelection("../broadcaster")
   private val chatLogger = context.actorSelection("../chatLogger")
   private def getTime() = new Date().getTime() / 1000
-  private val bufferSize = 5
+  private val bufferSize = 30
   private var buffer = Random.shuffle(titles.lines().toSeq).take(bufferSize + 1)
     .map(ot => (ot, MusicStore.getSong(ot)))
   private var nextSong = getNextAndFill()
@@ -41,17 +41,10 @@ class Playlist extends Actor {
           (song.videoId, (getTime - start).toInt, song.originTitle)
       } pipeTo sender
     }
-    case ListContent(oldSeq) => {
-      def getImgs() = Future.sequence(buffer.map(_._2.map(song => {
+    case ListContent => {
+      Future.sequence(buffer.take(20).map(_._2.map(song => {
         <img src={ song.thumb } title={ song.title } width="100"/>.toString
-      }).recover { case _ => "" }))
-
-      val res = for {
-        ots <- Future.successful(buffer.map(_._1))
-        imgs <- getImgs()
-      } yield (ots, imgs)
-      
-      res pipeTo sender
+      }).recover { case _ => <img src="error"/>.toString })) pipeTo sender
     }
   }
 
@@ -79,4 +72,4 @@ class Playlist extends Actor {
 }
 
 case object CurrentSong
-case class ListContent(oldSeq: Seq[String])
+case object ListContent
