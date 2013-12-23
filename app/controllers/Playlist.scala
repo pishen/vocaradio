@@ -21,8 +21,8 @@ class Playlist extends Actor {
   private val broadcaster = context.actorSelection("../broadcaster")
   private val chatLogger = context.actorSelection("../chatLogger")
   private def getTime() = new Date().getTime() / 1000
-  private val bufferSize = 30
-  private var buffer = Random.shuffle(titles.lines().toSeq).take(bufferSize + 1)
+  private val lowerBound = 100
+  private var buffer = Random.shuffle(titles.lines().toSeq).take(lowerBound + 100)
     .map(ot => (ot, MusicStore.getSong(ot)))
   private var nextSong = getNextAndFill()
 
@@ -57,10 +57,10 @@ class Playlist extends Actor {
       (song, getTime)
     })
     buffer = buffer.tail
-    if (buffer.length < bufferSize) {
+    if (buffer.length < lowerBound) {
       val bufferTitles = buffer.map(_._1)
-      val otNew = Random.shuffle(titles.lines()).find(!bufferTitles.contains(_)).get
-      buffer = buffer :+ (otNew, MusicStore.getSong(otNew))
+      val newTitles = Random.shuffle(titles.lines()).toSeq.filterNot(bufferTitles.contains(_)).take(100)
+      buffer = buffer ++ newTitles.map(ot => (ot, MusicStore.getSong(ot)))
     }
     broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "updateList")))
     nextSong
