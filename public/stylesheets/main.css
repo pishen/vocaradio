@@ -1,5 +1,6 @@
 @import url(http://fonts.googleapis.com/css?family=Bad+Script);
 
+/* basic styles */
 body {
 	background-color: #413839;
 	font-family: Arial, Helvetica, sans-serif;
@@ -10,14 +11,11 @@ a:hover {
 	background-color: gray;
 }
 
-a:link {
+a:link, a:visited {
 	color: white;
 }
 
-a:visited {
-	color: white;
-}
-
+/* custom styles */
 .wrapper {
 	width: 95%;
 	max-width: 960px;
@@ -59,16 +57,14 @@ a:visited {
 	margin: 0.8em auto 0.7em auto;
 }
 
-#playback {
+.h-center {
 	display: block;
 	margin: auto;
 }
 
 #volume {
-	display: block;
 	width: 80%;
 	height: 35px;
-	margin: auto;
 	background: transparent;
 }
 
@@ -135,6 +131,11 @@ hr:after {
 #username:hover {
 	background-color: gray;
 	cursor: pointer;
+}
+
+#playlist{
+	overflow-x: auto;
+	white-space: nowrap;
 }
 
 .about {

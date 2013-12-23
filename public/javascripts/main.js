@@ -12,6 +12,9 @@ $(document).ready(function() {
 	setupNewMsg();
 	updateWS();
 	setupAliveMsg();
+	updatePlaylist()
+
+	// setupFB();
 });
 
 // username
@@ -94,6 +97,26 @@ function setupNewMsg() {
 	});
 }
 
+// playlist
+var otsJson = {
+	ots : []
+};
+function updatePlaylist() {
+	$.ajax({
+		url : "listContent",
+		type : "POST",
+		data : JSON.stringify(otsJson),
+		contentType : "application/json; charset=utf-8",
+		dataType: "json",
+		success: function(jsObj){
+			$("#playlist").prepend(jsObj.imgs);
+			otsJson = {
+				ots : jsObj.ots
+			};
+		}
+	});
+}
+
 // websocket
 var ws;
 var retryTimes = 0;
@@ -117,6 +140,8 @@ function updateWS() {
 		} else if (json.type == "chat") {
 			$("#chat-log").append(json.content);
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"));
+		} else if (json.type == "updateList") {
+
 		} else if (json.type == "notify") {
 			if ($("#notify").prop("checked") && json.title != userName.text()) {
 				var notify = new Notification(json.title, {
@@ -127,7 +152,7 @@ function updateWS() {
 				window.setTimeout(function() {
 					notify.close();
 				}, 5000);
-				
+
 				document.title = "*" + originTitle;
 			}
 		}
@@ -204,6 +229,8 @@ function onPlayerStateChange(event) {
 		});
 	} else if (event.data == YT.PlayerState.PAUSED && !isMobile) {
 		$("#playback").text("Play").off().click(function() {
+			//TODO remove
+			updatePlaylist();
 			syncAndPlay(true);
 		});
 	}
@@ -225,3 +252,22 @@ function syncAndPlay(seek) {
 		player.setVolume($("#volume").prop("value"));
 	});
 }
+
+// Facebook
+/*
+ * function setupFB() { window.fbAsyncInit = function() { FB.init({ appId :
+ * '565192206888536', status : true, cookie : true, xfbml : true });
+ * 
+ * FB.Event.subscribe('auth.authResponseChange', function(response) { if
+ * (response.status === 'connected') { testAPI(); } else if (response.status ===
+ * 'not_authorized') { FB.login(); } else { FB.login(); } }); }; // Load the SDK
+ * asynchronously (function(d) { var js, id = 'facebook-jssdk', ref =
+ * d.getElementsByTagName('script')[0]; if (d.getElementById(id)) { return; } js =
+ * d.createElement('script'); js.id = id; js.async = true; js.src =
+ * "//connect.facebook.net/en_US/all.js"; ref.parentNode.insertBefore(js, ref);
+ * }(document)); }
+ * 
+ * function testAPI() { console.log('Welcome! Fetching your information.... ');
+ * FB.api('/me', function(response) { console.log('Good to see you, ' +
+ * response.name + '.'); }); }
+ */

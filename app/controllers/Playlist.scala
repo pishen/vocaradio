@@ -16,17 +16,18 @@ import views.html.helper
 import play.api.libs.json.Json
 
 class Playlist extends Actor {
-  private val titlesResource = Resource.fromFile("titles")
+  private val titles = Resource.fromFile("titles")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
   private val broadcaster = context.actorSelection("../broadcaster")
   private val chatLogger = context.actorSelection("../chatLogger")
-
   private def getTime() = new Date().getTime() / 1000
-  private var titleSeq = Random.shuffle(titlesResource.lines().toSeq).take(21)
+  private val bufferSize = 5
+  private var buffer = Random.shuffle(titles.lines().toSeq).take(bufferSize + 1)
+    .map(ot => (ot, MusicStore.getSong(ot)))
   private var nextSong = getNextAndFill()
 
   def receive = {
-    case AskSong => {
+    case CurrentSong => {
       nextSong.value match {
         case Some(Success((song, start))) =>
           if (getTime - start > song.duration - 2) {
@@ -40,20 +41,35 @@ class Playlist extends Actor {
           (song.videoId, (getTime - start).toInt, song.originTitle)
       } pipeTo sender
     }
+    case ListContent(oldSeq) => {
+      def getImgs() = Future.sequence(buffer.map(_._2.map(song => {
+        <img src={ song.thumb } title={ song.title } width="100"/>.toString
+      }).recover { case _ => "" }))
+
+      val res = for {
+        ots <- Future.successful(buffer.map(_._1))
+        imgs <- getImgs()
+      } yield (ots, imgs)
+      
+      res pipeTo sender
+    }
   }
 
   private def getNextAndFill() = {
-    val nextSong = MusicStore.getOrCreateSong(titleSeq.head).map(song => {
+    val nextSong = buffer.head._2.map(song => {
       //song changed notification
       /*val content = <p class="light">{ song.title }</p>.toString
       broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> content)))
       chatLogger ! ChatLog(content)*/
       (song, getTime)
     })
-    titleSeq = titleSeq.tail
-    if (titleSeq.length < 20) {
-      titleSeq = titleSeq :+ Random.shuffle(titlesResource.lines()).find(!titleSeq.contains(_)).get
+    buffer = buffer.tail
+    if (buffer.length < bufferSize) {
+      val bufferTitles = buffer.map(_._1)
+      val otNew = Random.shuffle(titles.lines()).find(!bufferTitles.contains(_)).get
+      buffer = buffer :+ (otNew, MusicStore.getSong(otNew))
     }
+    broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "updateList")))
     nextSong
   }
 
@@ -62,4 +78,5 @@ class Playlist extends Actor {
   }
 }
 
-case object AskSong
+case object CurrentSong
+case class ListContent(oldSeq: Seq[String])

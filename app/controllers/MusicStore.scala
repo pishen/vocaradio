@@ -16,42 +16,47 @@ object MusicStore {
   val log = LoggerFactory.getLogger("MusicStore")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
-  def getOrCreateSong(originTitle: String): Future[Song] = {
+  //TODO change the logging and println parts
+  def getSong(originTitle: String, update: Boolean = true): Future[Song] = {
     Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} RETURN s.videoId")
       .on("ot" -> originTitle).getData
       .flatMap(data => {
         if (data.nonEmpty) {
           //use stored videoId and update the status
           val videoId = data.head.head
-          val song = getSong(originTitle, videoId)
-          song.onComplete {
-            case Success(_) => {
-              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'OK'")
-                .on("ot" -> originTitle).execute
-                .foreach(json => println(originTitle + "\n" + json))
-            }
-            case Failure(ex) => {
-              log.error("YT error " + originTitle, ex)
-              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
-                .on("ot" -> originTitle).execute
-                .foreach(json => println(originTitle + "\n" + json))
+          val song = getSongFromYT(originTitle, videoId)
+          if (update) {
+            song.onComplete {
+              case Success(_) => {
+                Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'OK'")
+                  .on("ot" -> originTitle).execute
+                  .foreach(json => println(originTitle + "\n" + json))
+              }
+              case Failure(ex) => {
+                log.error("YT error " + originTitle, ex)
+                Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
+                  .on("ot" -> originTitle).execute
+                  .foreach(json => println(originTitle + "\n" + json))
+              }
             }
           }
           song
         } else {
           //add new song
-          val newSong = getSong(originTitle)
-          newSong.onComplete {
-            case Success(s) => {
-              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
-                .on("ot" -> originTitle, "id" -> s.videoId).execute
-                .foreach(json => println(originTitle + "\n" + json))
-            }
-            case Failure(ex) => {
-              log.error("YT error " + originTitle, ex)
-              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
-                .on("ot" -> originTitle).execute
-                .foreach(json => println(originTitle + "\n" + json))
+          val newSong = getSongFromYT(originTitle)
+          if (update) {
+            newSong.onComplete {
+              case Success(s) => {
+                Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
+                  .on("ot" -> originTitle, "id" -> s.videoId).execute
+                  .foreach(json => println(originTitle + "\n" + json))
+              }
+              case Failure(ex) => {
+                log.error("YT error " + originTitle, ex)
+                Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
+                  .on("ot" -> originTitle).execute
+                  .foreach(json => println(originTitle + "\n" + json))
+              }
             }
           }
           newSong
@@ -59,12 +64,12 @@ object MusicStore {
       })
   }
 
-  private def getSong(originTitle: String, videoId: String = null): Future[Song] = {
+  private def getSongFromYT(originTitle: String, videoId: String = null): Future[Song] = {
     for {
       videoId <- if (videoId == null) getVideoId(originTitle) else Future.successful(videoId)
-      (title, duration) <- getDetails(videoId)
+      (title, duration, thumb) <- getDetails(videoId)
     } yield {
-      Song(originTitle, videoId, title, duration)
+      Song(originTitle, videoId, title, duration, thumb)
     }
   }
 
@@ -78,18 +83,24 @@ object MusicStore {
       .map(response => (response.json \\ "videoId").head.as[String])
   }
 
-  private def getDetails(videoId: String): Future[(String, Int)] = {
-    WS.url("https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id="
-      + videoId
-      + "&fields=items(contentDetails%2Csnippet)&key="
-      + googleKey)
-      .get
-      .map { response =>
+  private def getDetails(videoId: String): Future[(String, Int, String)] = {
+
+    val req = WS.url("https://www.googleapis.com/youtube/v3/videos")
+      .withQueryString(
+        "part" -> "snippet,contentDetails",
+        "id" -> videoId,
+        "fields" -> "items(contentDetails,snippet)",
+        "key" -> googleKey)
+    
+
+    req.get
+      .map(response => {
         val title = (response.json \\ "title").head.as[String]
         val mAndS = (response.json \\ "duration").head.as[String].replaceAll("[PTS]", "").split("M")
         val duration = mAndS.head.toInt * 60 + mAndS.last.toInt
-        (title, duration)
-      }
+        val thumb = (response.json \\ "thumbnails").head.\("default").\("url").as[String]
+        (title, duration, thumb)
+      })
   }
 
 }
@@ -109,7 +120,7 @@ object BatchUpdater {
     })*/
     //update by titles
     titles.foreach(title => {
-      MusicStore.getOrCreateSong(title)
+      MusicStore.getSong(title)
     })
     //update by replaces
     /*Resource.fromFile("replaces").lines().toSeq

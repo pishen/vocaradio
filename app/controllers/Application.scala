@@ -2,12 +2,10 @@ package controllers
 
 import java.net.MalformedURLException
 import java.net.URL
-
 import scala.Array.canBuildFrom
 import scala.concurrent.duration.DurationInt
 import scala.util.Random
 import scala.xml.Utility
-
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
@@ -22,6 +20,8 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
+import models.Song
+import java.net.URLDecoder
 
 object Application extends Controller {
   implicit val timeout = Timeout((5).seconds)
@@ -38,7 +38,7 @@ object Application extends Controller {
   }
 
   def sync = Action.async {
-    (playlist ? AskSong).mapTo[(String, Int, String)].map(t => {
+    (playlist ? CurrentSong).mapTo[(String, Int, String)].map(t => {
       Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
     })
   }
@@ -58,6 +58,7 @@ object Application extends Controller {
   def chat = Action(parse.json) { request =>
     val json = request.body
     val user = (json \ "user").as[String]
+    require(user != "")
     val msg = (json \ "msg").as[String]
 
     val chatLog =
@@ -90,6 +91,19 @@ object Application extends Controller {
     (chatLogger ? GetHistory).mapTo[Seq[String]].map(chatLogs => {
       Ok(Json.obj("history" -> chatLogs.mkString))
     })
+  }
+
+  def listContent = Action.async(parse.json) { req =>
+    val json = req.body
+    println("parsing")
+    (json \ "ots").as[Array[String]].foreach(println)
+    /*val str = "<w>" + URLDecoder.decode(req.rawQueryString, "utf-8").replaceAll(">", "/>") + "</w>"
+    val t = xml.XML.loadString(str)
+    val res = (t \ "img").map(_ \ "@title").mkString(", ")
+    println(res)*/
+    (playlist ? ListContent).mapTo[(Seq[String], Seq[String])].map{
+      case (ots, imgs) => Ok(Json.obj("ots" -> ots, "imgs" -> imgs.mkString))
+    }
   }
 
 }

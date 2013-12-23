@@ -4,10 +4,10 @@
 
 <html>
 <head>
-<meta name="viewport" content="width=device-width, user-scalable=false">
-<meta name="description" content="a simple VOCALOID radio station">
-<meta name="keywords" content="vocaloid, radio, miku">
 <title>VocaRadio - 24hr VOCALOID 自動電台</title>
+<meta name="viewport" content="width=device-width, user-scalable=false"/>
+<meta name="description" content="24hr self-driven VOCALOID radio station"/>
+<meta name="keywords" content="vocaloid, radio, miku"/>
 <link rel="stylesheet" href="assets/stylesheets/normalize.css">
 <link rel="stylesheet" href="assets/stylesheets/col.css">
 <link rel="stylesheet" href="assets/stylesheets/4cols.css">
@@ -32,22 +32,22 @@
 	</div>
 	<div class="controls-wrapper">
 		<div class="section group">
-			<div class="col span_1_of_4"></div>
-			<div class="col span_2_of_4">
-				<button id="playback" class="dark-red">Play</button>
+			<div class="span_1_of_4 col"></div>
+			<div class="span_2_of_4 col">
+				<button id="playback" class="dark-red h-center">Play</button>
 			</div>
-			<div class="col span_1_of_4">
-				<input id="volume" type="range" min="0" max="100" value="50" />
+			<div class="span_1_of_4 col">
+				<input id="volume" class="h-center" type="range" min="0" max="100" value="50" />
 			</div>
 		</div>
 	</div>
 	<div class="wrapper">
 		<hr />
 		<div class="section group">
-			<div class="module col span_2_of_4">
+			<div class="span_2_of_4 col">
 				<div id="client-count"></div>
 			</div>
-			<div class="module col span_2_of_4">
+			<div class="span_2_of_4 col">
 				<div id="chat-log"></div>
 				<div id="new-msg">
 					<textarea placeholder="Let's have a chat!"></textarea>
@@ -62,19 +62,32 @@
 				</div>
 			</div>
 		</div>
+		<div class="section group">
+			<div id="playlist" class="span_4_of_4 col">
+				<img title="te&#34;st"/>
+				<img title="test2"/>
+			</div>
+		</div>
+		<div class="section group">
+			<div id="user">
+				<div id="fb-root"></div>
+				<!-- <button id="login" class="fb-button"></button> -->
+				<!-- <button id="logout" class="grey">Logout</button> -->
+			</div>
+		</div>
 	</div>
 	<div class="wrapper about">
 		<div class="section group">
-			<div class="col span_1_of_4">
+			<div class="span_1_of_4 col">
 				DJ: <a href="http://facebook.com/pishen" target="_blank">pishen</a>
 			</div>
-			<div class="col span_1_of_4">
+			<div class="span_1_of_4 col">
 				入台音效: <a href="http://goo.gl/4AKWYn" target="_blank">yoyo幫尼</a>
 			</div>
-			<div class="col span_1_of_4">
+			<div class="span_1_of_4 col">
 				<a href="https://www.facebook.com/vocaradio" target="_blank">Facebook</a>
 			</div>
-			<div class="col span_1_of_4">
+			<div class="span_1_of_4 col">
 				<a href="https://github.com/pishen/vocaradio" target="_blank">GitHub</a>
 			</div>
 		</div>

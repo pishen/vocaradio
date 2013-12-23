@@ -1,3 +1,3 @@
 package models
 
-case class Song(originTitle: String, videoId: String, title: String, duration: Int)
+case class Song(originTitle: String, videoId: String, title: String, duration: Int, thumb: String)
