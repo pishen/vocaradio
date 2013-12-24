@@ -11,6 +11,7 @@ import models.Cypher
 import scala.util.Success
 import scala.util.Failure
 import org.slf4j.LoggerFactory
+import scala.util.matching.Regex
 
 object MusicStore {
   val log = LoggerFactory.getLogger("MusicStore")
@@ -96,8 +97,13 @@ object MusicStore {
     req.get
       .map(response => {
         val title = (response.json \\ "title").head.as[String]
-        val mAndS = (response.json \\ "duration").head.as[String].replaceAll("[PTS]", "").split("M")
-        val duration = mAndS.head.toInt * 60 + mAndS.last.toInt
+        val rgx = new Regex("""PT(\d+M)?(\d+S)""", "m", "s")
+        val ptms = (response.json \\ "duration").head.as[String]
+        val duration = {
+          val mt = rgx.findFirstMatchIn(ptms).get
+          val m = mt.group("m")
+          (if(m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
+        }
         val thumb = (response.json \\ "thumbnails").head.\("default").\("url").as[String]
         (title, duration, thumb)
       })

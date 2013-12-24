@@ -22,12 +22,15 @@ import play.api.mvc.Controller
 import play.api.mvc.WebSocket
 import models.Song
 import java.net.URLDecoder
+import java.text.SimpleDateFormat
+import java.util.Date
 
 object Application extends Controller {
   implicit val timeout = Timeout((5).seconds)
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
+  val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg",
     "http://res.nimg.jp/img/watch_zero/walls/wall_night_cruise.jpg",
     "http://res.nimg.jp/img/watch_zero/walls/wall_cloud.jpg",
@@ -62,7 +65,7 @@ object Application extends Controller {
     val msg = (json \ "msg").as[String]
 
     val chatLog =
-      <strong class="color">{ user }</strong>
+      <strong class="color" title={ sdf.format(new Date()) }>{ user }</strong>
       <p>{
         //decorate the url
         msg.split(" ").map { s =>
