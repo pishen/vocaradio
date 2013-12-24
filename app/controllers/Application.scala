@@ -65,8 +65,8 @@ object Application extends Controller {
     val msg = (json \ "msg").as[String]
 
     val chatLog =
-      <strong class="color" title={ sdf.format(new Date()) }>{ user }</strong>
-      <p>{
+      <strong class="color">{ user }</strong>
+      <p title={ sdf.format(new Date()) }>{
         //decorate the url
         msg.split(" ").map { s =>
           try {
