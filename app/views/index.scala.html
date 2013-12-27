@@ -37,14 +37,17 @@
 				<button id="playback" class="dark-red">Play</button>
 				<input id="volume" type="range" min="0" max="100" value="50" />
 			</div>
-			<a id="gear" href="#setting" title="User Settings"></a>
+			<a id="setting-switch" href="#setting" title="User Settings">
+				<div class="setting-switch-bar"></div>
+				<div class="setting-switch-bar"></div>
+				<div class="setting-switch-bar"></div>
+			</a>
 			<div id="setting" class="modal">
 				<div>
 					<a href="#close" title="Close" class="close">X</a>
 					<h2>User Settings</h2>
 					<p>
-						<strong>your name: </strong><br />
-						<input />
+						<strong>your name: </strong><br /> <input />
 					</p>
 					<p>
 						<button class="fb">Connect with Facebook</button>

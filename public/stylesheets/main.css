@@ -72,23 +72,32 @@ a:link,a:visited {
 	right: 0;
 	height: 35px;
 	width: 150px;
+	padding: 0;
 	background: transparent;
 }
 
-#gear {
+#setting-switch {
 	position: absolute;
 	top: 0;
 	right: 0;
-	width: 35px;
+	width: 36px;
 	height: 35px;
-	background-image: url('/assets/images/1388138897_preferences.png');
-	background-position: center;
-	background-size: cover;
 	background-color: transparent;
+	padding-top: 7px;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 
-#gear:hover {
-	cursor: pointer;
+#setting-switch:hover div {
+	background-color: #f24537;
+}
+
+.setting-switch-bar {
+	position: relative;
+	background-color: white;
+	width: 24px;
+	height: 4px;
+	margin: 0 auto 5px auto;
 }
 
 .modal {
