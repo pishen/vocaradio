@@ -1,13 +1,10 @@
 button.dark-red {
+	display: inline-block;
 	box-shadow: inset 0px 1px 0px 0px #f5978e;
 	background-color: #f24537;
-	border-top-left-radius: 0px;
-	border-top-right-radius: 0px;
-	border-bottom-right-radius: 0px;
-	border-bottom-left-radius: 0px;
 	text-indent: 0;
 	border: 1px solid #d02718;
-	color: #ffffff;
+	color: white;
 	font-family: Arial;
 	font-size: 15px;
 	font-weight: bold;
@@ -29,29 +26,21 @@ button.dark-red:active {
 }
 
 button.grey {
-	box-shadow: inset 0px 1px 0px 0px #ffffff;
-	background-color: #ededed;
-	border-top-left-radius: 0px;
-	border-top-right-radius: 0px;
-	border-bottom-right-radius: 0px;
-	border-bottom-left-radius: 0px;
-	text-indent: 0;
-	border: 1px solid #dcdcdc;
-	color: #777777;
-	font-family: Arial;
+	display: inline-block;
+	box-shadow: inset 0px 1px 0px 0px #CCCCCC;
+	background-color: #999999;
+	border: 1px solid #4C4C4C;
+	color: white;
 	font-size: 15px;
 	font-weight: bold;
 	font-style: normal;
-	height: 35px;
-	line-height: 35px;
 	width: 90px;
-	text-decoration: none;
+	height: 35px;
 	text-align: center;
-	text-shadow: 1px 1px 0px #ffffff;
 }
 
 button.grey:hover {
-	background-color: #dfdfdf;
+	background-color: #7A7A7A;
 }
 
 button.grey:active {
@@ -60,17 +49,21 @@ button.grey:active {
 }
 
 button.fb {
+	display: inline-block;
 	box-shadow: inset 0px 1px 0px 0px #536FAB;
-	width: 95px;
+	background-color: #3b5998;
+	border: 1px solid #23355B;
+	color: white;
+	font-size: 15px;
+	font-weight: bold;
+	font-style: normal;
+	width: 200px;
 	height: 35px;
-	border: 1px solid #344E86;
-	background-color: transparent;
-	background-image: url('/assets/images/active_200.png');
-	background-position: center;
+	text-align: center;
 }
 
 button.fb:hover {
-	background-image: url('/assets/images/pressed_200.png');
+	background-color: #2F477A;
 }
 
 button.fb:active {

@@ -7,6 +7,8 @@ $(document).ready(function() {
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 	originTitle = document.title;
+
+	setupSetting();
 	setupUserName();
 	setupNotify();
 	setupNewMsg();
@@ -15,6 +17,19 @@ $(document).ready(function() {
 
 	// setupFB();
 });
+
+// setting
+function setupSetting() {
+	$("#setting").dialog({
+		autoOpen : false,
+		draggable : false,
+		modal : true
+	});
+	$("#gear").click(function() {
+		console.log("test");
+		$("#setting").dialog("open");
+	});
+}
 
 // username
 var userName;
@@ -101,14 +116,14 @@ function updatePlaylist() {
 	$.getJSON("listContent", function(jsObj) {
 		var playlist = $("#playlist");
 		var imgs = playlist.children();
-		if(imgs.length == 0){
-			$.each(jsObj.imgs, function(i, imgStr){
+		if (imgs.length == 0) {
+			$.each(jsObj.imgs, function(i, imgStr) {
 				$(imgStr).appendTo(playlist);
 			});
-		}else{
-			imgs.each(function(i){
+		} else {
+			imgs.each(function(i) {
 				var newImg = $(jsObj.imgs[i]).hide();
-				$(this).delay(i * 100).fadeOut(function(){
+				$(this).delay(i * 100).fadeOut(function() {
 					$(this).replaceWith(newImg);
 					newImg.fadeIn();
 				});
