@@ -61,7 +61,8 @@ a:link,a:visited {
 }
 
 #player-controls {
-	position: relative; margin : auto;
+	position: relative;
+	margin: auto;
 	width: 640px;
 	text-align: center;
 	margin: auto;
@@ -109,7 +110,7 @@ a:link,a:visited {
 	background: rgba(0, 0, 0, 0.8);
 	z-index: 99999;
 	opacity: 0;
-	transition: opacity 300ms ease-in;
+	transition: opacity 100ms ease-in;
 	pointer-events: none;
 }
 
@@ -178,7 +179,7 @@ hr:after {
 	overflow-y: auto;
 }
 
-#chat-log p,#chat-settings p {
+#chat-log p {
 	margin: 5px 0;
 }
 
@@ -205,11 +206,6 @@ hr:after {
 	border: 0px;
 }
 
-#username:hover {
-	background-color: gray;
-	cursor: pointer;
-}
-
 #playlist {
 	overflow-x: auto;
 	white-space: nowrap;
@@ -218,10 +214,11 @@ hr:after {
 .about {
 	text-align: center;
 	max-width: 700px;
+	margin-bottom: 1em;
 }
 
-@media only screen and (max-width: 640px) {
-	#playback {
+@media only screen and (max-width: 810px) {
+	#player-controls {
 		display: none;
 	}
 	#player-background {
@@ -230,5 +227,11 @@ hr:after {
 	iframe {
 		width: 368px;
 		height: 207px;
+	}
+	.modal>div{
+		width: 80%;
+	}
+	hr {
+		display: none;
 	}
 }

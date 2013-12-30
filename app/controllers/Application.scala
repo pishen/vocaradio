@@ -31,10 +31,7 @@ object Application extends Controller {
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
-  val bgUrls = Seq("http://res.nimg.jp/img/watch_zero/walls/wall_ginza.jpg",
-    "http://res.nimg.jp/img/watch_zero/walls/wall_night_cruise.jpg",
-    "http://res.nimg.jp/img/watch_zero/walls/wall_cloud.jpg",
-    "http://res.nimg.jp/img/watch_zero/walls/wall_night.jpg")
+  val bgUrls = Seq("assets/images/nouveau-fond.jpg")
 
   def index = Action {
     Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length))))

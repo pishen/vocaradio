@@ -8,64 +8,30 @@ $(document).ready(function() {
 
 	originTitle = document.title;
 
-	setupSetting();
 	setupUserName();
 	setupNotify();
 	setupNewMsg();
 	updateWS();
 	setupAliveMsg();
 
-	// setupFB();
 });
-
-// setting
-function setupSetting() {
-	$("#setting").dialog({
-		autoOpen : false,
-		draggable : false,
-		modal : true
-	});
-	$("#gear").click(function() {
-		console.log("test");
-		$("#setting").dialog("open");
-	});
-}
 
 // username
 var userName;
 function setupUserName() {
 	userName = $("#username");
 	if (typeof (Storage) !== "undefined" && localStorage.userName) {
-		userName.text(localStorage.userName);
-	} else {
-		$("#new-msg").hide();
-		insertNewNameInput("");
+		userName.val(localStorage.userName);
 	}
-	userName.click(function() {
-		var oldNameStr = $(this).text();
-		$(this).hide();
-		insertNewNameInput(oldNameStr);
+	userName.blur(function(){
+		localStorage.userName = userName.val();
 	});
-}
-
-function insertNewNameInput(oldNameStr) {
-	$("<input>").val(oldNameStr).keyup(function(e) {
-		if (e.keyCode == 13) {
-			var newNameStr = $(this).val();
-			if (newNameStr != "") {
-				userName.text(newNameStr).show();
-				localStorage.userName = newNameStr;
-				$(this).remove();
-				if (oldNameStr == "")
-					$("#new-msg").slideDown();
-			}
-		} else if (e.keyCode == 27) {
-			if (oldNameStr != "") {
-				userName.show();
-				$(this).remove();
-			}
+	$("#new-msg").focusin(function(){
+		if(!userName.val()){
+			location.hash = "#setting";
+			userName.select();
 		}
-	}).insertAfter(userName).select();
+	});
 }
 
 // notification
@@ -91,7 +57,7 @@ function setupNewMsg() {
 	$("#new-msg textarea").keydown(function(e) {
 		if (e.keyCode == 13 && $(this).val() != "") {
 			var chatLog = {
-				user : userName.text(),
+				user : userName.val(),
 				msg : $(this).val()
 			};
 			$.ajax({
@@ -159,7 +125,7 @@ function updateWS() {
 		} else if (json.type == "updateList") {
 			updatePlaylist();
 		} else if (json.type == "notify") {
-			if ($("#notify").prop("checked") && json.title != userName.text()) {
+			if ($("#notify").prop("checked") && json.title != userName.val()) {
 				var notify = new Notification(json.title, {
 					body : json.body,
 					icon : "assets/images/logo.png",
@@ -265,22 +231,3 @@ function syncAndPlay(seek) {
 		player.setVolume($("#volume").prop("value"));
 	});
 }
-
-// Facebook
-/*
- * function setupFB() { window.fbAsyncInit = function() { FB.init({ appId :
- * '565192206888536', status : true, cookie : true, xfbml : true });
- * 
- * FB.Event.subscribe('auth.authResponseChange', function(response) { if
- * (response.status === 'connected') { testAPI(); } else if (response.status ===
- * 'not_authorized') { FB.login(); } else { FB.login(); } }); }; // Load the SDK
- * asynchronously (function(d) { var js, id = 'facebook-jssdk', ref =
- * d.getElementsByTagName('script')[0]; if (d.getElementById(id)) { return; } js =
- * d.createElement('script'); js.id = id; js.async = true; js.src =
- * "//connect.facebook.net/en_US/all.js"; ref.parentNode.insertBefore(js, ref);
- * }(document)); }
- * 
- * function testAPI() { console.log('Welcome! Fetching your information.... ');
- * FB.api('/me', function(response) { console.log('Good to see you, ' +
- * response.name + '.'); }); }
- */
