@@ -25,6 +25,7 @@
 <script src="assets/javascripts/main.js"></script>
 </head>
 <body>
+	<div id="fb-root"></div>
 	<header class="wrapper">
 		<div class="logo">VocaRadio</div>
 	</header>
@@ -49,6 +50,11 @@
 					<p>
 						<strong>your name: </strong><br /> <input id="username" />
 					</p>
+					<p>
+						<button id="login" class="fb">Connect with Facebook</button>
+						<button id="logout" class="grey">Logout</button>
+						<span id="fb-status"></span>
+					</p>
 				</div>
 			</div>
 		</div>
@@ -70,22 +76,13 @@
 		<div class="section group">
 			<div id="playlist" class="span_4_of_4 col"></div>
 		</div>
-		<div class="section group">
-			<div id="user">
-				<div id="fb-root"></div>
-				<!-- <button id="login" class="fb-button"></button> -->
-				<!-- <button id="logout" class="grey">Logout</button> -->
-			</div>
-		</div>
 	</div>
 	<div class="wrapper about">
 		<div class="section group">
 			<div class="span_1_of_4 col">
 				DJ: <a href="http://facebook.com/pishen" target="_blank">pishen</a>
 			</div>
-			<div class="span_1_of_4 col">
-				イラスト: 有熊黑白
-			</div>
+			<div class="span_1_of_4 col">イラスト: 有熊黑白</div>
 			<div class="span_1_of_4 col">
 				入台音效: <a href="http://goo.gl/4AKWYn" target="_blank">yoyo幫尼</a>
 			</div>
