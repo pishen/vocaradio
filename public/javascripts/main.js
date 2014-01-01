@@ -58,7 +58,8 @@ function setupNewMsg() {
 	$("#new-msg textarea").keydown(function(e) {
 		if (e.keyCode == 13 && $(this).val() != "") {
 			var chatLog = {
-				user : userName.val(),
+				name : userName.val(),
+				token : accessToken ? accessToken : "guest",
 				msg : $(this).val()
 			}
 			$.ajax({
@@ -234,6 +235,7 @@ function syncAndPlay(seek) {
 }
 
 // Facebook
+var accessToken
 function setupFB() {
 	$.getScript('//connect.facebook.net/en_US/all.js', function() {
 		FB.init({
@@ -252,8 +254,10 @@ function setupFB() {
 			if (resp.status === 'connected') {
 				$("#login").hide()
 				$("#logout").show()
+				accessToken = resp.authResponse.accessToken
 				FB.api('/me', function(resp) {
 					$("#fb-status").text(" (Logged in as " + resp.name + ") ")
+					if(!userName.val()) userName.val(resp.name)
 				})
 			}else{
 				$("#login").show()

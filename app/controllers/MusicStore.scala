@@ -1,17 +1,18 @@
 package controllers
 
 import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.matching.Regex
+
+import org.slf4j.LoggerFactory
+
+import models.Cypher
 import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 import views.html.helper
-import play.api.libs.json.Json
-import models.Cypher
-import scala.util.Success
-import scala.util.Failure
-import org.slf4j.LoggerFactory
-import scala.util.matching.Regex
 
 object MusicStore {
   val log = LoggerFactory.getLogger("MusicStore")

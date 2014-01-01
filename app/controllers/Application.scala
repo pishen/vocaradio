@@ -2,10 +2,11 @@ package controllers
 
 import java.net.MalformedURLException
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
 import scala.Array.canBuildFrom
 import scala.concurrent.duration.DurationInt
 import scala.util.Random
-import scala.xml.Utility
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
@@ -20,16 +21,14 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
-import models.Song
-import java.net.URLDecoder
-import java.text.SimpleDateFormat
-import java.util.Date
+import scala.concurrent.Future
 
 object Application extends Controller {
   implicit val timeout = Timeout((5).seconds)
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
+  val userStore = Akka.system.actorOf(Props[UserStore], "userStore")
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
 
@@ -57,32 +56,45 @@ object Application extends Controller {
 
   def chat = Action(parse.json) { request =>
     val json = request.body
-    val user = (json \ "user").as[String]
-    require(user != "")
+    val name = (json \ "name").as[String]
+    require(name != "")
+    val token = (json \ "token").as[String]
     val msg = (json \ "msg").as[String]
 
-    val chatLog =
-      <strong class="color">{ user }</strong>
-      <p title={ sdf.format(new Date()) }>{
-        //decorate the url
-        msg.split(" ").map { s =>
-          try {
-            new URL(s)
-            <a target="_blank" href={ s }>{ s }</a>
-          } catch {
-            case e: MalformedURLException=> " " + s + " "
-          }
-        }
-      }</p>.mkString
+    val userID = if (token == "guest") {
+      Future.successful("guest")
+    } else {
+      (userStore ? InspectToken(token)).mapTo[String]
+    }
 
-    broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> chatLog)))
-    broadcaster ! ToAll(
-      Json.stringify(
-        Json.obj("type" -> "notify",
-          "title" -> user,
-          "body" -> msg,
-          "tag" -> "chat")))
-    chatLogger ! ChatLog(chatLog)
+    userID.foreach(id => {
+      val checkedID = if(id == "628930919") id + "(DJ)" else id
+      val chatLog =
+        <strong class="color" title={ checkedID }>{ name }</strong>
+        <p title={ sdf.format(new Date()) }>{
+          //decorate the url
+          msg.split(" ").map { s =>
+            try {
+              new URL(s)
+              <a target="_blank" href={ s }>{ s }</a>
+            } catch {
+              case e: MalformedURLException=> " " + s + " "
+            }
+          }
+        }</p>.mkString
+      
+      //log the message to chatroom
+      broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> chatLog)))
+      //notification
+      broadcaster ! ToAll(
+        Json.stringify(
+          Json.obj("type" -> "notify",
+            "title" -> name,
+            "body" -> msg,
+            "tag" -> "chat")))
+      //log the message on server
+      chatLogger ! ChatLog(chatLog)
+    })
 
     Ok("Got msg")
   }

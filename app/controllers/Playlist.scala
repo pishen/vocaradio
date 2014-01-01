@@ -1,19 +1,19 @@
 package controllers
 
 import java.util.Date
+
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Random
 import scala.util.Success
+
 import akka.actor.Actor
-import akka.actor.actorRef2Scala
+import akka.actor.ActorSelection.toScala
 import akka.pattern.pipe
-import models.Song
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.ws.WS
-import scalax.io.Resource
-import views.html.helper
 import play.api.libs.json.Json
+import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import scalax.io.Resource
 
 class Playlist extends Actor {
   private val titles = Resource.fromFile("titles")
