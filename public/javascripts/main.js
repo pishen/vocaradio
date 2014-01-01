@@ -184,9 +184,11 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
 	console.log("ready")
+	if(localStorage.volume) $("#volume").prop("value", localStorage.volume)
 	player.setVolume($("#volume").prop("value"))
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"))
+		localStorage.volume = $(this).prop("value")
 	})
 	if (isFirst)
 		player.loadVideoById('7NptssoOJ78')
