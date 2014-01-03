@@ -34,6 +34,7 @@ object Application extends Controller {
 
   def index = Action {
     Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length))))
+      .withHeaders("X-Frame-Options" -> "DENY")
   }
 
   def sync = Action.async {
@@ -68,7 +69,7 @@ object Application extends Controller {
     }
 
     userID.foreach(id => {
-      val checkedID = if(id == "628930919") id + "(DJ)" else id
+      val checkedID = if (id == "628930919") id + "(DJ)" else id
       val chatLog =
         <strong class="color" title={ checkedID }>{ name }</strong>
         <p title={ sdf.format(new Date()) }>{
@@ -82,7 +83,7 @@ object Application extends Controller {
             }
           }
         }</p>.mkString
-      
+
       //log the message to chatroom
       broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "chat", "content" -> chatLog)))
       //notification
