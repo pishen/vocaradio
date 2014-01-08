@@ -8,32 +8,13 @@ $(document).ready(function() {
 
 	originTitle = document.title
 
-	setupUserName()
 	setupNotify()
+	setupUserName()
 	setupNewMsg()
 	updateWS()
-	setupAliveMsg()
 	setupFB()
 
 })
-
-// username
-var userName
-function setupUserName() {
-	userName = $("#username")
-	if (typeof (Storage) !== "undefined" && localStorage.userName) {
-		userName.val(localStorage.userName)
-	}
-	userName.blur(function() {
-		localStorage.userName = userName.val()
-	})
-	$("#new-msg").focusin(function() {
-		if (!userName.val()) {
-			location.hash = "#setting"
-			userName.select()
-		}
-	})
-}
 
 // notification
 function setupNotify() {
@@ -48,12 +29,29 @@ function setupNotify() {
 					notify.close()
 				}, 5000)
 			})
-			$(".tip").remove()
 		}
 	})
 }
 
-// new chat POST
+// username
+var userName
+function setupUserName() {
+	userName = $("#username")
+	if (localStorage.userName) {
+		userName.val(localStorage.userName)
+	}
+	userName.blur(function() {
+		localStorage.userName = userName.val()
+	})
+	$("#new-msg").focusin(function() {
+		if (!userName.val()) {
+			location.hash = "#setting"
+			userName.select()
+		}
+	})
+}
+
+//new chat POST
 function setupNewMsg() {
 	$("#new-msg textarea").keydown(function(e) {
 		if (e.keyCode == 13 && $(this).val() != "") {
@@ -150,13 +148,6 @@ function updateWS() {
 			retryTimes += 1
 		}
 	}
-}
-
-// keep websocket connected by nginx
-function setupAliveMsg() {
-	window.setInterval(function() {
-		ws.send("still alive")
-	}, 60000)
 }
 
 // YouTube player
