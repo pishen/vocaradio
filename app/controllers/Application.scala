@@ -107,7 +107,7 @@ object Application extends Controller {
   }
 
   def listContent = Action.async {
-    (playlist ? ListContent).mapTo[Seq[String]].map(imgs => Ok(Json.obj("imgs" -> imgs)))
+    (playlist ? ListContent).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
   }
 
 }

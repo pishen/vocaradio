@@ -51,7 +51,7 @@ function setupUserName() {
 	})
 }
 
-//new chat POST
+// new chat POST
 function setupNewMsg() {
 	$("#new-msg textarea").keydown(function(e) {
 		if (e.keyCode == 13 && $(this).val() != "") {
@@ -78,24 +78,33 @@ function setupNewMsg() {
 }
 
 // playlist
-function updatePlaylist() {
-	$.getJSON("listContent", function(jsObj) {
-		var playlist = $("#playlist")
-		var imgs = playlist.children()
-		if (imgs.length == 0) {
-			$.each(jsObj.imgs, function(i, imgStr) {
-				$(imgStr).appendTo(playlist)
-			})
-		} else {
-			imgs.each(function(i) {
-				var newImg = $(jsObj.imgs[i]).hide()
-				$(this).delay(i * 100).fadeOut(function() {
-					$(this).replaceWith(newImg)
-					newImg.fadeIn()
-				})
+var list
+function updatePlaylist(json) {
+	if (json) {
+		if (json.remove) {
+			var index = parseInt(json.remove)
+			var itemToRemove = list.eq(index)
+			//prevent wrong selection from next remove before animate done
+			list = list.slice(0, index).add(list.slice(index + 1))
+			itemToRemove.animate({
+				width : "hide"
+			}, function() {
+				$(this).remove()
 			})
 		}
-	})
+		if(json.append){
+			var itemToAppend = $(json.append)
+			list = list.add(itemToAppend)
+			itemToAppend.hide().appendTo("#playlist").animate({
+				width : "show"
+			})
+		}
+	} else {
+		$.getJSON("listContent", function(json) {
+			$("#playlist").empty().append(json.content)
+			list = $("#playlist span")
+		})
+	}
 }
 
 // websocket
@@ -106,11 +115,10 @@ function updateWS() {
 	ws.onopen = function() {
 		retryTimes = 0
 		// client counter
-		ws.send("still alive")
+		ws.send("Hello, Voca")
 		// chatroom
 		$.getJSON("chat-history", function(jsObj) {
-			$("#chat-log").children(".old").remove()
-			$("#chat-log").prepend(jsObj.history)
+			$("#chat-log").empty().append(jsObj.history)
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
 		})
 		updatePlaylist()
@@ -123,7 +131,7 @@ function updateWS() {
 			$("#chat-log").append(json.content)
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
 		} else if (json.type == "updateList") {
-			updatePlaylist()
+			updatePlaylist(json)
 		} else if (json.type == "notify") {
 			if ($("#notify").prop("checked") && json.title != userName.val()) {
 				var notify = new Notification(json.title, {
@@ -141,9 +149,8 @@ function updateWS() {
 	ws.onclose = function() {
 		// chatroom
 		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>")
-		$("#chat-log").children().addClass("old")
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-		if (retryTimes < 10) {
+		if (retryTimes < 5) {
 			window.setTimeout(updateWS, 2000)
 			retryTimes += 1
 		}
@@ -159,6 +166,7 @@ function onYouTubeIframeAPIReady() {
 		height : '360',
 		width : '640',
 		playerVars : {
+			'wmode': 'opaque',
 			'rel' : 0,
 			'iv_load_policy' : 3,
 			'controls' : isMobile ? 1 : 0,
@@ -175,7 +183,8 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
 	console.log("ready")
-	if(localStorage.volume) $("#volume").prop("value", localStorage.volume)
+	if (localStorage.volume)
+		$("#volume").prop("value", localStorage.volume)
 	player.setVolume($("#volume").prop("value"))
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"))
@@ -235,12 +244,12 @@ function setupFB() {
 			appId : '565192206888536',
 			status : true,
 			cookie : true,
-			xfbml  : false
+			xfbml : false
 		})
-		$("#login").click(function(){
+		$("#login").click(function() {
 			FB.login()
 		})
-		$("#logout").click(function(){
+		$("#logout").click(function() {
 			FB.logout()
 		}).hide()
 		FB.Event.subscribe('auth.authResponseChange', function(resp) {
@@ -250,9 +259,10 @@ function setupFB() {
 				accessToken = resp.authResponse.accessToken
 				FB.api('/me', function(resp) {
 					$("#fb-status").text(" (Logged in as " + resp.name + ") ")
-					if(!userName.val()) userName.val(resp.name)
+					if (!userName.val())
+						userName.val(resp.name)
 				})
-			}else{
+			} else {
 				$("#login").show()
 				$("#logout").hide()
 				$("#fb-status").text("")

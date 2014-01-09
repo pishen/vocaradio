@@ -22,7 +22,12 @@ class Playlist extends Actor {
   private val chatLogger = context.actorSelection("../chatLogger")
   private def getTime() = new Date().getTime() / 1000
   private val lowerBound = 20
-  private var buffer = Random.shuffle(titles.lines().toSeq).map(SongHolder(_))
+  private var randomTitles = Random.shuffle(titles.lines().toSeq)
+  private var buffer = {
+    val initSongs = randomTitles.take(lowerBound + 1).map(SongHolder(_))
+    randomTitles = randomTitles.drop(lowerBound + 1)
+    initSongs
+  }
   private var nextSong = getNextAndFill()
 
   def receive = {
@@ -41,9 +46,7 @@ class Playlist extends Actor {
       } pipeTo sender
     }
     case ListContent => {
-      Future.sequence(buffer.take(20).map(_.songF.map(song => {
-        <img src={ song.thumb } title={ song.title } width="100"/>.toString
-      }).recover { case _ => <img src="error" width="0"/>.toString })) pipeTo sender
+      Future.sequence(buffer.map(_.htmlString)).map(_.mkString) pipeTo sender
     }
   }
 
@@ -56,12 +59,27 @@ class Playlist extends Actor {
       (song, getTime)
     })
     buffer = buffer.tail
-    if (buffer.length < lowerBound) {
-      val bufferTitles = buffer.map(_.originTitle)
-      val newTitles = Random.shuffle(titles.lines().toSeq.filterNot(bufferTitles.contains(_)))
-      buffer = buffer ++ newTitles.map(SongHolder(_))
+    val fill = buffer.size < lowerBound
+    if (fill) {
+      if(randomTitles.isEmpty){
+        val bufferTitles = buffer.map(_.originTitle)
+        randomTitles = Random.shuffle(titles.lines().toSeq.filterNot(bufferTitles contains _))
+      } 
+      buffer = buffer :+ SongHolder(randomTitles.head)
+      randomTitles = randomTitles.tail
+      //notify to update playlist when ready
+      buffer.last.htmlString.foreach(str => {
+        val json = Json.obj("type" -> "updateList",
+          "remove" -> "0",
+          "append" -> str)
+        broadcaster ! ToAll(Json.stringify(json))
+      })
+    }else{
+      //notify to update playlist
+      val json = Json.obj("type" -> "updateList",
+          "remove" -> 0)
+      broadcaster ! ToAll(Json.stringify(json))
     }
-    broadcaster ! ToAll(Json.stringify(Json.obj("type" -> "updateList")))
     nextSong
   }
 
@@ -71,6 +89,9 @@ class Playlist extends Actor {
 
   case class SongHolder(originTitle: String) {
     lazy val songF = MusicStore.getSong(originTitle)
+    lazy val htmlString = songF.map(song => {
+      <span><img src={ song.thumb } title={ song.title }/></span>.toString
+    }).recover { case _ => <span></span>.toString }
   }
 }
 
