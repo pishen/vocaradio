@@ -19,49 +19,49 @@ object MusicStore {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
 
   //TODO change the logging and println parts
-  def getSong(originTitle: String, update: Boolean = true): Future[Song] = {
+  def getSong(originTitle: String): Future[Song] = {
     Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} RETURN s.videoId")
       .on("ot" -> originTitle).getData
       .flatMap(data => {
         if (data.nonEmpty) {
-          //use stored videoId and update the status
+          /* use stored videoId first, 
+           * if stored videoId has error,
+           * try to search for new id and update status */
           val videoId = data.head.head
-          val song = getSongFromYT(originTitle, videoId)
-          if (update) {
-            song.onComplete {
-              case Success(_) => {
-                Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'OK'")
-                  .on("ot" -> originTitle).execute
-                  .foreach(json => println(originTitle + "\n" + json))
-              }
-              case Failure(ex) => {
-                log.error("YT error " + originTitle, ex)
-                Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
-                  .on("ot" -> originTitle).execute
-                  .foreach(json => println(originTitle + "\n" + json))
-              }
+          val songF = getSongFromYT(originTitle, videoId).recoverWith {
+            case ex: Exception => getSongFromYT(originTitle)
+          }
+          songF.onComplete {
+            case Success(s) => {
+              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.videoId = {id}, s.status = 'OK'")
+                .on("ot" -> originTitle, "id" -> s.videoId).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+            case Failure(ex) => {
+              log.error("YT error " + originTitle, ex)
+              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
+                .on("ot" -> originTitle).execute
+                .foreach(json => println(originTitle + "\n" + json))
             }
           }
-          song
+          songF
         } else {
           //add new song
-          val newSong = getSongFromYT(originTitle)
-          if (update) {
-            newSong.onComplete {
-              case Success(s) => {
-                Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
-                  .on("ot" -> originTitle, "id" -> s.videoId).execute
-                  .foreach(json => println(originTitle + "\n" + json))
-              }
-              case Failure(ex) => {
-                log.error("YT error " + originTitle, ex)
-                Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
-                  .on("ot" -> originTitle).execute
-                  .foreach(json => println(originTitle + "\n" + json))
-              }
+          val newSongF = getSongFromYT(originTitle)
+          newSongF.onComplete {
+            case Success(s) => {
+              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
+                .on("ot" -> originTitle, "id" -> s.videoId).execute
+                .foreach(json => println(originTitle + "\n" + json))
+            }
+            case Failure(ex) => {
+              log.error("YT error " + originTitle, ex)
+              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
+                .on("ot" -> originTitle).execute
+                .foreach(json => println(originTitle + "\n" + json))
             }
           }
-          newSong
+          newSongF
         }
       })
   }
@@ -76,26 +76,28 @@ object MusicStore {
   }
 
   private def getVideoId(originTitle: String): Future[String] = {
-    //TODO change to queryString()
-    WS.url("https://www.googleapis.com/youtube/v3/search?part=id&maxResults=1&q="
-      + helper.urlEncode(originTitle)
-      + "&type=video&videoEmbeddable=true&videoSyndicated=true&fields=items%2Fid&key="
-      + googleKey)
+    WS.url("https://www.googleapis.com/youtube/v3/search")
+      .withQueryString(
+        "part" -> "id",
+        "maxResults" -> "1",
+        "q" -> helper.urlEncode(originTitle),
+        "type" -> "video",
+        "videoEmbeddable" -> "true",
+        "videoSyndicated" -> "true",
+        "fields" -> "items/id",
+        "key" -> googleKey)
       .get
       .map(response => (response.json \\ "videoId").head.as[String])
   }
 
   private def getDetails(videoId: String): Future[(String, Int, String)] = {
-
-    val req = WS.url("https://www.googleapis.com/youtube/v3/videos")
+    WS.url("https://www.googleapis.com/youtube/v3/videos")
       .withQueryString(
         "part" -> "snippet,contentDetails",
         "id" -> videoId,
         "fields" -> "items(contentDetails,snippet)",
         "key" -> googleKey)
-    
-
-    req.get
+      .get
       .map(response => {
         val title = (response.json \\ "title").head.as[String]
         val rgx = new Regex("""PT(\d+M)?(\d+S)""", "m", "s")
@@ -103,7 +105,7 @@ object MusicStore {
         val duration = {
           val mt = rgx.findFirstMatchIn(ptms).get
           val m = mt.group("m")
-          (if(m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
+          (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
         }
         val thumb = (response.json \\ "thumbnails").head.\("default").\("url").as[String]
         (title, duration, thumb)
