@@ -151,7 +151,7 @@ function updateWS() {
 		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>")
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
 		if (retryTimes < 5) {
-			window.setTimeout(updateWS, 2000)
+			setTimeout(updateWS, 2000)
 			retryTimes += 1
 		}
 	}

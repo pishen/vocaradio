@@ -80,7 +80,7 @@ object MusicStore {
       .withQueryString(
         "part" -> "id",
         "maxResults" -> "1",
-        "q" -> helper.urlEncode(originTitle),
+        "q" -> originTitle,
         "type" -> "video",
         "videoEmbeddable" -> "true",
         "videoSyndicated" -> "true",
