@@ -26,9 +26,9 @@ import scala.concurrent.Future
 object Application extends Controller {
   implicit val timeout = Timeout((5).seconds)
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
-  val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
+  val playlistHandler = Akka.system.actorOf(Props[PlaylistHandler], "playlistHandler")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
-  val userStore = Akka.system.actorOf(Props[UserStore], "userStore")
+  val userStore = Akka.system.actorOf(Props[UserHandler], "userStore")
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
 
@@ -38,7 +38,7 @@ object Application extends Controller {
   }
 
   def sync = Action.async {
-    (playlist ? CurrentSong).mapTo[(String, Int, String)].map(t => {
+    (playlistHandler ? CurrentSong).mapTo[(String, Int, String)].map(t => {
       Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
     })
   }
@@ -107,7 +107,7 @@ object Application extends Controller {
   }
 
   def listContent = Action.async {
-    (playlist ? ListContent).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
+    (playlistHandler ? ListContent).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
   }
 
 }

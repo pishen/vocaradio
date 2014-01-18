@@ -7,7 +7,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 
-class UserStore extends Actor {
+class UserHandler extends Actor {
   val appSecret = Resource.fromFile("fb-app-secret").lines().head
   val appID = 565192206888536L
   //mutable

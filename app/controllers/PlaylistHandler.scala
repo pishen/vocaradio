@@ -10,12 +10,13 @@ import scala.util.Success
 import akka.actor.Actor
 import akka.actor.ActorSelection.toScala
 import akka.pattern.pipe
+import models.MusicStore
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import scalax.io.Resource
 
-class Playlist extends Actor {
+class PlaylistHandler extends Actor {
   private val titles = Resource.fromFile("titles")
   private val googleKey = Resource.fromFile("google-api-key").lines().head
   private val broadcaster = context.actorSelection("../broadcaster")
