@@ -21,8 +21,8 @@ class PlaylistHandler extends Actor {
   private val googleKey = Resource.fromFile("google-api-key").lines().head
   private val broadcaster = context.actorSelection("../broadcaster")
   private val chatLogger = context.actorSelection("../chatLogger")
-  private def getTime() = new Date().getTime() / 1000
-  private val lowerBound = 20
+  
+  private val lowerBound = 15
   private var randomTitles = Random.shuffle(titles.lines().toSeq)
   private var buffer = {
     val initSongs = randomTitles.take(lowerBound + 1).map(SongHolder(_))
@@ -32,7 +32,7 @@ class PlaylistHandler extends Actor {
   private var nextSong = getNextAndFill()
 
   def receive = {
-    case CurrentSong => {
+    case PlaylistHandler.CurrentSong => {
       nextSong.value match {
         case Some(Success((song, start))) =>
           if (getTime - start > song.duration - 2) {
@@ -46,7 +46,7 @@ class PlaylistHandler extends Actor {
           (song.videoId, (getTime - start).toInt, song.originTitle)
       } pipeTo sender
     }
-    case ListContent => {
+    case PlaylistHandler.Content => {
       Future.sequence(buffer.map(_.htmlString)).map(_.mkString) pipeTo sender
     }
   }
@@ -83,11 +83,9 @@ class PlaylistHandler extends Actor {
     }
     nextSong
   }
-
-  private def removeAndFill(title: String) = {
-    //TODO
-  }
-
+  
+  private def getTime() = new Date().getTime() / 1000
+  
   case class SongHolder(originTitle: String) {
     lazy val songF = MusicStore.getSong(originTitle)
     lazy val htmlString = songF.map(song => {
@@ -96,5 +94,7 @@ class PlaylistHandler extends Actor {
   }
 }
 
-case object CurrentSong
-case object ListContent
+object PlaylistHandler {
+  case object CurrentSong
+  case object Content
+}

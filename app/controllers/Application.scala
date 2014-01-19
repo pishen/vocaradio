@@ -38,9 +38,10 @@ object Application extends Controller {
   }
 
   def sync = Action.async {
-    (playlistHandler ? CurrentSong).mapTo[(String, Int, String)].map(t => {
-      Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
-    })
+    (playlistHandler ? PlaylistHandler.CurrentSong).mapTo[(String, Int, String)]
+      .map(t => {
+        Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
+      })
   }
 
   def ws = WebSocket.async[String] { request =>
@@ -107,7 +108,7 @@ object Application extends Controller {
   }
 
   def listContent = Action.async {
-    (playlistHandler ? ListContent).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
+    (playlistHandler ? PlaylistHandler.Content).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
   }
 
 }
