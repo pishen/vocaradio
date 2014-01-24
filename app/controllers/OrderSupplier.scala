@@ -2,49 +2,52 @@ package controllers
 
 import akka.actor.Actor
 import scalax.io.Resource
-import controllers.OrderSupplier.SongHolder
 import models.MusicStore
 import scala.util.Random
 import java.util.Date
 
 class OrderSupplier extends Actor {
   private val titles = Resource.fromFile("titles")
+  private val groupSize = 25
+  
   private var groups = makeGroups()
-  private var start = getTime()
+  private var start = currentSecs()
   
   def receive = {
-    case OrderSupplier.Content => {
+    case CurrentGroup => {
       
     }
+    case RandomPick =>
+    case p: Pick =>
   }
   
   private def currentGroup() = {
-    //1hr: 3600000 mini secs
-    if(getTime() - start >= 3600) updateGroup()
-    groups.head
+    val elapse = currentSecs() - start
+    if(elapse >= 3600){
+      updateGroup()
+      (groups.head, 0L)
+    }else{
+      (groups.head, elapse)
+    }
   }
   
   private def updateGroup() = {
     if(groups.size == 1) groups = makeGroups()
     else groups = groups.tail
     //TODO pick the songs already in playlist
-    start = getTime()
+    start = currentSecs()
   }
   
   private def makeGroups() = {
-    Random.shuffle(titles.lines().map(SongHolder(_))).grouped(20)
+    Random.shuffle(titles.lines().map(SongHolder.apply)).grouped(groupSize).init
   }
   
-  private def getTime() = new Date().getTime() / 1000
-  
+  case class SongHolder(originTitle: String) {
+    lazy val song = MusicStore.getSong(originTitle)
+    def htmlString = ""
+  }
 }
 
-object OrderSupplier {
-  case object Content
-  case class Pick()
-  case class SongHolder(originTitle: String) {
-    lazy val songF = MusicStore.getSong(originTitle)
-    lazy val htmlString = ""
-    var pickedBy: String = null
-  }
-}
+case object CurrentGroup
+case object RandomPick
+case class Pick(originTitle: String, userName: String, userID: String)

@@ -66,9 +66,19 @@ object MusicStore {
   private def getSongFromYT(originTitle: String, videoId: String = null): Future[Song] = {
     for {
       videoId <- if (videoId == null) getVideoId(originTitle) else Future.successful(videoId)
-      (title, duration, thumb) <- getDetails(videoId)
+      details <- getDetails(videoId)
     } yield {
-      Song(originTitle, videoId, title, duration, thumb)
+      val title = (details.json \\ "title").head.as[String]
+      val rgx = new Regex("""PT(\d+M)?(\d+S)""", "m", "s")
+      val ptms = (details.json \\ "duration").head.as[String]
+      val duration = {
+        val mt = rgx.findFirstMatchIn(ptms).get
+        val m = mt.group("m")
+        (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
+      }
+      val thumbDefault = (details.json \\ "thumbnails").head.\("default").\("url").as[String]
+      val thumbMedium = (details.json \\ "thumbnails").head.\("medium").\("url").as[String]
+      Song(originTitle, videoId, title, duration, thumbDefault, thumbMedium)
     }
   }
 
@@ -87,7 +97,7 @@ object MusicStore {
       .map(response => (response.json \\ "videoId").head.as[String])
   }
 
-  private def getDetails(videoId: String): Future[(String, Int, String)] = {
+  private def getDetails(videoId: String) = {
     WS.url("https://www.googleapis.com/youtube/v3/videos")
       .withQueryString(
         "part" -> "snippet,contentDetails",
@@ -95,18 +105,6 @@ object MusicStore {
         "fields" -> "items(contentDetails,snippet)",
         "key" -> googleKey)
       .get
-      .map(response => {
-        val title = (response.json \\ "title").head.as[String]
-        val rgx = new Regex("""PT(\d+M)?(\d+S)""", "m", "s")
-        val ptms = (response.json \\ "duration").head.as[String]
-        val duration = {
-          val mt = rgx.findFirstMatchIn(ptms).get
-          val m = mt.group("m")
-          (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
-        }
-        val thumb = (response.json \\ "thumbnails").head.\("default").\("url").as[String]
-        (title, duration, thumb)
-      })
   }
 
 }

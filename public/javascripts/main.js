@@ -91,20 +91,31 @@ function updatePlaylist(json) {
 			}, function() {
 				$(this).remove()
 			})
-		}
-		if(json.append){
+		}else if(json.insert){
+			var index = parseInt(json.insert)
+			var itemToInsert = $(json.content)
+			itemToInsert.hide().insertBefore(list.eq(index)).animate({
+				width : "show"
+			})
+			list = $("#playlist span")
+		}else if(json.append){
 			var itemToAppend = $(json.append)
-			list = list.add(itemToAppend)
 			itemToAppend.hide().appendTo("#playlist").animate({
 				width : "show"
 			})
+			list = $("#playlist span")
 		}
 	} else {
-		$.getJSON("listContent", function(json) {
+		$.getJSON("playlistQueue", function(json) {
 			$("#playlist").empty().append(json.content)
 			list = $("#playlist span")
 		})
 	}
+}
+
+//order-supplier
+function updateOrderSupplier(json){
+	
 }
 
 // websocket
@@ -130,8 +141,10 @@ function updateWS() {
 		} else if (json.type == "chat") {
 			$("#chat-log").append(json.content)
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-		} else if (json.type == "updateList") {
+		} else if (json.type == "updatePlaylist") {
 			updatePlaylist(json)
+		} else if (json.type == "updateOrderSupplier"){
+			updateOrderSupplier(json)
 		} else if (json.type == "notify") {
 			if ($("#notify").prop("checked") && json.title != userName.val()) {
 				var notify = new Notification(json.title, {
@@ -229,9 +242,9 @@ function onPlayerError(event) {
 
 function syncAndPlay(seek) {
 	// console.log("seek: " + seek)
-	$.getJSON("sync", function(jsObj) {
-		console.log("sync id: " + jsObj.id)
-		player.loadVideoById(jsObj.id, seek ? jsObj.start : 0)
+	$.getJSON("sync", function(json) {
+		console.log("sync id: " + json.id)
+		player.loadVideoById(json.id, seek ? json.start : 0)
 		player.setVolume($("#volume").prop("value"))
 	})
 }

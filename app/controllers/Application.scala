@@ -4,13 +4,14 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import scala.Array.canBuildFrom
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.Future
 import scala.util.Random
+
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
-import akka.util.Timeout
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -21,14 +22,15 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
-import scala.concurrent.Future
 
 object Application extends Controller {
-  implicit val timeout = Timeout((5).seconds)
+  //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
-  val playlistHandler = Akka.system.actorOf(Props[PlaylistHandler], "playlistHandler")
+  val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
-  val userStore = Akka.system.actorOf(Props[UserHandler], "userStore")
+  val userHandler = Akka.system.actorOf(Props[UserHandler], "userHandler")
+  val orderSupplier = Akka.system.actorOf(Props[OrderSupplier], "orderSupplier")
+  
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
 
@@ -38,10 +40,7 @@ object Application extends Controller {
   }
 
   def sync = Action.async {
-    (playlistHandler ? PlaylistHandler.CurrentSong).mapTo[(String, Int, String)]
-      .map(t => {
-        Ok(Json.obj("id" -> t._1, "start" -> t._2, "originTitle" -> t._3))
-      })
+    (playlist ? Playing).mapTo[String].map(str => Ok(str))
   }
 
   def ws = WebSocket.async[String] { request =>
@@ -66,11 +65,11 @@ object Application extends Controller {
     val userID = if (token == "guest") {
       Future.successful("guest")
     } else {
-      (userStore ? InspectToken(token)).mapTo[String]
+      (userHandler ? InspectToken(token)).mapTo[String]
     }
 
     userID.foreach(id => {
-      val checkedID = if (id == "628930919") id + "(DJ)" else id
+      val checkedID = if (id == "628930919") "DJ" else id
       val chatLog =
         <strong class="color" title={ checkedID }>{ name }</strong>
         <p title={ sdf.format(new Date()) }>{
@@ -107,8 +106,8 @@ object Application extends Controller {
     })
   }
 
-  def listContent = Action.async {
-    (playlistHandler ? PlaylistHandler.Content).mapTo[String].map(str => Ok(Json.obj("content" -> str)))
+  def playlistQueue = Action.async {
+    (playlist ? Queue).mapTo[String].map(str => Ok(str))
   }
 
 }
