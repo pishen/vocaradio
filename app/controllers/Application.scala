@@ -27,20 +27,24 @@ object Application extends Controller {
   //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
+  val songPicker = Akka.system.actorOf(Props[SongPicker], "songPicker")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
   val userHandler = Akka.system.actorOf(Props[UserHandler], "userHandler")
-  val orderSupplier = Akka.system.actorOf(Props[OrderSupplier], "orderSupplier")
-  
+
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
 
+  val playlistSize = 25
+  val colSize = 5
+  val listHeight = (((playlistSize - 1) / colSize + 1) * 114).toString + "px"
+
   def index = Action {
-    Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length))))
+    Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length)), listHeight))
       .withHeaders("X-Frame-Options" -> "DENY")
   }
 
   def sync = Action.async {
-    (playlist ? Playing).mapTo[String].map(str => Ok(str))
+    (playlist ? CurrentSong).mapTo[String].map(str => Ok(str))
   }
 
   def ws = WebSocket.async[String] { request =>
@@ -106,8 +110,19 @@ object Application extends Controller {
     })
   }
 
-  def playlistQueue = Action.async {
-    (playlist ? Queue).mapTo[String].map(str => Ok(str))
+  def listContent = Action.async {
+    (playlist ? ListContent).mapTo[String].map(str => Ok(str))
+  }
+  
+  def order = Action(parse.json) { request =>
+    val json = request.body
+    val name = (json \ "name").as[String]
+    require(name != "")
+    val videoId = (json \ "videoId").as[String]
+    
+    playlist ! Order(videoId, name) 
+    
+    Ok("Got order")
   }
 
 }

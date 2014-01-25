@@ -44,11 +44,14 @@ function setupUserName() {
 		localStorage.userName = userName.val()
 	})
 	$("#new-msg").focusin(function() {
-		if (!userName.val()) {
-			location.hash = "#setting"
-			userName.select()
-		}
+		if (!userName.val())
+			openSettingForUserName()
 	})
+}
+
+function openSettingForUserName() {
+	location.hash = "#setting"
+	userName.select()
 }
 
 // new chat POST
@@ -81,41 +84,50 @@ function setupNewMsg() {
 var list
 function updatePlaylist(json) {
 	if (json) {
-		if (json.remove) {
-			var index = parseInt(json.remove)
-			var itemToRemove = list.eq(index)
-			//prevent wrong selection from next remove before animate done
-			list = list.slice(0, index).add(list.slice(index + 1))
-			itemToRemove.animate({
-				width : "hide"
-			}, function() {
-				$(this).remove()
-			})
-		}else if(json.insert){
-			var index = parseInt(json.insert)
-			var itemToInsert = $(json.content)
-			itemToInsert.hide().insertBefore(list.eq(index)).animate({
-				width : "show"
-			})
-			list = $("#playlist span")
-		}else if(json.append){
+		if (json.append) {
 			var itemToAppend = $(json.append)
-			itemToAppend.hide().appendTo("#playlist").animate({
-				width : "show"
+			itemToAppend.hide().appendTo("#playlist").delay(1000).fadeIn()
+		} else if (json.convert) {
+			$.each(json.convert, function(i, json2) {
+				var song = $("#" + json2.id)
+				if (json2.remove) {
+					song.remove()
+				} else {
+					song.css("transform", json2.to)
+					song.css("-webkit-transform", json2.to)
+					if (json2.orderedBy){
+						song.find(".order").off().remove()
+						song.find(".overlap").append(json2.orderedBy)
+					}
+				}
 			})
-			list = $("#playlist span")
 		}
+		setupOrders()
 	} else {
-		$.getJSON("playlistQueue", function(json) {
+		$.getJSON("listContent", function(json) {
 			$("#playlist").empty().append(json.content)
-			list = $("#playlist span")
+			setupOrders()
 		})
 	}
 }
 
-//order-supplier
-function updateOrderSupplier(json){
-	
+function setupOrders() {
+	$(".order").off().click(function() {
+		if (!userName.val()) {
+			openSettingForUserName()
+		} else {
+			var order = {
+				videoId : $(this).closest(".song").attr("id"),
+				name : userName.val()
+			}
+			$.ajax({
+				url : "order",
+				type : "POST",
+				data : JSON.stringify(order),
+				contentType : "application/json; charset=utf-8"
+			})
+		}
+	})
 }
 
 // websocket
@@ -143,8 +155,6 @@ function updateWS() {
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
 		} else if (json.type == "updatePlaylist") {
 			updatePlaylist(json)
-		} else if (json.type == "updateOrderSupplier"){
-			updateOrderSupplier(json)
 		} else if (json.type == "notify") {
 			if ($("#notify").prop("checked") && json.title != userName.val()) {
 				var notify = new Notification(json.title, {
@@ -179,7 +189,7 @@ function onYouTubeIframeAPIReady() {
 		height : '360',
 		width : '640',
 		playerVars : {
-			'wmode': 'opaque',
+			'wmode' : 'opaque',
 			'rel' : 0,
 			'iv_load_policy' : 3,
 			'controls' : isMobile ? 1 : 0,
@@ -244,7 +254,7 @@ function syncAndPlay(seek) {
 	// console.log("seek: " + seek)
 	$.getJSON("sync", function(json) {
 		console.log("sync id: " + json.id)
-		player.loadVideoById(json.id, seek ? json.start : 0)
+		player.loadVideoById(json.id, seek ? json.position : 0)
 		player.setVolume($("#volume").prop("value"))
 	})
 }
