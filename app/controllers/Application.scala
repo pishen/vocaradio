@@ -113,16 +113,17 @@ object Application extends Controller {
   def listContent = Action.async {
     (playlist ? ListContent).mapTo[String].map(str => Ok(str))
   }
-  
+
   def order = Action(parse.json) { request =>
     val json = request.body
     val name = (json \ "name").as[String]
     require(name != "")
     val token = (json \ "token").as[String]
     val videoId = (json \ "videoId").as[String]
-    
-    (userHandler ? InspectToken(token)).foreach(_ => playlist ! Order(videoId, name))
-    
+
+    (userHandler ? InspectToken(token)).mapTo[String]
+      .foreach(userId => playlist ! Order(videoId, name, userId))
+
     Ok("got order")
   }
 

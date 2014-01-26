@@ -19,7 +19,7 @@ class UserHandler extends Actor {
         case Some(id) => sender ! id
         case None => {
           val userID = askFB(token)
-          userID.map(id => AddTokenUserPair(token -> id)) pipeTo self
+          userID.foreach(id => self ! AddTokenUserPair(token -> id))
           userID pipeTo sender
         }
       }

@@ -46,20 +46,29 @@ class Playlist extends Actor {
       sender ! Json.stringify(json)
     }
     case AddSong(s) => {
-      val newSong = SongWrapper(s)
+      val newSong = SongWrapper(s, null, null)
       list = list :+ newSong
       //broadcast update
       val str = newSong.html(list.indices.last)
       broadcast(Json.obj("type" -> "updatePlaylist", "append" -> str))
     }
     case RemoveSong(ot) => //TODO impl
-    case Order(videoId, userName) => {
+    case Order(videoId, userName, userId) => {
       list.find(_.song.videoId == videoId) match {
         case None => sender ! "song-not-exist"
         case Some(w) => {
-          if (w.userName == null) {
-            val (l, r) = list.span(_.userName != null)
-            list = (l :+ SongWrapper(w.song, userName)) ++ (r.filter(_.song.videoId != videoId))
+          if (w.userId == null) {
+            val (l, r) = list.splitAt(list.lastIndexWhere(_.userId == userId) + 1)
+            val (rl, rr) = r.zipWithIndex.span {
+              case (w2, i) =>
+                val id = w2.userId
+                val prefix = r.take(i).map(_.userId)
+                id != null && !prefix.contains(id)
+            }
+            list = l ++ rl.map(_._1) ++
+              Seq(SongWrapper(w.song, userName, userId)) ++
+              rr.map(_._1).filter(_.song.videoId != videoId)
+
             //broadcast update
             val seq = list.zipWithIndex.map {
               case (w2, i) =>
@@ -103,7 +112,7 @@ class Playlist extends Actor {
     "translate3d(" + x + "px," + y + "px,0)"
   }
 
-  case class SongWrapper(song: Song, userName: String = null) {
+  case class SongWrapper(song: Song, userName: String, userId: String) {
     def html(index: Int) = {
       val transform = getStyle(index)
       val style = "transform:" + transform + ";-webkit-transform:" + transform
@@ -125,4 +134,4 @@ case object CurrentSong
 case object ListContent
 case class AddSong(song: Song)
 case class RemoveSong(originTitle: String)
-case class Order(videoId: String, userName: String)
+case class Order(videoId: String, userName: String, userId: String)
