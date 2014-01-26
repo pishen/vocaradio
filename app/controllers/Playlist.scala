@@ -15,7 +15,7 @@ class Playlist extends Actor {
   private var playing: Option[(SongWrapper, Long)] = None
   private var list = Seq.empty[SongWrapper]
 
-  for (i <- 1 to playlistSize) songPicker ! Pick
+  for (i <- 1 to playlistSize) songPicker ! Pick(1)
 
   def receive = {
     case CurrentSong => {
@@ -83,7 +83,7 @@ class Playlist extends Actor {
       val oldList = list
       playing = Some(list.head, currentTime())
       list = list.tail
-      songPicker ! Pick
+      songPicker ! Pick(1)
       //broadcast update
       val seq = oldList.zipWithIndex.map {
         case (w, i) =>
