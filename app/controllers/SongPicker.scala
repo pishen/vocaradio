@@ -20,13 +20,15 @@ class SongPicker extends Actor {
   }
 
   def receive = {
-    case Pick => {
+    case Pick(t) => {
       if (buffer.size < 25) refill()
       val picked = buffer.head
       buffer = buffer.tail
       picked.song.map(AddSong.apply) pipeTo playlist
       picked.song.onFailure {
-        case e: Exception => self ! Pick
+        case e: Exception => {
+          if(t < 20) self ! Pick(t + 1)
+        }
       }
     }
   }
@@ -41,4 +43,4 @@ class SongPicker extends Actor {
 
 }
 
-case object Pick
+case class Pick(times: Int)
