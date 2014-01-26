@@ -204,6 +204,16 @@ hr:after {
 	border: 0px;
 }
 
+#list-wrapper{
+	position: relative;
+}
+
+#rail {
+	position: absolute;
+	top:0;
+	left:0;
+}
+
 #playlist {
 	position: relative;
 	width: 960px;

@@ -76,9 +76,9 @@ object MusicStore {
         val m = mt.group("m")
         (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
       }
-      val thumbDefault = (details.json \\ "thumbnails").head.\("default").\("url").as[String]
+      //val thumbDefault = (details.json \\ "thumbnails").head.\("default").\("url").as[String]
       val thumbMedium = (details.json \\ "thumbnails").head.\("medium").\("url").as[String]
-      Song(originTitle, videoId, title, duration, thumbDefault, thumbMedium)
+      Song(originTitle, videoId, title, duration, thumbMedium)
     }
   }
 

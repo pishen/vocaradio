@@ -5,5 +5,4 @@ case class Song(
   videoId: String,
   title: String,
   duration: Int,
-  thumbDefault: String,
   thumbMedium: String)

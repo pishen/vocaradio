@@ -13,7 +13,7 @@ $(document).ready(function() {
 	setupNewMsg()
 	updateWS()
 	setupFB()
-
+	setupRail(5)
 })
 
 // notification
@@ -43,15 +43,14 @@ function setupUserName() {
 	userName.blur(function() {
 		localStorage.userName = userName.val()
 	})
-	$("#new-msg").focusin(function() {
-		if (!userName.val())
-			openSettingForUserName()
-	})
+
 }
 
-function openSettingForUserName() {
+function openSetting() {
 	location.hash = "#setting"
-	userName.select()
+	if (!userName.val()) {
+		userName.select()
+	}
 }
 
 // new chat POST
@@ -78,47 +77,77 @@ function setupNewMsg() {
 	}).click(function() {
 		document.title = originTitle
 	})
+	$("#new-msg").focusin(function() {
+		if (!userName.val()) {
+			openSetting()
+		}
+	})
+}
+
+function setupRail(row){
+	var left = 92
+	var right = 868
+	var rowHeight = 114
+	var canvas = document.getElementById('rail');
+    var context = canvas.getContext('2d');
+    context.lineWidth = 25;
+    context.strokeStyle = '#FFCC00';
+    for(i = 0; i < row; i++){
+    	context.beginPath();
+        context.moveTo(left, i * rowHeight + 52);
+        context.lineTo(right, i * rowHeight + 52);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(i % 2 == 0 ? right : left, i * rowHeight + 52);
+        context.lineTo(i % 2 == 0 ? right : left, (i + 1) * rowHeight + 52);
+        context.stroke();
+    }
 }
 
 // playlist
 var list
 function updatePlaylist(json) {
-	if (json) {
-		if (json.append) {
-			var itemToAppend = $(json.append)
-			itemToAppend.hide().appendTo("#playlist").delay(1000).fadeIn()
-		} else if (json.convert) {
-			$.each(json.convert, function(i, json2) {
-				var song = $("#" + json2.id)
-				if (json2.remove) {
-					song.remove()
-				} else {
-					song.css("transform", json2.to)
-					song.css("-webkit-transform", json2.to)
-					if (json2.orderedBy){
-						song.find(".order").off().remove()
-						song.find(".overlap").append(json2.orderedBy)
+	if(!isMobile){
+		if (json) {
+			if (json.append) {
+				var itemToAppend = $(json.append)
+				itemToAppend.appendTo("#playlist")
+			} else if (json.convert) {
+				$.each(json.convert, function(i, json2) {
+					var song = $("#" + json2.id)
+					if (json2.remove) {
+						song.remove()
+					} else {
+						song.css({
+							"transform" : json2.to,
+							"-webkit-transform" : json2.to
+						})
+						if (json2.orderedBy) {
+							song.find(".order").off().remove()
+							song.find(".overlap").append(json2.orderedBy)
+						}
 					}
-				}
+				})
+			}
+			setupOrders()
+		} else {
+			$.getJSON("listContent", function(json) {
+				$("#playlist").empty().append(json.content)
+				setupOrders()
 			})
 		}
-		setupOrders()
-	} else {
-		$.getJSON("listContent", function(json) {
-			$("#playlist").empty().append(json.content)
-			setupOrders()
-		})
 	}
 }
 
 function setupOrders() {
 	$(".order").off().click(function() {
-		if (!userName.val()) {
-			openSettingForUserName()
+		if (!userName.val() || !accessToken) {
+			openSetting()
 		} else {
 			var order = {
-				videoId : $(this).closest(".song").attr("id"),
-				name : userName.val()
+				name : userName.val(),
+				token : accessToken,
+				videoId : $(this).closest(".song").attr("id")
 			}
 			$.ajax({
 				url : "order",
@@ -180,9 +209,11 @@ function updateWS() {
 	}
 }
 
-// YouTube player
+// Mobile test
 var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+// YouTube player
 var player
 function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {

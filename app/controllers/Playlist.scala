@@ -100,7 +100,7 @@ class Playlist extends Actor {
     val yi = index / colSize
     val x = (if (yi % 2 == 1) colSize - 1 - xi else xi) * 194
     val y = yi * 114
-    "translate3d(" + x + "px," + y + "px,0)"
+    "translate(" + x + "px," + y + "px)"
   }
 
   case class SongWrapper(song: Song, userName: String = null) {

@@ -101,7 +101,7 @@ object Application extends Controller {
       chatLogger ! ChatLog(chatLog)
     })
 
-    Ok("Got msg")
+    Ok("got msg")
   }
 
   def chatHistory = Action.async {
@@ -118,11 +118,12 @@ object Application extends Controller {
     val json = request.body
     val name = (json \ "name").as[String]
     require(name != "")
+    val token = (json \ "token").as[String]
     val videoId = (json \ "videoId").as[String]
     
-    playlist ! Order(videoId, name) 
+    (userHandler ? InspectToken(token)).foreach(_ => playlist ! Order(videoId, name))
     
-    Ok("Got order")
+    Ok("got order")
   }
 
 }
