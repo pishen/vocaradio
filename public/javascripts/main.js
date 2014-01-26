@@ -13,7 +13,6 @@ $(document).ready(function() {
 	setupNewMsg()
 	updateWS()
 	setupFB()
-	setupRail(5)
 })
 
 // notification
@@ -82,26 +81,6 @@ function setupNewMsg() {
 			openSetting()
 		}
 	})
-}
-
-function setupRail(row){
-	var left = 92
-	var right = 868
-	var rowHeight = 114
-	var canvas = document.getElementById('rail');
-    var context = canvas.getContext('2d');
-    context.lineWidth = 25;
-    context.strokeStyle = '#FFCC00';
-    for(i = 0; i < row; i++){
-    	context.beginPath();
-        context.moveTo(left, i * rowHeight + 52);
-        context.lineTo(right, i * rowHeight + 52);
-        context.stroke();
-        context.beginPath();
-        context.moveTo(i % 2 == 0 ? right : left, i * rowHeight + 52);
-        context.lineTo(i % 2 == 0 ? right : left, (i + 1) * rowHeight + 52);
-        context.stroke();
-    }
 }
 
 // playlist
