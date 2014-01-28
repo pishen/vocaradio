@@ -118,7 +118,9 @@ class Playlist extends Actor {
       val style = "transform:" + transform + ";-webkit-transform:" + transform
       <div id={ song.videoId } class="song" style={ style }>
         <div class="overlap">
-          <p>{ song.title }</p>
+          <a class="yt-link" href={ "http://www.youtube.com/watch?v=" + song.videoId } target="_blank">
+            { song.title }
+          </a>
           {
             if (userName == null) <button class="order">點播</button>
             else <span class="order">點播: <span>{ userName }</span></span>
