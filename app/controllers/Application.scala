@@ -4,11 +4,9 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import scala.Array.canBuildFrom
 import scala.concurrent.Future
 import scala.util.Random
-
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
@@ -22,8 +20,10 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
+import org.slf4j.LoggerFactory
 
 object Application extends Controller {
+  private val logger = LoggerFactory.getLogger("Application")
   //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
@@ -43,7 +43,8 @@ object Application extends Controller {
       .withHeaders("X-Frame-Options" -> "DENY")
   }
 
-  def sync = Action.async {
+  def sync = Action.async { request =>
+    logger.info("sync: " + request.remoteAddress)
     (playlist ? CurrentSong).mapTo[String].map(str => Ok(str))
   }
 
