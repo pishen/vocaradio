@@ -44,7 +44,7 @@ object Application extends Controller {
   }
 
   def sync = Action.async { request =>
-    Logger.info("sync: " + request.remoteAddress)
+    //Logger.info("sync: " + request.remoteAddress)
     (playlist ? CurrentSong).mapTo[String].map(str => Ok(str))
   }
 
