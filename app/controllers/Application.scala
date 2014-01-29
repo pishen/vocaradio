@@ -21,9 +21,9 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
 import org.slf4j.LoggerFactory
+import play.api.Logger
 
 object Application extends Controller {
-  private val logger = LoggerFactory.getLogger("Application")
   //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
@@ -44,7 +44,7 @@ object Application extends Controller {
   }
 
   def sync = Action.async { request =>
-    logger.info("sync: " + request.remoteAddress)
+    Logger.info("sync: " + request.remoteAddress)
     (playlist ? CurrentSong).mapTo[String].map(str => Ok(str))
   }
 
