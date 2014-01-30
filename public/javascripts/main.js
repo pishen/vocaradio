@@ -1,18 +1,22 @@
 var originTitle
 $(document).ready(function() {
-	// insert script for ytplayer
-	var tag = document.createElement('script')
-	tag.src = "https://www.youtube.com/iframe_api"
-	var firstScriptTag = document.getElementsByTagName('script')[0]
-	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
+	if (window.WebSocket){
+		// insert script for ytplayer
+		var tag = document.createElement('script')
+		tag.src = "https://www.youtube.com/iframe_api"
+		var firstScriptTag = document.getElementsByTagName('script')[0]
+		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
-	originTitle = document.title
-
-	setupNotify()
-	setupUserName()
-	setupNewMsg()
-	updateWS()
-	setupFB()
+		originTitle = document.title
+		
+		setupNotify()
+		setupUserName()
+		setupNewMsg()
+		updateWS()
+		setupFB()
+	}else{
+		window.alert("No support for websocket, please update your browser!")
+	}
 })
 
 // notification
@@ -263,11 +267,13 @@ function onPlayerError(event) {
 
 function syncAndPlay(seek) {
 	// console.log("seek: " + seek)
-	$.getJSON("sync", function(json) {
-		console.log("sync id: " + json.id)
-		player.loadVideoById(json.id, seek ? json.position : 0)
-		player.setVolume($("#volume").prop("value"))
-	})
+	if (window.WebSocket){
+		$.getJSON("sync", function(json) {
+			console.log("sync id: " + json.id)
+			player.loadVideoById(json.id, seek ? json.position : 0)
+			player.setVolume($("#volume").prop("value"))
+		})
+	}
 }
 
 // Facebook
