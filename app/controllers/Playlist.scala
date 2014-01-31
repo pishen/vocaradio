@@ -67,7 +67,7 @@ class Playlist extends Actor {
             }
             list = l ++ rl.map(_._1) ++
               Seq(SongWrapper(w.song, userName, userId)) ++
-              rr.map(_._1).filter(_.song.videoId != videoId)
+              rr.map(_._1).filter(_.song.originTitle != w.song.originTitle)
 
             //broadcast update
             val seq = list.zipWithIndex.map {
