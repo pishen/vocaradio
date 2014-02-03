@@ -10,6 +10,9 @@ import scala.util.Random
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
+import models.GetNodes
+import models.Labels
+import models.Neo4j
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -20,16 +23,16 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
-import org.slf4j.LoggerFactory
-import play.api.Logger
+import akka.util.Timeout
 
 object Application extends Controller {
+  implicit val timeout = Timeout(5000)
   //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
   val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
-  val songPicker = Akka.system.actorOf(Props[SongPicker], "songPicker")
   val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
   val userHandler = Akka.system.actorOf(Props[UserHandler], "userHandler")
+  val neo4j = Akka.system.actorOf(Props[Neo4j], "neo4j")
 
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
@@ -126,6 +129,25 @@ object Application extends Controller {
       .foreach(userId => playlist ! Order(videoId, name, userId))
 
     Ok("got order")
+  }
+
+  def voca = Action {
+    Ok(views.html.voca())
+  }
+
+  def vocaRequest = Action.async(parse.tolerantText) { request =>
+    val json = Json.parse(request.body)
+    val action = (json \ "action").as[String]
+
+    if (action == "status-error") {
+      (neo4j ? GetNodes(Labels.song, "status", "error")).mapTo[Seq[Long]]
+        .map(ids => {
+          
+        })
+    } else {
+      Future.successful(Ok("Not Implemented"))
+    }
+
   }
 
 }

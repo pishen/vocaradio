@@ -282,7 +282,7 @@ a.yt-link:hover {
 	.modal>div {
 		width: 80%;
 	}
-	hr {
+	hr,#playlist {
 		display: none;
 	}
 }

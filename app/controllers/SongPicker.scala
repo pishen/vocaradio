@@ -1,7 +1,6 @@
 package controllers
 
 import scala.util.Random
-
 import Application.playlist
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
@@ -9,6 +8,7 @@ import akka.pattern.pipe
 import models.MusicStore
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scalax.io.Resource
+import models.MusicStore
 
 class SongPicker extends Actor {
   private val titles = Resource.fromFile("titles")
@@ -27,7 +27,7 @@ class SongPicker extends Actor {
       picked.song.map(AddSong.apply) pipeTo playlist
       picked.song.onFailure {
         case e: Exception => {
-          if(t < 20) self ! Pick(t + 1)
+          if(t < 7) self ! Pick(t + 1)
         }
       }
     }

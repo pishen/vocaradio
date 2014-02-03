@@ -5,60 +5,57 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.matching.Regex
 
-import org.slf4j.LoggerFactory
-
+import akka.pattern.ask
+import controllers.Application.neo4j
+import controllers.Application.timeout
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
 
 object MusicStore {
-  val log = LoggerFactory.getLogger("MusicStore")
-  private val googleKey = Resource.fromFile("google-api-key").lines().head
+  val googleKey = Resource.fromFile("google-api-key").lines().head
 
-  //TODO change the logging and println parts
   def getSong(originTitle: String): Future[Song] = {
-    Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} RETURN s.videoId")
-      .on("ot" -> originTitle).getData
-      .flatMap(data => {
-        if (data.nonEmpty) {
+    (neo4j ? GetNodes(Labels.song, "originTitle", originTitle)).mapTo[Seq[Long]]
+      .flatMap(nodes => {
+        if (nodes.nonEmpty) {
           /* use stored videoId first, 
            * if stored videoId has error,
            * try to search for new id and update status */
-          val videoId = data.head.head
-          val songF = getSongFromYT(originTitle, videoId).recoverWith {
-            case ex: Exception => getSongFromYT(originTitle)
-          }
-          songF.onComplete {
-            case Success(s) => {
-              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.videoId = {id}, s.status = 'OK'")
-                .on("ot" -> originTitle, "id" -> s.videoId).execute
-                .foreach(json => println(originTitle + "\n" + json))
-            }
-            case Failure(ex) => {
-              log.error("YT error " + originTitle, ex)
-              Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.status = 'error'")
-                .on("ot" -> originTitle).execute
-                .foreach(json => println(originTitle + "\n" + json))
-            }
-          }
-          songF
+          val nodeId = nodes.head
+          (neo4j ? GetProperties(nodeId, Seq("videoId"))).mapTo[Map[String, String]]
+            .flatMap(m => {
+              val oldVideoId = m.get("videoId").get
+              val song = getSongFromYT(originTitle, oldVideoId).recoverWith {
+                case ex: Exception => getSongFromYT(originTitle)
+              }
+              song.onComplete {
+                case Success(v) => {
+                  neo4j ! SetProperties(nodeId, Seq("videoId" -> v.videoId, "status" -> "OK"))
+                }
+                case Failure(e) => {
+                  Logger.error("YT error " + originTitle, e)
+                  neo4j ! SetProperties(nodeId, Seq("status" -> "error"))
+                }
+              }
+              song
+            })
         } else {
           //add new song
-          val newSongF = getSongFromYT(originTitle)
-          newSongF.onComplete {
-            case Success(s) => {
-              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:{id}, status:'OK'})")
-                .on("ot" -> originTitle, "id" -> s.videoId).execute
-                .foreach(json => println(originTitle + "\n" + json))
+          val newSong = getSongFromYT(originTitle)
+          newSong.onComplete {
+            case Success(v) => {
+              val nodeContent = Seq("originTitle" -> originTitle, "videoId" -> v.videoId, "status" -> "OK")
+              neo4j ! CreateNode(Labels.song, nodeContent)
             }
-            case Failure(ex) => {
-              log.error("YT error " + originTitle, ex)
-              Cypher("CREATE (s:Song {originTitle:{ot}, videoId:'error', status:'error'})")
-                .on("ot" -> originTitle).execute
-                .foreach(json => println(originTitle + "\n" + json))
+            case Failure(e) => {
+              Logger.error("YT error " + originTitle, e)
+              val nodeContent = Seq("originTitle" -> originTitle, "videoId" -> "error", "status" -> "error")
+              neo4j ! CreateNode(Labels.song, nodeContent)
             }
           }
-          newSongF
+          newSong
         }
       })
   }
@@ -76,7 +73,6 @@ object MusicStore {
         val m = mt.group("m")
         (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
       }
-      //val thumbDefault = (details.json \\ "thumbnails").head.\("default").\("url").as[String]
       val thumbMedium = (details.json \\ "thumbnails").head.\("medium").\("url").as[String]
       Song(originTitle, videoId, title, duration, thumbMedium)
     }
@@ -108,38 +104,3 @@ object MusicStore {
   }
 
 }
-
-object BatchUpdater {
-
-  def main(args: Array[String]): Unit = {
-    val titles = Resource.fromFile("titles").lines().toSeq
-    //delete 'not in titles' songs
-    /*val inDB = Cypher("MATCH (s:Song) RETURN s.originTitle").apply.collect {
-      case CypherRow(originTitle: String) => originTitle
-    }
-    inDB.filterNot(titles contains _).foreach(originTitle => {
-      val res = Cypher("MATCH (s:Song) WHERE s.originTitle = {originTitle} DELETE s")
-        .on("originTitle" -> originTitle).execute
-      println("delete " + originTitle + " with status " + res)
-    })*/
-    //update by titles
-    titles.foreach(title => {
-      MusicStore.getSong(title)
-    })
-    //update by replaces
-    /*Resource.fromFile("replaces").lines().toSeq
-      .map(_.split(">>>")).foreach(s => {
-        val originTitle = s.head
-        val newId = s.last
-        Cypher("MATCH (s:Song) WHERE s.originTitle = {ot} SET s.videoId = {id}")
-          .on("ot" -> originTitle, "id" -> newId).execute
-          .foreach(json => {
-            println(originTitle)
-            println(json)
-          })
-      })*/
-
-  }
-
-}
-
