@@ -26,7 +26,7 @@ class SongPicker extends Actor {
       picked.song.map(AddSong.apply) pipeTo context.parent
       picked.song.onFailure {
         case e: Exception => {
-          if(t < 7) self ! Pick(t + 1)
+          if (t < 7) self ! Pick(t + 1)
         }
       }
     }
@@ -34,9 +34,8 @@ class SongPicker extends Actor {
 
   private def refill() = {
     val oldTitles = buffer.map(_.originTitle)
-    val newWrappers =
-      Random.shuffle(titles.lines().filterNot(oldTitles.contains))
-        .map(SongWrapper.apply)
+    val titlesToFill = titles.lines().map(_.dropRight(4)).filterNot(oldTitles.contains)
+    val newWrappers = Random.shuffle(titlesToFill).map(SongWrapper.apply)
     buffer = buffer ++ newWrappers
   }
 
