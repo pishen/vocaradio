@@ -4,15 +4,22 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import scala.Array.canBuildFrom
 import scala.concurrent.Future
 import scala.util.Random
+
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
+import akka.util.Timeout
 import models.GetNodes
+import models.GetNodesResponse
+import models.GetProperties
+import models.GetPropertiesResponse
 import models.Labels
 import models.Neo4j
+import models.SetProperties
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -23,11 +30,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
-import akka.util.Timeout
-import models.GetNodesResponse
-import models.GetProperties
-import models.GetPropertiesResponse
-import models.SetProperties
+import scalax.io.Resource
 
 object Application extends Controller {
   implicit val timeout = Timeout(5000)
@@ -39,14 +42,21 @@ object Application extends Controller {
   val neo4j = Akka.system.actorOf(Props[Neo4j])
 
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
-  val bgUrls = Seq("assets/images/nouveau-fond.jpg")
+  val bgImages = Resource.fromFile("bg-images")
 
   val playlistSize = 25
   val colSize = 5
   val listHeight = (((playlistSize - 1) / colSize + 1) * 114).toString + "px"
 
   def index = Action {
-    Ok(views.html.index(bgUrls(Random.nextInt(bgUrls.length)), listHeight))
+    val bgInfo = Random.shuffle(bgImages.lines()).head.split(" ")
+    val bgUrl = bgInfo.head
+    val illus = if (bgInfo.size == 3) {
+      <a href={ bgInfo(2) } target="_blank">{ bgInfo(1) }</a>
+    } else {
+      <span>{ bgInfo(1) }</span>
+    }
+    Ok(views.html.index(bgUrl, illus, listHeight))
       .withHeaders("X-Frame-Options" -> "DENY")
   }
 
