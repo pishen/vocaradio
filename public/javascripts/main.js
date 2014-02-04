@@ -299,8 +299,6 @@ function setupFB() {
 				accessToken = resp.authResponse.accessToken
 				FB.api('/me', function(resp) {
 					$("#fb-status").text(" (Logged in as " + resp.name + ") ")
-					if (!userName.val())
-						userName.val(resp.name)
 				})
 			} else {
 				$("#login").show()
