@@ -1,7 +1,6 @@
 package controllers
 
 import scala.util.Random
-import Application.playlist
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.pattern.pipe
@@ -24,7 +23,7 @@ class SongPicker extends Actor {
       if (buffer.size < 25) refill()
       val picked = buffer.head
       buffer = buffer.tail
-      picked.song.map(AddSong.apply) pipeTo playlist
+      picked.song.map(AddSong.apply) pipeTo context.parent
       picked.song.onFailure {
         case e: Exception => {
           if(t < 7) self ! Pick(t + 1)

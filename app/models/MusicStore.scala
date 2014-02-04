@@ -17,16 +17,19 @@ object MusicStore {
   val googleKey = Resource.fromFile("google-api-key").lines().head
 
   def getSong(originTitle: String): Future[Song] = {
-    (neo4j ? GetNodes(Labels.song, "originTitle", originTitle)).mapTo[Seq[Long]]
-      .flatMap(nodes => {
-        if (nodes.nonEmpty) {
+    (neo4j ? GetNodes(Labels.song, "originTitle", originTitle))
+      .mapTo[GetNodesResponse]
+      .flatMap(resp => {
+        if (resp.ids.nonEmpty) {
           /* use stored videoId first, 
            * if stored videoId has error,
            * try to search for new id and update status */
-          val nodeId = nodes.head
-          (neo4j ? GetProperties(nodeId, Seq("videoId"))).mapTo[Map[String, String]]
-            .flatMap(m => {
-              val oldVideoId = m.get("videoId").get
+          val nodeId = resp.ids.head
+          (neo4j ? GetProperties(Seq(nodeId), Seq("videoId")))
+            .mapTo[GetPropertiesResponse]
+            .flatMap(resp => {
+              val kv = resp.nodes.head.kv
+              val oldVideoId = kv.get("videoId").get
               val song = getSongFromYT(originTitle, oldVideoId).recoverWith {
                 case ex: Exception => getSongFromYT(originTitle)
               }
@@ -65,13 +68,18 @@ object MusicStore {
       videoId <- if (videoId == null) getVideoId(originTitle) else Future.successful(videoId)
       details <- getDetails(videoId)
     } yield {
+      val embeddable = (details.json \\ "embeddable").head.as[Boolean]
+      assert(embeddable, "not embeddable: " + videoId)
       val title = (details.json \\ "title").head.as[String]
-      val rgx = new Regex("""PT(\d+M)?(\d+S)""", "m", "s")
+      val rgx = new Regex("""PT(\d+M)?(\d+S)?""", "m", "s")
       val ptms = (details.json \\ "duration").head.as[String]
       val duration = {
-        val mt = rgx.findFirstMatchIn(ptms).get
-        val m = mt.group("m")
-        (if (m != null) m.init.toInt * 60 else 0) + mt.group("s").init.toInt
+        val matched = rgx.findFirstMatchIn(ptms).get
+        val mStr = matched.group("m")
+        val m = if (mStr != null) mStr.init.toInt * 60 else 0
+        val sStr = matched.group("s")
+        val s = if (sStr != null) sStr.init.toInt else 0
+        m + s
       }
       val thumbMedium = (details.json \\ "thumbnails").head.\("medium").\("url").as[String]
       Song(originTitle, videoId, title, duration, thumbMedium)
@@ -96,9 +104,9 @@ object MusicStore {
   private def getDetails(videoId: String) = {
     WS.url("https://www.googleapis.com/youtube/v3/videos")
       .withQueryString(
-        "part" -> "snippet,contentDetails",
+        "part" -> "snippet,contentDetails,status",
         "id" -> videoId,
-        "fields" -> "items(contentDetails,snippet)",
+        "fields" -> "items(contentDetails,snippet,status)",
         "key" -> googleKey)
       .get
   }

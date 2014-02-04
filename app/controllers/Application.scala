@@ -24,15 +24,19 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
 import akka.util.Timeout
+import models.GetNodesResponse
+import models.GetProperties
+import models.GetPropertiesResponse
+import models.SetProperties
 
 object Application extends Controller {
   implicit val timeout = Timeout(5000)
   //actors
-  val broadcaster = Akka.system.actorOf(Props[Broadcaster], "broadcaster")
-  val playlist = Akka.system.actorOf(Props[Playlist], "playlist")
-  val chatLogger = Akka.system.actorOf(Props[ChatLogger], "chatLogger")
-  val userHandler = Akka.system.actorOf(Props[UserHandler], "userHandler")
-  val neo4j = Akka.system.actorOf(Props[Neo4j], "neo4j")
+  val broadcaster = Akka.system.actorOf(Props[Broadcaster])
+  val playlist = Akka.system.actorOf(Props[Playlist])
+  val chatLogger = Akka.system.actorOf(Props[ChatLogger])
+  val userHandler = Akka.system.actorOf(Props[UserHandler])
+  val neo4j = Akka.system.actorOf(Props[Neo4j])
 
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgUrls = Seq("assets/images/nouveau-fond.jpg")
@@ -131,23 +135,76 @@ object Application extends Controller {
     Ok("got order")
   }
 
-  def voca = Action {
-    Ok(views.html.voca())
+  //= = = backend = = =
+  def backend = Action {
+    Ok(views.html.backend())
   }
 
-  def vocaRequest = Action.async(parse.tolerantText) { request =>
-    val json = Json.parse(request.body)
-    val action = (json \ "action").as[String]
+  def statusError = Action.async(parse.tolerantJson) { request =>
+    val json = request.body
+    val token = (json \ "token").as[String]
 
-    if (action == "status-error") {
-      (neo4j ? GetNodes(Labels.song, "status", "error")).mapTo[Seq[Long]]
-        .map(ids => {
-          
-        })
-    } else {
-      Future.successful(Ok("Not Implemented"))
-    }
+    val userId = (userHandler ? InspectToken(token)).mapTo[String]
+    userId.filter(_ == "628930919").flatMap(_ => {
+      getStoredInfo(GetNodes(Labels.song, "status", "error"))
+    }).recover { case _ => BadRequest }
+  }
 
+  def updateVideoId = Action.async(parse.tolerantJson) { request =>
+    val json = request.body
+    val token = (json \ "token").as[String]
+    val nodeId = (json \ "nodeId").as[String].toLong
+    val newVideoId = (json \ "newVideoId").as[String]
+
+    val userId = (userHandler ? InspectToken(token)).mapTo[String]
+    userId.filter(_ == "628930919").map(_ => {
+      neo4j ! SetProperties(nodeId, Seq("videoId" -> newVideoId, "status" -> "OK"))
+      Ok(newVideoId)
+    }).recover { case _ => BadRequest }
+  }
+
+  def songById = Action.async(parse.tolerantJson) { request =>
+    val json = request.body
+    val token = (json \ "token").as[String]
+    val videoId = (json \ "videoId").as[String]
+
+    val userId = (userHandler ? InspectToken(token)).mapTo[String]
+    userId.filter(_ == "628930919").flatMap(_ => {
+      getStoredInfo(GetNodes(Labels.song, "videoId", videoId))
+    }).recover { case _ => BadRequest }
+  }
+
+  def songByTitle = Action.async(parse.tolerantJson) { request =>
+    val json = request.body
+    val token = (json \ "token").as[String]
+    val originTitle = (json \ "originTitle").as[String]
+
+    val userId = (userHandler ? InspectToken(token)).mapTo[String]
+    userId.filter(_ == "628930919").flatMap(_ => {
+      getStoredInfo(GetNodes(Labels.song, "originTitle", originTitle))
+    }).recover { case _ => BadRequest }
+  }
+
+  private def getStoredInfo(query: GetNodes) = {
+    (neo4j ? query)
+      .mapTo[GetNodesResponse]
+      .flatMap(resp => {
+        (neo4j ? GetProperties(resp.ids, Seq("originTitle", "videoId", "status")))
+          .mapTo[GetPropertiesResponse]
+          .map(resp => {
+            val res = resp.nodes.map(node => {
+              val videoId = node.kv.get("videoId").get
+              <ul id={ node.id.toString }>
+                <li>{ node.kv.get("originTitle").get }</li>
+                <li class="video-id">
+                  <a href={ "https://www.youtube.com/watch?v=" + videoId } target="_blank">{ videoId }</a>
+                </li>
+                <li><input/><button class="update">update</button></li>
+              </ul>.toString()
+            }).mkString
+            Ok(res)
+          })
+      })
   }
 
 }
