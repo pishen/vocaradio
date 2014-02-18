@@ -4,11 +4,9 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import scala.Array.canBuildFrom
 import scala.concurrent.Future
 import scala.util.Random
-
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
@@ -31,6 +29,7 @@ import play.api.mvc.Action
 import play.api.mvc.Controller
 import play.api.mvc.WebSocket
 import scalax.io.Resource
+import play.api.libs.iteratee.Concurrent
 
 object Application extends Controller {
   implicit val timeout = Timeout(5000)
@@ -40,6 +39,8 @@ object Application extends Controller {
   val chatLogger = Akka.system.actorOf(Props[ChatLogger])
   val userHandler = Akka.system.actorOf(Props[UserHandler])
   val neo4j = Akka.system.actorOf(Props[Neo4j])
+  //websocket
+  val (enumerator, channel) = Concurrent.broadcast[String]
 
   val sdf = new SimpleDateFormat("MM/dd HH:mm:ss")
   val bgImages = Resource.fromFile("bg-images")
@@ -66,15 +67,14 @@ object Application extends Controller {
   }
 
   def ws = WebSocket.async[String] { request =>
-    (broadcaster ? Join).mapTo[Enumerator[String]].map { out =>
-      val in = Iteratee.foreach[String](msg => {
-        broadcaster ! BCClientCount
+    (broadcaster ? Join).mapTo[String].map(id => {
+      val in = Iteratee.foreach[String](name => {
+        broadcaster ! SetName(id, name)
       }).map(_ => {
-        broadcaster ! Quit
-        broadcaster ! BCClientCount
+        broadcaster ! Quit(id)
       })
-      (in, out)
-    }
+      (in, enumerator)
+    })
   }
 
   def chat = Action(parse.json) { request =>

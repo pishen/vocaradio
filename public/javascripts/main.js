@@ -1,6 +1,6 @@
 var originTitle
 $(document).ready(function() {
-	if (window.WebSocket){
+	if (window.WebSocket) {
 		// insert script for ytplayer
 		var tag = document.createElement('script')
 		tag.src = "https://www.youtube.com/iframe_api"
@@ -8,30 +8,53 @@ $(document).ready(function() {
 		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
 		originTitle = document.title
-		
+
 		setupNotify()
+		setupOnlinList()
 		setupUserName()
 		setupNewMsg()
 		updateWS()
 		setupFB()
-	}else{
+	} else {
 		window.alert("No support for websocket, please update your browser!")
 	}
 })
 
 // notification
 function setupNotify() {
+	if (localStorage.notify) {
+		$("#notify").prop("checked", true)
+		requestNotify()
+	}
 	$("#notify").change(function() {
 		if ($(this).prop("checked")) {
-			Notification.requestPermission(function() {
-				var notify = new Notification("VocaRadio", {
-					body : "訊息通知已啟動",
-					icon : "assets/images/logo.png"
-				})
-				window.setTimeout(function() {
-					notify.close()
-				}, 5000)
-			})
+			localStorage.notify = true
+			requestNotify()
+		} else {
+			localStorage.removeItem("notify")
+		}
+	})
+}
+
+function requestNotify() {
+	Notification.requestPermission(function() {
+		var notify = new Notification("VocaRadio", {
+			body : "訊息通知已啟動",
+			icon : "assets/images/logo.png"
+		})
+		window.setTimeout(function() {
+			notify.close()
+		}, 5000)
+	})
+}
+
+//online-list
+function setupOnlinList() {
+	$("#online-list-switch").change(function() {
+		if ($(this).prop("checked")) {
+			$("#online-list").slideDown()
+		} else {
+			$("#online-list").slideUp()
 		}
 	})
 }
@@ -45,8 +68,8 @@ function setupUserName() {
 	}
 	userName.blur(function() {
 		localStorage.userName = userName.val()
+		ws.send(userName.val())
 	})
-
 }
 
 function openSetting() {
@@ -90,7 +113,7 @@ function setupNewMsg() {
 // playlist
 var list
 function updatePlaylist(json) {
-	if(!isMobile){
+	if (!isMobile) {
 		if (json) {
 			if (json.append) {
 				var itemToAppend = $(json.append)
@@ -149,8 +172,8 @@ function updateWS() {
 	ws = new WebSocket("ws://" + window.location.host + "/ws")
 	ws.onopen = function() {
 		retryTimes = 0
-		// client counter
-		ws.send("Hello, Voca")
+		// send my name
+		ws.send(userName.val())
 		// chatroom
 		$.getJSON("chat-history", function(jsObj) {
 			$("#chat-log").empty().append(jsObj.history)
@@ -162,6 +185,8 @@ function updateWS() {
 		var json = JSON.parse(e.data)
 		if (json.type == "clientCount") {
 			$("#client-count").html(json.content)
+		} else if (json.type == "onlineList") {
+			$("#online-list").html(json.content)
 		} else if (json.type == "chat") {
 			$("#chat-log").append(json.content)
 			$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
@@ -202,7 +227,7 @@ function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
 		height : '360',
 		width : '640',
-		videoId: '7NptssoOJ78',
+		videoId : '7NptssoOJ78',
 		playerVars : {
 			'wmode' : 'opaque',
 			'rel' : 0,
@@ -267,7 +292,7 @@ function onPlayerError(event) {
 
 function syncAndPlay(seek) {
 	// console.log("seek: " + seek)
-	if (window.WebSocket){
+	if (window.WebSocket) {
 		$.getJSON("sync", function(json) {
 			console.log("sync id: " + json.id)
 			player.loadVideoById(json.id, seek ? json.position : 0)
