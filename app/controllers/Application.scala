@@ -36,6 +36,7 @@ object Application extends Controller {
   //actors
   val broadcaster = Akka.system.actorOf(Props[Broadcaster])
   val playlist = Akka.system.actorOf(Props[Playlist])
+  val songPicker = Akka.system.actorOf(Props[SongPicker])
   val chatLogger = Akka.system.actorOf(Props[ChatLogger])
   val userHandler = Akka.system.actorOf(Props[UserHandler])
   val neo4j = Akka.system.actorOf(Props[Neo4j])
@@ -49,7 +50,7 @@ object Application extends Controller {
   val colSize = 5
   val listHeight = (((playlistSize - 1) / colSize + 1) * 114).toString + "px"
 
-  def index = Action {
+  def index = Action.async {
     val bgInfo = Random.shuffle(bgImages.lines()).head.split(" ")
     val bgUrl = bgInfo.head
     val illus = if (bgInfo.size == 3) {
@@ -57,8 +58,13 @@ object Application extends Controller {
     } else {
       <span>{ bgInfo(1) }</span>
     }
-    Ok(views.html.index(bgUrl, illus, listHeight))
-      .withHeaders("X-Frame-Options" -> "DENY")
+    (songPicker ? StoreStatus).mapTo[(Int, Date)]
+      .map {
+        case (length, lastUpdate) =>
+          Ok(views.html.index(bgUrl, illus, listHeight, length.toString, sdf.format(lastUpdate)))
+            .withHeaders("X-Frame-Options" -> "DENY")
+      }
+
   }
 
   def sync = Action.async { request =>
@@ -80,7 +86,7 @@ object Application extends Controller {
   def chat = Action(parse.json) { request =>
     val json = request.body
     val name = (json \ "name").as[String]
-    require(name != "")
+    require(name.replaceAll("\\s", "") != "")
     val token = (json \ "token").as[String]
     val msg = (json \ "msg").as[String]
 

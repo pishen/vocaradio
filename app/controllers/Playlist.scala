@@ -2,6 +2,7 @@ package controllers
 
 import Application.playlistSize
 import Application.colSize
+import Application.songPicker
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import models.Song
@@ -12,8 +13,6 @@ import play.api.libs.json.JsString
 import akka.actor.Props
 
 class Playlist extends Actor {
-  val songPicker = context.actorOf(Props[SongPicker])
-  
   private var playing: Option[(SongWrapper, Long)] = None
   private var list = Seq.empty[SongWrapper]
 

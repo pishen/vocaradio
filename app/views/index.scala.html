@@ -1,4 +1,8 @@
-@(bgUrl: String, illus: xml.Node, listHeight: String)
+@(bgUrl: String, 
+  illus: xml.Node, 
+  listHeight: String,
+  length: String,
+  lastUpdate: String)
 
 <!DOCTYPE html>
 
@@ -64,8 +68,10 @@
 		</div>
 		<hr />
 		<div class="section group">
-			<div class="span_2_of_4 col">
+			<div id="status" class="span_2_of_4 col">
 				<div id="client-count"></div>
+				<div>目前歌單長度: @length 首</div>
+				<div>最後更新時間: @lastUpdate</div>
 			</div>
 			<div class="span_2_of_4 col">
 				<div id="chat-log"></div>
@@ -74,7 +80,7 @@
 				</div>
 				<div>
 					<input id="notify" type="checkbox"> 新訊息通知
-					<input id="online-list-switch" type="checkbox"> 在線清單
+					<input id="online-list-switch" type="checkbox"> 在線名單
 				</div>
 				<div id="online-list"></div>
 			</div>

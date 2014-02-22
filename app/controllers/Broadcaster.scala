@@ -43,7 +43,10 @@ class Broadcaster extends Actor {
   }
 
   def onlineListMsg = {
-    val content = <div>{ names.values.filter(_ != "").mkString(", ") }</div>.toString
+    val content =
+      <div>
+        { names.values.filter(_.replaceAll("\\s", "") != "").mkString(", ") }
+      </div>.toString
     Json.stringify(Json.obj("type" -> "onlineList", "content" -> content))
   }
 
