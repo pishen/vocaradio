@@ -99,7 +99,7 @@ object Application extends Controller {
     userID.foreach(id => {
       val checkedID = if (id == "628930919") "DJ" else id
       val chatLog =
-        <strong class="color" title={ checkedID }>{ name }</strong>
+        <strong style="color: gold" title={ checkedID }>{ name }</strong>
         <p title={ sdf.format(new Date()) }>{
           //decorate the url
           msg.split(" ").map { s =>

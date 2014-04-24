@@ -8,103 +8,88 @@
 
 <html>
 <head>
-<title>VocaRadio - 24hr VOCALOID 自動電台</title>
-<meta name="viewport" content="width=device-width, user-scalable=false" />
-<meta name="description"
-	content="24hr self-driven VOCALOID radio station" />
+<meta name="description" content="24hr self-driven VOCALOID radio station" />
 <meta name="keywords" content="vocaloid, radio, miku" />
-<link rel="stylesheet" href="assets/stylesheets/normalize.css">
-<link rel="stylesheet" href="assets/stylesheets/col.css">
-<link rel="stylesheet" href="assets/stylesheets/4cols.css">
-<link rel="stylesheet" href="assets/stylesheets/button.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VocaRadio - 24hr VOCALOID 自動電台</title>
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/base-min.css">
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">
 <link rel="stylesheet" href="assets/stylesheets/main.css">
-<link rel="shortcut icon" type="image/png"
-	href="assets/images/favicon.png">
-<style type="text/css">
-#player-background {
-	background-image: url('@bgUrl');
-}
-
-#playlist {
-	height: @listHeight
-}
-</style>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-<script src="assets/javascripts/main.js"></script>
+<link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
 </head>
 <body>
 	<div id="fb-root"></div>
-	<header class="wrapper">
-		<div class="logo">VocaRadio</div>
-	</header>
-	<div id="player-background">
-		<div id="player"></div>
+	<div class="logo">VocaRadio</div>
+	<div class="player-bg">
+		<div class="player-pad pure-hidden-phone pure-hidden-tablet"></div>
+		<div class="player-wrap">
+			<div id="player"></div>
+		</div>
+		<div class="player-pad pure-hidden-phone pure-hidden-tablet"></div>
 	</div>
 	<div class="wrapper">
-		<div id="controls">
+		<div id="controls" class="pure-hidden-phone pure-hidden-tablet">
 			<div id="player-controls">
-				<button id="playback" class="dark-red">Play</button>
+				<button id="playback" class="pure-button button-red">Play</button>
 				<input id="volume" type="range" min="0" max="100" value="50" />
 			</div>
-			<a id="setting-switch" href="#setting" title="User Settings">
-				<div class="setting-switch-bar"></div>
-				<div class="setting-switch-bar"></div>
-				<div class="setting-switch-bar"></div>
+			<a id="setting-switch" href="#setting" title="Setting">
+				<div class="bar"></div>
+				<div></div>
+				<div class="bar"></div>
+				<div></div>
+				<div class="bar"></div>
 			</a>
 			<div id="setting" class="modal">
 				<div>
-					<a href="#voca" title="Close" class="close">X</a>
-					<h2>User Settings</h2>
-					<p>
-						<strong>your name: </strong><br /> <input id="username" />
-					</p>
-					<p>
-						<button id="login" class="fb">Connect with Facebook</button>
-						<button id="logout" class="grey">Logout</button>
-						<span id="fb-status"> (啟用點播功能) </span>
-					</p>
+					<a href="#" title="Close" class="close">X</a>
+					<form class="pure-form pure-form-stacked">
+						<fieldset>
+							<legend style="color: white">Setting</legend>
+							<label>Nickname</label>
+							<input id="username">
+							<label>Facebook (登入以啟動點播功能)</label>
+							<button id="login" class="pure-button button-fb">Login with Facebook</button>
+							<button id="logout" class="pure-button">Logout</button>
+						</fieldset>
+					</form>
 				</div>
 			</div>
 		</div>
-		<hr />
-		<div class="section group">
-			<div id="status" class="span_2_of_4 col">
+		<hr class="pure-hidden-phone pure-hidden-tablet">
+		<div class="pure-g-r">
+			<div class="pure-u-1-2 l-box">
 				<div id="client-count"></div>
-				<div>目前歌單長度: @length 首</div>
-				<div>最後更新時間: @lastUpdate</div>
 			</div>
-			<div class="span_2_of_4 col">
+			<div class="pure-u-1-2 l-box pure-hidden-phone">
 				<div id="chat-log"></div>
 				<div id="new-msg">
-					<textarea placeholder="Let's have a chat!"></textarea>
+					<textarea placeholder="留個言吧"></textarea>
 				</div>
 				<div>
 					<input id="notify" type="checkbox"> 新訊息通知
-					<input id="online-list-switch" type="checkbox"> 在線名單
+					<input id="online-list-switch" type="checkbox"> 在線清單
 				</div>
 				<div id="online-list"></div>
 			</div>
 		</div>
-		<div class="section group">
-			<div id="list-wrapper" class="span_4_of_4 col">
-				<div id="playlist"></div>
-			</div>
-		</div>
-	</div>
-	<div class="wrapper about">
-		<div class="section group">
-			<div class="span_1_of_4 col">
+		<div id="playlist" class="pure-hidden-phone pure-hidden-tablet"></div>
+		<div class="pure-g-r about">
+			<div class="pure-u-1-4">
 				DJ: <a href="http://facebook.com/pishen" target="_blank">pishen</a>
 			</div>
-			<div class="span_1_of_4 col">イラスト: @illus</div>
-			<div class="span_1_of_4 col">
+			<div class="pure-u-1-4">イラスト: 有熊黑白</div>
+			<div class="pure-u-1-4">
 				入台音效: <a href="http://goo.gl/4AKWYn" target="_blank">yoyo幫尼</a>
 			</div>
-			<div class="span_1_of_4 col">
-				<a href="https://www.facebook.com/vocaradio" target="_blank">Facebook</a>
+			<div class="pure-u-1-4">
+				<a href="https://www.facebook.com/vocaradio" target="_blank">Facebook page</a>
 			</div>
 		</div>
 	</div>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+	<script src="assets/javascripts/main.js"></script>
 </body>
 </html>
 

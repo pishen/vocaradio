@@ -108,7 +108,7 @@ class Playlist extends Actor {
   private def getStyle(index: Int) = {
     val xi = index % colSize
     val yi = index / colSize
-    val x = (if (yi % 2 == 1) colSize - 1 - xi else xi) * 194
+    val x = (if (yi % 2 == 1) colSize - 1 - xi else xi) * 194 + 10
     val y = yi * 114
     "translate3d(" + x + "px," + y + "px,0)"
   }
