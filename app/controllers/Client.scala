@@ -4,6 +4,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.PoisonPill
 import akka.actor.actorRef2Scala
+import play.api.Logger
 
 class Client(out: ActorRef) extends Actor {
   
@@ -25,6 +26,7 @@ class Client(out: ActorRef) extends Actor {
     case Send(msgToClient) => out ! msgToClient
     case GetClientName => sender ! name
     case StopIfOutdated => if(System.currentTimeMillis() - lastUpdate > 60000){
+      Logger.info("client " + name + " stopped due to outdated.")
       self ! PoisonPill
     }
   }

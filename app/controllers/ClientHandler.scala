@@ -18,8 +18,14 @@ class ClientHandler extends Actor {
   var clients = Set.empty[ActorRef]
 
   def receive = {
-    case AddClient(client) => clients += client
-    case RemoveClient(client) => clients -= client
+    case AddClient(client) => {
+      clients += client
+      self ! BroadcastClientStatus
+    }
+    case RemoveClient(client) => {
+      clients -= client
+      self ! BroadcastClientStatus
+    }
     case Broadcast(msg) => clients.foreach(_ ! Send(msg))
     case BroadcastJson(json) => clients.foreach(_ ! Send(Json.stringify(json)))
     case CleanOutdatedClient => clients.foreach(_ ! StopIfOutdated)

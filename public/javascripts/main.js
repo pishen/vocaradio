@@ -252,6 +252,9 @@ function onPlayerReady(event) {
 		player.setVolume($(this).prop("value"))
 		localStorage.volume = $(this).prop("value")
 	})
+	$("#playback").click(function() {
+		player.loadVideoById('7NptssoOJ78')
+	})
 }
 
 var prePlayerState
