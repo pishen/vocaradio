@@ -5,10 +5,12 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.matching.Regex
 
+import akka.actor.actorRef2Scala
 import akka.pattern.ask
 import controllers.Application.neo4j
 import controllers.Application.timeout
 import play.api.Logger
+import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource

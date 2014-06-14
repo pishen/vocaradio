@@ -1,21 +1,24 @@
 package controllers
 
-import Application.playlistSize
-import Application.colSize
+import Application.clientHandler
 import Application.songPicker
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import models.Song
-import play.api.libs.json.Json
-import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsString
-import akka.actor.Props
+import play.api.libs.json.Json
+import play.api.libs.json.Json.toJsFieldJsValueWrapper
 
 class Playlist extends Actor {
   private var playing: Option[(SongWrapper, Long)] = None
   private var list = Seq.empty[SongWrapper]
 
+  val playlistSize = 25
+  val colSize = 5
+  
+  def currentTime() = System.currentTimeMillis() / 1000
+  
   for (i <- 1 to playlistSize) songPicker ! Pick(1)
 
   def receive = {
@@ -51,7 +54,7 @@ class Playlist extends Actor {
       list = list :+ newSong
       //broadcast update
       val str = newSong.html(list.indices.last)
-      broadcast(Json.obj("type" -> "updatePlaylist", "append" -> str))
+      clientHandler ! BroadcastJson(Json.obj("type" -> "updatePlaylist", "append" -> str))
     }
     case RemoveSong(ot) => //TODO impl
     case Order(videoId, userName, userId) => {
@@ -79,7 +82,7 @@ class Playlist extends Actor {
                   base + ("orderedBy" -> JsString(append))
                 } else base
             }
-            broadcast(Json.obj("type" -> "updatePlaylist", "convert" -> seq))
+            clientHandler ! BroadcastJson(Json.obj("type" -> "updatePlaylist", "convert" -> seq))
           }
         }
       }
@@ -101,7 +104,7 @@ class Playlist extends Actor {
           if (i == 0) base + ("remove" -> JsBoolean(true))
           else base + ("to" -> JsString(getStyle(i - 1)))
       }
-      broadcast(Json.obj("type" -> "updatePlaylist", "convert" -> seq))
+      clientHandler ! BroadcastJson(Json.obj("type" -> "updatePlaylist", "convert" -> seq))
     }
   }
 

@@ -1,23 +1,19 @@
 var originTitle
 $(document).ready(function() {
-	if (window.WebSocket) {
-		// insert script for ytplayer
-		var tag = document.createElement('script')
-		tag.src = "https://www.youtube.com/iframe_api"
-		var firstScriptTag = document.getElementsByTagName('script')[0]
-		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
+	// insert script for ytplayer
+	var tag = document.createElement('script')
+	tag.src = "https://www.youtube.com/iframe_api"
+	var firstScriptTag = document.getElementsByTagName('script')[0]
+	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
-		originTitle = document.title
+	originTitle = document.title
 
-		setupNotify()
-		setupOnlinList()
-		setupUserName()
-		setupNewMsg()
-		updateWS()
-		setupFB()
-	} else {
-		window.alert("No support for websocket, please update your browser!")
-	}
+	setupNotify()
+	setupOnlinList()
+	setupUserName()
+	setupNewMsg()
+	updateWS()
+	setupFB()
 })
 
 // notification
@@ -167,6 +163,7 @@ function setupOrders() {
 
 // websocket
 var ws
+var interval
 var retryTimes = 0
 function updateWS() {
 	ws = new WebSocket("ws://" + window.location.host + "/ws")
@@ -174,6 +171,7 @@ function updateWS() {
 		retryTimes = 0
 		// send my name
 		ws.send(userName.val())
+		interval = setInterval(function(){ws.send(userName.val())}, 30000)
 		// chatroom
 		$.getJSON("chat-history", function(jsObj) {
 			$("#chat-log").empty().append(jsObj.history)
@@ -208,9 +206,10 @@ function updateWS() {
 	}
 	ws.onclose = function() {
 		// chatroom
-		$("#chat-log").append("<p>(connection lost，reconnect in 2 sec)</p>")
+		clearInterval(interval)
+		$("#chat-log").append("<p>(connection lost，trying to reconnect...)</p>")
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-		if (retryTimes < 5) {
+		if (retryTimes < 1) {
 			setTimeout(updateWS, 2000)
 			retryTimes += 1
 		}
@@ -253,10 +252,6 @@ function onPlayerReady(event) {
 		player.setVolume($(this).prop("value"))
 		localStorage.volume = $(this).prop("value")
 	})
-	if (isFirst)
-		player.loadVideoById('7NptssoOJ78')
-	else
-		syncAndPlay(true)
 }
 
 var prePlayerState

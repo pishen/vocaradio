@@ -172,15 +172,6 @@ hr:after {
 	background: #f24537;
 }
 
-/* status panel */
-#client-count {
-	text-align: center;
-}
-
-#client-count .num {
-	font-size: 40px;
-}
-
 /* chat panel */
 #chat-log {
 	max-height: 300px;
@@ -282,6 +273,7 @@ a.yt-link:hover {
 .about > div {
 	text-align: center;
 }
+
 
 @media ( min-width : 980px) {
 	/* player */

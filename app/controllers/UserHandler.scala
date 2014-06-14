@@ -3,6 +3,7 @@ package controllers
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.pattern.pipe
+import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WS
 import scalax.io.Resource
