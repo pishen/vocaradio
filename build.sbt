@@ -1,13 +1,13 @@
-name := "vocaradio"
-
-version := "dev"
-
-scalaVersion := "2.10.4"
-
-libraryDependencies ++= Seq(
-  ws,
-  "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2",
-  "org.neo4j"                     %  "neo4j"         % "2.0.1"
+lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
+  name := "vocaradio",
+  version := "0.1.0",
+  scalaVersion := "2.11.7",
+  libraryDependencies ++= Seq(
+    ws,
+    filters,
+    "com.github.nscala-time" %% "nscala-time" % "2.2.0",
+    "com.github.pathikrit" %% "better-files" % "2.3.0"
+  ),
+  resolvers += Resolver.bintrayRepo("pathikrit", "maven"),
+  routesGenerator := InjectedRoutesGenerator
 )
-
-lazy val root = (project in file(".")).enablePlugins(PlayScala)

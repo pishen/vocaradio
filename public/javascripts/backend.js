@@ -21,6 +21,7 @@ function setupRequests() {
 			originTitle : $("#entries>input").val()
 		}), showResponse)
 	})
+	
 }
 
 function showResponse(data) {

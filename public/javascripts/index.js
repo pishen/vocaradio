@@ -1,10 +1,5 @@
 var originTitle
 $(document).ready(function() {
-	// insert script for ytplayer
-	var tag = document.createElement('script')
-	tag.src = "https://www.youtube.com/iframe_api"
-	var firstScriptTag = document.getElementsByTagName('script')[0]
-	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
 	originTitle = document.title
 
@@ -44,7 +39,7 @@ function requestNotify() {
 	})
 }
 
-//online-list
+// online-list
 function setupOnlinList() {
 	$("#online-list-switch").change(function() {
 		if ($(this).prop("checked")) {
@@ -171,7 +166,9 @@ function updateWS() {
 		retryTimes = 0
 		// send my name
 		ws.send(userName.val())
-		interval = setInterval(function(){ws.send(userName.val())}, 30000)
+		interval = setInterval(function() {
+			ws.send(userName.val())
+		}, 30000)
 		// chatroom
 		$.getJSON("chat-history", function(jsObj) {
 			$("#chat-log").empty().append(jsObj.history)
@@ -207,7 +204,8 @@ function updateWS() {
 	ws.onclose = function() {
 		// chatroom
 		clearInterval(interval)
-		$("#chat-log").append("<p>(connection lost，trying to reconnect...)</p>")
+		$("#chat-log")
+				.append("<p>(connection lost，trying to reconnect...)</p>")
 		$("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
 		if (retryTimes < 1) {
 			setTimeout(updateWS, 2000)
@@ -216,11 +214,12 @@ function updateWS() {
 	}
 }
 
-// Mobile test
-var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-
 // YouTube player
+var tag = document.createElement('script')
+tag.src = "https://www.youtube.com/iframe_api"
+var firstScriptTag = document.getElementsByTagName('script')[0]
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
+
 var player
 function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
@@ -231,8 +230,7 @@ function onYouTubeIframeAPIReady() {
 			'wmode' : 'opaque',
 			'rel' : 0,
 			'iv_load_policy' : 3,
-			'controls' : isMobile ? 1 : 0,
-			'autohide' : 1,
+			'controls' : 0,
 			'disablekb' : 1
 		},
 		events : {
@@ -245,89 +243,49 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
 	console.log("ready")
-	if (localStorage.volume)
+	if (localStorage.volume) {
 		$("#volume").prop("value", localStorage.volume)
+	}
 	player.setVolume($("#volume").prop("value"))
 	$("#volume").change(function() {
 		player.setVolume($(this).prop("value"))
 		localStorage.volume = $(this).prop("value")
 	})
 	$("#playback").click(function() {
-		player.loadVideoById('7NptssoOJ78')
+		player.playVideo()
 	})
 }
 
-var prePlayerState
 var isFirst = true
 function onPlayerStateChange(event) {
 	if (event.data == YT.PlayerState.ENDED) {
 		console.log("ended")
+		//if come from opening video, seek, otherwise just continue next song
 		syncAndPlay(isFirst)
 		isFirst = false
-	} else if (event.data == YT.PlayerState.PLAYING && !isMobile) {
+	} else if (event.data == YT.PlayerState.PLAYING) {
 		console.log("playing")
-		if (prePlayerState == YT.PlayerState.PAUSED
-				|| prePlayerState == YT.PlayerState.ENDED) {
-			syncAndPlay(true)
-		}
-		$("#playback").text("Pause").off().click(function() {
+		$("#playback").text("PAUSE").off().click(function() {
 			player.pauseVideo()
 		})
-	} else if (event.data == YT.PlayerState.PAUSED && !isMobile) {
-		$("#playback").text("Play").off().click(function() {
+	} else if (event.data == YT.PlayerState.PAUSED) {
+		$("#playback").text("PLAY").off().click(function() {
 			syncAndPlay(true)
 		})
 	}
-	prePlayerState = event.data
 }
 
 function onPlayerError(event) {
 	console.log("player error: " + event.data)
-	$("#playback").text("Play").off().click(function() {
+	$("#playback").text("PLAY").off().click(function() {
 		syncAndPlay(true)
 	})
 }
 
 function syncAndPlay(seek) {
-	// console.log("seek: " + seek)
-	if (window.WebSocket) {
-		$.getJSON("sync", function(json) {
-			console.log("sync id: " + json.id)
-			player.loadVideoById(json.id, seek ? json.position : 0)
-			player.setVolume($("#volume").prop("value"))
-		})
-	}
-}
-
-// Facebook
-var accessToken
-function setupFB() {
-	$.getScript('//connect.facebook.net/en_US/all.js', function() {
-		FB.init({
-			appId : '565192206888536',
-			status : true,
-			cookie : true,
-			xfbml : false
-		})
-		$("#login").click(function() {
-			FB.login()
-		})
-		$("#logout").click(function() {
-			FB.logout()
-		}).hide()
-		FB.Event.subscribe('auth.authResponseChange', function(resp) {
-			if (resp.status === 'connected') {
-				$("#login").hide()
-				$("#logout").show()
-				accessToken = resp.authResponse.accessToken
-				FB.api('/me', function(resp) {
-					$("#fb-status").text(" (Logged in as " + resp.name + ") ")
-				})
-			} else {
-				$("#login").show()
-				$("#logout").hide()
-				$("#fb-status").text("")
-			}
-		})
+	$.getJSON("sync", function(json) {
+		console.log("sync id: " + json.id)
+		player.loadVideoById(json.id, seek ? json.position : 0)
+		player.setVolume($("#volume").prop("value"))
 	})
 }

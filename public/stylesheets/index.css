@@ -1,0 +1,182 @@
+@import url(http://fonts.googleapis.com/css?family=Nova+Square);
+
+/* general */
+body {
+	color: white;
+	background-color: #413839;
+}
+
+a:link, a:visited, a:hover, a:active {
+	color: white;
+}
+
+.modal-content {
+	background: gray;
+}
+
+.modal-header {
+	border: 0px;
+}
+
+.modal-body, .modal-footer {
+	border-top: 1px solid #666666;
+}
+
+/* header */
+.logo {
+	text-align: center;
+	color: #ff8080;
+	margin: 5px 0px;
+	font-size: 60px;
+	font-family: 'Nova Square', cursive;
+}
+
+/* player */
+.player-pad {
+	height: 70px;
+}
+
+.player-wrap {
+	max-width: 640px;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+}
+
+.player-wrap:after {
+	padding-top: 56.25%;
+	display: block;
+	content: '';
+}
+
+.player-bg {
+	background: url('../images/spaghetti.jpg');
+	background-position: center;
+	box-shadow: 0 0 10px black;
+}
+
+#player {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+}
+
+/* controls */
+#controls {
+	position: relative;
+	margin: 20px 0px;
+}
+
+#player-controls {
+	position: relative;
+	max-width: 640px;
+}
+
+#volume {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 150px;
+	height: 100%;
+	padding: 0;
+	background: transparent;
+}
+
+.settings-btn {
+	position: absolute;
+	top: 3px;
+	right: 3px;
+	width: 34px;
+	height: 34px;
+	background: url('../images/gear_white.svg');
+	background-size: cover;
+}
+
+.settings-btn:hover {
+	background: url('../images/gear_red.svg');
+	background-size: cover;
+	cursor: pointer;
+}
+
+/* chat panel */
+#chat-log {
+	max-height: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.chat-username {
+	color: gold;
+	font-weight: bold;
+}
+
+.chat {
+	margin-bottom: 5px;
+}
+
+/* playlist */
+#playlist {
+	position: relative;
+	width: 980px;
+	height: 560px;
+	margin: 10px 0;
+}
+
+.song {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 184px;
+	height: 104px;
+	overflow: hidden;
+	transition: all 1s;
+}
+
+.overlap {
+	width: 184px;
+	height: 104px;
+	position: absolute;
+	background: rgba(0, 0, 0, 0.8);
+	transition: all 0.2s;
+	opacity: 0;
+}
+
+a.yt-link {
+	display: block;
+	margin: 5px;
+	font-size: 13px;
+	text-decoration: none;
+}
+
+a.yt-link:hover {
+	text-decoration: underline;
+}
+
+.overlap>span {
+	font-size: 13px;
+	color: #FFCC00;
+}
+
+.order {
+	position: absolute;
+	right: 5px;
+	bottom: 5px;
+}
+
+.overlap:hover {
+	opacity: 1;
+}
+
+.song>img {
+	width: 184px;
+}
+
+/* about */
+#about {
+	max-width: 340px;
+	margin: 30px auto;
+}
+
+#about dd {
+	margin-bottom: 5px;
+}
