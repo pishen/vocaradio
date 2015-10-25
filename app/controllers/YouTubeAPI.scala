@@ -3,11 +3,12 @@ package controllers
 import play.api.libs.ws._
 import play.api.libs.json._
 import com.typesafe.config.ConfigFactory
+import net.ceedubs.ficus.Ficus._
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.github.nscala_time.time.Imports._
 
 object YouTubeAPI {
-  val googleApiKey = ConfigFactory.load().getString("google-api-key")
+  val googleApiKey = ConfigFactory.load().as[String]("google.api.key")
 
   def getSong(id: String)(implicit ws: WSClient) = {
     ws.url("https://www.googleapis.com/youtube/v3/videos")

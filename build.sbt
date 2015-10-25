@@ -6,8 +6,8 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
     ws,
     filters,
     "com.github.nscala-time" %% "nscala-time" % "2.2.0",
-    "com.github.pathikrit" %% "better-files" % "2.3.0"
+    "com.github.pathikrit" %% "better-files" % "2.13.0",
+    "net.ceedubs" %% "ficus" % "1.1.2"
   ),
-  resolvers += Resolver.bintrayRepo("pathikrit", "maven"),
   routesGenerator := InjectedRoutesGenerator
 )

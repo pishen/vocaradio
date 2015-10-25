@@ -1,4 +1,11 @@
 GET     /                           controllers.Application.index
-GET     /sync                       controllers.Application.sync
+GET     /playing                    controllers.Application.playing
+GET     /playlist                   controllers.Application.playlist
+
+GET     /login                      controllers.Application.login
+GET     /callback                   controllers.Application.callback(code: Option[String], state: Option[String])
+GET     /logout                     controllers.Application.logout
+
+GET     /socket                     controllers.Application.socket
 
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

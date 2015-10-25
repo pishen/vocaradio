@@ -1,4 +1,4 @@
-@()
+@(verification: xml.Elem)
 <!DOCTYPE html>
 <html>
 
@@ -11,6 +11,7 @@
     <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/stylesheets/buttons.css">
+    <link rel="stylesheet" href="/assets/stylesheets/pos.css">
     <style>
         @@import url(http://fonts.googleapis.com/css?family=Nova+Square);
         /* general */
@@ -135,24 +136,26 @@
         
         #playlist {
             position: relative;
-            width: 980px;
-            height: 560px;
+            width: 100%;
+            height: 675px;
             margin: 10px 0;
         }
         
         .song {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 184px;
-            height: 104px;
+            width: 220px;
+            height: 124px;
             overflow: hidden;
             transition: all 1s;
         }
         
+        .sample-song {
+            display: none;
+        }
+        
         .overlap {
-            width: 184px;
-            height: 104px;
+            width: 220px;
+            height: 124px;
             position: absolute;
             background: rgba(0, 0, 0, 0.8);
             transition: all 0.2s;
@@ -186,7 +189,7 @@
         }
         
         .song>img {
-            width: 184px;
+            width: 220px;
         }
         /* about */
         
@@ -213,15 +216,17 @@
                     <h4 class="modal-title">Settings</h4>
                 </div>
                 <div class="modal-body">
+                    <p class="alert alert-info">Connect with Google and fill your name to turn on the full power.</p>
                     <form>
                         <div class="form-group">
+                            <label>Verification</label>
+                            @verification
+                        </div>
+                        <div class="form-group">
                             <label>Name</label>
-                            <input class="form-control" id="username" placeholder="寫上您的大名以啟動進階功能">
+                            <input class="form-control" id="username">
                         </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button id="save-settings-btn" data-dismiss="modal" class="btn btn-primary raised">Save</button>
                 </div>
             </div>
         </div>
@@ -276,232 +281,86 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script>
-        var originTitle
-        $(document).ready(function() {
+        //notification
+        function notify(theTitle, theBody) {
+            new Notification(theTitle, {
+                body: theBody,
+                icon: "/assets/images/logo.png"
+            })
+        }
 
-            originTitle = document.title
-
-            setupNotify()
-            setupOnlinList()
-            setupUserName()
-            setupNewMsg()
-            updateWS()
-            setupFB()
+        Notification.requestPermission(function() {
+            notify("VocaRadio", "訊息通知已啟動")
         })
 
-        // notification
-        function setupNotify() {
-            if (localStorage.notify) {
-                $("#notify").prop("checked", true)
-                requestNotify()
-            }
-            $("#notify").change(function() {
-                if ($(this).prop("checked")) {
-                    localStorage.notify = true
-                    requestNotify()
-                } else {
-                    localStorage.removeItem("notify")
-                }
-            })
-        }
+        //online-list
 
-        function requestNotify() {
-            Notification.requestPermission(function() {
-                var notify = new Notification("VocaRadio", {
-                    body: "訊息通知已啟動",
-                    icon: "assets/images/logo.png"
+        //username
+
+        //chat
+
+        //playlist
+        function updatePlaylist() {
+            $.getJSON("/playlist", function(songs) {
+                var songIds = songs.map(function(song) {
+                    return song.id
                 })
-                window.setTimeout(function() {
-                    notify.close()
-                }, 5000)
-            })
-        }
 
-        // online-list
-        function setupOnlinList() {
-            $("#online-list-switch").change(function() {
-                if ($(this).prop("checked")) {
-                    $("#online-list").slideDown()
-                } else {
-                    $("#online-list").slideUp()
-                }
-            })
-        }
+                $(".song").filter(function(i, s) {
+                    return !$.inArray(s.id, songIds)
+                }).remove()
 
-        // username
-        var userName
-
-        function setupUserName() {
-            userName = $("#username")
-            if (localStorage.userName) {
-                userName.val(localStorage.userName)
-            }
-            userName.blur(function() {
-                localStorage.userName = userName.val()
-                ws.send(userName.val())
-            })
-        }
-
-        function openSetting() {
-            location.hash = "#setting"
-            if (!userName.val()) {
-                userName.select()
-            }
-        }
-
-        // new chat POST
-        function setupNewMsg() {
-            $("#new-msg textarea").keydown(function(e) {
-                if (e.keyCode == 13 && $(this).val() != "") {
-                    var chatLog = {
-                        name: userName.val(),
-                        token: accessToken ? accessToken : "guest",
-                        msg: $(this).val()
+                songs.forEach(function(song, i) {
+                    var target = $("#" + song.id.replace(/(#|:|\.|\[|\]|,)/g, "\\$1"))
+                    if (target.length != 0) {
+                        target.attr("class", "song pos" + i).html(song.html)
+                    } else {
+                        $("<div></div>").attr("id", song.id).addClass("song pos" + i).html(song.html).appendTo("#playlist")
                     }
-                    $.ajax({
-                        url: "chat",
-                        type: "POST",
-                        data: JSON.stringify(chatLog),
-                        contentType: "application/json; charset=utf-8"
-                    })
-                    $(this).val("")
-                    return false
-                } else if (e.keyCode == 13) {
-                    return false
-                }
-                document.title = originTitle
-            }).click(function() {
-                document.title = originTitle
-            })
-            $("#new-msg").focusin(function() {
-                if (!userName.val()) {
-                    openSetting()
-                }
-            })
-        }
-
-        // playlist
-        var list
-
-        function updatePlaylist(json) {
-            if (!isMobile) {
-                if (json) {
-                    if (json.append) {
-                        var itemToAppend = $(json.append)
-                        itemToAppend.appendTo("#playlist")
-                    } else if (json.convert) {
-                        $.each(json.convert, function(i, json2) {
-                            var song = $("#" + json2.id)
-                            if (json2.remove) {
-                                song.remove()
-                            } else {
-                                song.css({
-                                    "transform": json2.to,
-                                    "-webkit-transform": json2.to
-                                })
-                                if (json2.orderedBy) {
-                                    song.find(".order").off().remove()
-                                    song.find(".overlap").append(json2.orderedBy)
-                                }
-                            }
-                        })
-                    }
-                    setupOrders()
-                } else {
-                    $.getJSON("listContent", function(json) {
-                        $("#playlist").empty().append(json.content)
-                        setupOrders()
-                    })
-                }
-            }
-        }
-
-        function setupOrders() {
-            $(".order").off().click(function() {
-                if (!userName.val() || !accessToken) {
-                    openSetting()
-                } else {
-                    var order = {
-                        name: userName.val(),
-                        token: accessToken,
-                        videoId: $(this).closest(".song").attr("id")
-                    }
-                    $.ajax({
-                        url: "order",
-                        type: "POST",
-                        data: JSON.stringify(order),
-                        contentType: "application/json; charset=utf-8"
-                    })
-                }
-            })
-        }
-
-        // websocket
-        var ws
-        var interval
-        var retryTimes = 0
-
-        function updateWS() {
-            ws = new WebSocket("ws://" + window.location.host + "/ws")
-            ws.onopen = function() {
-                retryTimes = 0
-                    // send my name
-                ws.send(userName.val())
-                interval = setInterval(function() {
-                        ws.send(userName.val())
-                    }, 30000)
-                    // chatroom
-                $.getJSON("chat-history", function(jsObj) {
-                    $("#chat-log").empty().append(jsObj.history)
-                    $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
                 })
+            })
+        }
+
+        //websocket
+        var socket
+        var secondsToWait = 1
+        
+        setInterval(function(){
+            socket.send("")
+        }, 300000)
+
+        function updateSocket() {
+            socket = new WebSocket("ws://" + window.location.host + "/socket")
+            socket.onopen = function() {
+                console.log("websocket connected.")
+                secondsToWait = 1
+                socket.send("")
+                //TODO update the information at connection lost
                 updatePlaylist()
             }
-            ws.onmessage = function(e) {
-                var json = JSON.parse(e.data)
-                if (json.type == "clientCount") {
-                    $("#client-count").html(json.content)
-                } else if (json.type == "onlineList") {
-                    $("#online-list").html(json.content)
-                } else if (json.type == "chat") {
-                    $("#chat-log").append(json.content)
-                    $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-                } else if (json.type == "updatePlaylist") {
-                    updatePlaylist(json)
-                } else if (json.type == "notify") {
-                    if ($("#notify").prop("checked") && json.title != userName.val()) {
-                        var notify = new Notification(json.title, {
-                            body: json.body,
-                            icon: "assets/images/logo.png",
-                            tag: json.tag
-                        })
-                        window.setTimeout(function() {
-                            notify.close()
-                        }, 5000)
-                        document.title = "*" + originTitle
-                    }
+            socket.onmessage = function(event) {
+                var json = JSON.parse(event.data)
+                if (json.msg == "updatePlaylist") {
+                    updatePlaylist()
+                } else if (json.msg == "") {
+                    //TODO
                 }
             }
-            ws.onclose = function() {
-                // chatroom
-                clearInterval(interval)
-                $("#chat-log")
-                    .append("<p>(connection lost，trying to reconnect...)</p>")
-                $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-                if (retryTimes < 1) {
-                    setTimeout(updateWS, 2000)
-                    retryTimes += 1
-                }
+            socket.onclose = function() {
+                console.log("websocket closed, retry in " + secondsToWait + " seconds.")
+                setTimeout(updateSocket, secondsToWait * 1000)
+                secondsToWait *= 2
             }
         }
+        updateSocket()
 
-        // YouTube player
+        //youtube player
         var tag = document.createElement('script')
         tag.src = "https://www.youtube.com/iframe_api"
         var firstScriptTag = document.getElementsByTagName('script')[0]
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
-        var player
+        var player = null
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
@@ -538,37 +397,42 @@
             })
         }
 
+        var toSync = true
         var isFirst = true
 
         function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.ENDED) {
-                console.log("ended")
-                    //if come from opening video, seek, otherwise just continue next song
-                syncAndPlay(isFirst)
-                isFirst = false
+                //if come from opening video, seek, otherwise just continue next song
+                play()
             } else if (event.data == YT.PlayerState.PLAYING) {
-                console.log("playing")
+                if (toSync && !isFirst) {
+                    play()
+                }
+                isFirst = false
                 $("#playback").text("PAUSE").off().click(function() {
                     player.pauseVideo()
                 })
             } else if (event.data == YT.PlayerState.PAUSED) {
+                toSync = true
                 $("#playback").text("PLAY").off().click(function() {
-                    syncAndPlay(true)
+                    play()
                 })
             }
         }
 
         function onPlayerError(event) {
             console.log("player error: " + event.data)
+            toSync = true
             $("#playback").text("PLAY").off().click(function() {
-                syncAndPlay(true)
+                play()
             })
         }
 
-        function syncAndPlay(seek) {
-            $.getJSON("sync", function(json) {
-                console.log("sync id: " + json.id)
-                player.loadVideoById(json.id, seek ? json.position : 0)
+        function play() {
+            $.getJSON("/playing", function(json) {
+                console.log("playing id: " + json.song.id)
+                player.loadVideoById(json.song.id, toSync ? json.playedSeconds : 0)
+                toSync = false
                 player.setVolume($("#volume").prop("value"))
             })
         }
