@@ -117,4 +117,25 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   def socket = WebSocket.acceptWithActor[String, String] { request => out =>
     Client.props(out, hub)
   }
+  
+  def backend = Action {
+    Ok
+  }
+  
+  def shift = Action {
+    
+    Ok
+  }
+  
+  def kick(id: String) = Action {
+    Ok
+  }
+  
+  def problemSongs = Action {
+    Ok
+  }
+  
+  def changeSongId(fromId: Int, toId: Int) = Action {
+    Ok
+  }
 }

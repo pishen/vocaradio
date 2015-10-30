@@ -10,198 +10,8 @@
     <title>VocaRadio - 24hr VOCALOID 自動電台</title>
     <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/stylesheets/buttons.css">
     <link rel="stylesheet" href="/assets/stylesheets/pos.css">
-    <style>
-        @@import url(http://fonts.googleapis.com/css?family=Nova+Square);
-        /* general */
-        
-        body {
-            color: white;
-            background-color: #413839;
-        }
-        
-        a:link,
-        a:visited,
-        a:hover,
-        a:active {
-            color: white;
-        }
-        
-        .modal-content {
-            background: gray;
-        }
-        
-        .modal-header {
-            border: 0px;
-        }
-        
-        .modal-body,
-        .modal-footer {
-            border-top: 1px solid #666666;
-        }
-        /* header */
-        
-        .logo {
-            text-align: center;
-            color: #ff8080;
-            margin: 5px 0px;
-            font-size: 60px;
-            font-family: 'Nova Square', cursive;
-        }
-        /* player */
-        
-        .player-pad {
-            height: 70px;
-        }
-        
-        .player-wrap {
-            max-width: 640px;
-            margin-left: auto;
-            margin-right: auto;
-            position: relative;
-        }
-        
-        .player-wrap:after {
-            padding-top: 56.25%;
-            display: block;
-            content: '';
-        }
-        
-        .player-bg {
-            background: url('/assets/images/spaghetti.jpg');
-            background-position: center;
-            box-shadow: 0 0 10px black;
-        }
-        
-        #player {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-        }
-        /* controls */
-        
-        #controls {
-            position: relative;
-            margin: 20px 0px;
-        }
-        
-        #player-controls {
-            position: relative;
-            max-width: 640px;
-        }
-        
-        #volume {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 150px;
-            height: 100%;
-            padding: 0;
-            background: transparent;
-        }
-        
-        .settings-btn {
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            width: 34px;
-            height: 34px;
-            background: url('/assets/images/gear_white.svg');
-            background-size: cover;
-        }
-        
-        .settings-btn:hover {
-            background: url('/assets/images/gear_red.svg');
-            background-size: cover;
-            cursor: pointer;
-        }
-        /* chat panel */
-        
-        #chat-log {
-            max-height: 300px;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        
-        .chat-username {
-            color: gold;
-            font-weight: bold;
-        }
-        
-        .chat {
-            margin-bottom: 5px;
-        }
-        /* playlist */
-        
-        #playlist {
-            position: relative;
-            width: 100%;
-            height: 675px;
-            margin: 10px 0;
-        }
-        
-        .song {
-            position: absolute;
-            width: 220px;
-            height: 124px;
-            overflow: hidden;
-            transition: all 1s;
-        }
-        
-        .sample-song {
-            display: none;
-        }
-        
-        .overlap {
-            width: 220px;
-            height: 124px;
-            position: absolute;
-            background: rgba(0, 0, 0, 0.8);
-            transition: all 0.2s;
-            opacity: 0;
-        }
-        
-        a.yt-link {
-            display: block;
-            margin: 5px;
-            font-size: 13px;
-            text-decoration: none;
-        }
-        
-        a.yt-link:hover {
-            text-decoration: underline;
-        }
-        
-        .overlap>span {
-            font-size: 13px;
-            color: #FFCC00;
-        }
-        
-        .order {
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
-        }
-        
-        .overlap:hover {
-            opacity: 1;
-        }
-        
-        .song>img {
-            width: 220px;
-        }
-        /* about */
-        
-        #about {
-            max-width: 340px;
-            margin: 30px auto;
-        }
-        
-        #about dd {
-            margin-bottom: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/stylesheets/index.css">
 </head>
 
 <body>
@@ -216,7 +26,7 @@
                     <h4 class="modal-title">Settings</h4>
                 </div>
                 <div class="modal-body">
-                    <p class="alert alert-info">Connect with Google and fill your name to turn on the full power.</p>
+                    <p class="alert alert-success">Login with Google and fill in your name to turn on the full power.</p>
                     <form>
                         <div class="form-group">
                             <label>Verification</label>
@@ -224,7 +34,7 @@
                         </div>
                         <div class="form-group">
                             <label>Name</label>
-                            <input class="form-control" id="username">
+                            <input class="form-control" id="username" placeholder="Your name">
                         </div>
                     </form>
                 </div>
@@ -243,15 +53,22 @@
     <div class="container">
         <div id="controls">
             <div id="player-controls" class="center-block">
-                <button id="playback" class="btn btn-danger raised center-block">PLAY</button>
+                <button id="playback" class="btn btn-lg btn-danger center-block">PLAY</button>
                 <input id="volume" class="hidden-xs hidden-sm" type="range" min="0" max="100" value="50" />
             </div>
-            <div class="settings-btn" title="Settings" data-toggle="modal" data-target="#settings-modal"></div>
+            <div class="settings-btn" title="Settings" data-toggle="modal" data-target="#settings-modal">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
         </div>
-        <div class="row">
+    </div>
+    <div class="hr"></div>
+    <div class="container">
+        <div class="row" style="margin-top:15px;">
             <div class="col-sm-6">
-                <h3>Now playing:</h3>
-                <h3>Currently online:</h3>
+                <p class="lead text-center"><span class="number">7</span> listener(s) are online.</p>
+                <p class="lead text-center">This song has been played <span class="number">523</span> times.</p>
             </div>
             <div class="col-sm-6">
                 <div id="chat-log"></div>
@@ -263,180 +80,24 @@
             <dl class="dl-horizontal">
                 <dt>DJ</dt>
                 <dd>
-                    <a href="http://facebook.com/pishen" target="_blank">Pishen</a>
+                    <a class="plain" href="http://facebook.com/pishen" target="_blank">Pishen</a>
                 </dd>
                 <dt>イラスト</dt>
                 <dd>有熊黑白</dd>
                 <dt>入台音效</dt>
                 <dd>
-                    <a href="http://goo.gl/4AKWYn" target="_blank">yoyo幫尼</a>
+                    <a class="plain" href="http://goo.gl/4AKWYn" target="_blank">yoyo幫尼</a>
                 </dd>
                 <dt>Facebook Page</dt>
                 <dd>
-                    <a href="https://www.facebook.com/vocaradio" target="_blank">facebook/vocaradio</a>
+                    <a class="plain" href="https://www.facebook.com/vocaradio" target="_blank">facebook/vocaradio</a>
                 </dd>
             </dl>
         </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script>
-        //notification
-        function notify(theTitle, theBody) {
-            new Notification(theTitle, {
-                body: theBody,
-                icon: "/assets/images/logo.png"
-            })
-        }
-
-        Notification.requestPermission(function() {
-            notify("VocaRadio", "訊息通知已啟動")
-        })
-
-        //online-list
-
-        //username
-
-        //chat
-
-        //playlist
-        function updatePlaylist() {
-            $.getJSON("/playlist", function(songs) {
-                var songIds = songs.map(function(song) {
-                    return song.id
-                })
-
-                $(".song").filter(function(i, s) {
-                    return !$.inArray(s.id, songIds)
-                }).remove()
-
-                songs.forEach(function(song, i) {
-                    var target = $("#" + song.id.replace(/(#|:|\.|\[|\]|,)/g, "\\$1"))
-                    if (target.length != 0) {
-                        target.attr("class", "song pos" + i).html(song.html)
-                    } else {
-                        $("<div></div>").attr("id", song.id).addClass("song pos" + i).html(song.html).appendTo("#playlist")
-                    }
-                })
-            })
-        }
-
-        //websocket
-        var socket
-        var secondsToWait = 1
-        
-        setInterval(function(){
-            socket.send("")
-        }, 300000)
-
-        function updateSocket() {
-            socket = new WebSocket("ws://" + window.location.host + "/socket")
-            socket.onopen = function() {
-                console.log("websocket connected.")
-                secondsToWait = 1
-                socket.send("")
-                //TODO update the information at connection lost
-                updatePlaylist()
-            }
-            socket.onmessage = function(event) {
-                var json = JSON.parse(event.data)
-                if (json.msg == "updatePlaylist") {
-                    updatePlaylist()
-                } else if (json.msg == "") {
-                    //TODO
-                }
-            }
-            socket.onclose = function() {
-                console.log("websocket closed, retry in " + secondsToWait + " seconds.")
-                setTimeout(updateSocket, secondsToWait * 1000)
-                secondsToWait *= 2
-            }
-        }
-        updateSocket()
-
-        //youtube player
-        var tag = document.createElement('script')
-        tag.src = "https://www.youtube.com/iframe_api"
-        var firstScriptTag = document.getElementsByTagName('script')[0]
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
-
-        var player = null
-
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '360',
-                width: '640',
-                videoId: '7NptssoOJ78',
-                playerVars: {
-                    'wmode': 'opaque',
-                    'rel': 0,
-                    'iv_load_policy': 3,
-                    'controls': 0,
-                    'disablekb': 1
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
-                }
-            })
-        }
-
-        function onPlayerReady(event) {
-            console.log("ready")
-            if (localStorage.volume) {
-                $("#volume").prop("value", localStorage.volume)
-            }
-            player.setVolume($("#volume").prop("value"))
-            $("#volume").change(function() {
-                player.setVolume($(this).prop("value"))
-                localStorage.volume = $(this).prop("value")
-            })
-            $("#playback").click(function() {
-                player.playVideo()
-            })
-        }
-
-        var toSync = true
-        var isFirst = true
-
-        function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.ENDED) {
-                //if come from opening video, seek, otherwise just continue next song
-                play()
-            } else if (event.data == YT.PlayerState.PLAYING) {
-                if (toSync && !isFirst) {
-                    play()
-                }
-                isFirst = false
-                $("#playback").text("PAUSE").off().click(function() {
-                    player.pauseVideo()
-                })
-            } else if (event.data == YT.PlayerState.PAUSED) {
-                toSync = true
-                $("#playback").text("PLAY").off().click(function() {
-                    play()
-                })
-            }
-        }
-
-        function onPlayerError(event) {
-            console.log("player error: " + event.data)
-            toSync = true
-            $("#playback").text("PLAY").off().click(function() {
-                play()
-            })
-        }
-
-        function play() {
-            $.getJSON("/playing", function(json) {
-                console.log("playing id: " + json.song.id)
-                player.loadVideoById(json.song.id, toSync ? json.playedSeconds : 0)
-                toSync = false
-                player.setVolume($("#volume").prop("value"))
-            })
-        }
-    </script>
+    <script src="/assets/javascripts/index.js"></script>
 </body>
 
 </html>

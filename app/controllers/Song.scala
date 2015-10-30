@@ -7,10 +7,10 @@ case class Song(id: String, title: String, thumbnail: String, seconds: Int) {
   val html = {
     //TODO use CSS background instead of img
     <div class="overlap">
-      <a class="yt-link" href={ s"http://www.youtube.com/watch?v=${id}" } target="_blank">
+      <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${id}" } target="_blank">
         { title }
       </a>
-      <button class="order">request</button>
+      <button class="order btn btn-default btn-sm">Request</button>
     </div>
     <img src={ thumbnail }></img>
   }.mkString

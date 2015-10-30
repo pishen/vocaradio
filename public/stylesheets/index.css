@@ -1,182 +1,260 @@
 @import url(http://fonts.googleapis.com/css?family=Nova+Square);
 
 /* general */
+
 body {
-	color: white;
-	background-color: #413839;
+    color: white;
+    background-color: #413839;
 }
 
-a:link, a:visited, a:hover, a:active {
-	color: white;
+a.plain:link,
+a.plain:visited,
+a.plain:hover,
+a.plain:active {
+    color: white;
 }
+
+.btn {
+    border: 0px none;
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus {
+    outline: 0 none;
+}
+
+.alert {
+    border: 0px;
+}
+
+.hr {
+    height: 1px;
+    background: #8D8888;
+}
+
+/* modal */
 
 .modal-content {
-	background: gray;
+    background: #676061;
 }
 
 .modal-header {
-	border: 0px;
+    border: 0px;
 }
 
-.modal-body, .modal-footer {
-	border-top: 1px solid #666666;
+.modal-body,.modal-footer {
+    border-top: 1px solid #8D8888;
+}
+
+.close {
+    color: white;
+    opacity: 0.5;
+}
+
+.close:hover {
+    color: white;
+    opacity: 1;
 }
 
 /* header */
+
 .logo {
-	text-align: center;
-	color: #ff8080;
-	margin: 5px 0px;
-	font-size: 60px;
-	font-family: 'Nova Square', cursive;
+    text-align: center;
+    color: #ff8080;
+    margin: 5px 0px;
+    font-size: 60px;
+    font-family: 'Nova Square', cursive;
 }
 
 /* player */
+
 .player-pad {
-	height: 70px;
+    height: 70px;
 }
 
 .player-wrap {
-	max-width: 640px;
-	margin-left: auto;
-	margin-right: auto;
-	position: relative;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
 }
 
 .player-wrap:after {
-	padding-top: 56.25%;
-	display: block;
-	content: '';
+    padding-top: 56.25%;
+    display: block;
+    content: '';
 }
 
 .player-bg {
-	background: url('../images/spaghetti.jpg');
-	background-position: center;
-	box-shadow: 0 0 10px black;
+    background: url('/assets/images/spaghetti.jpg');
+    background-position: center;
+    box-shadow: 0 0 10px black;
 }
 
 #player {
-	width: 100%;
-	height: 100%;
-	position: absolute;
+    width: 100%;
+    height: 100%;
+    position: absolute;
 }
 
 /* controls */
+
 #controls {
-	position: relative;
-	margin: 20px 0px;
+    position: relative;
+    margin: 20px 0px;
 }
 
 #player-controls {
-	position: relative;
-	max-width: 640px;
+    position: relative;
+    max-width: 640px;
+}
+
+#playback {
+    position: relative;
+    box-shadow: 0 3px 0 0 #991B00;
+}
+
+#playback:active {
+    box-shadow: none;
+    top: 3px;
 }
 
 #volume {
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 150px;
-	height: 100%;
-	padding: 0;
-	background: transparent;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 100%;
+    padding: 0;
+    background: transparent;
 }
 
 .settings-btn {
-	position: absolute;
-	top: 3px;
-	right: 3px;
-	width: 34px;
-	height: 34px;
-	background: url('../images/gear_white.svg');
-	background-size: cover;
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    top: 0px;
+    right: 0px;
+}
+
+.settings-btn>.bar {
+    position: absolute;
+    left: 8px;
+    width: 28px;
+    height: 5px;
+    background-color: white;
 }
 
 .settings-btn:hover {
-	background: url('../images/gear_red.svg');
-	background-size: cover;
-	cursor: pointer;
+    cursor: pointer;
+}
+
+.settings-btn:hover>.bar {
+    background-color: #D9534F;
+}
+
+.settings-btn>.bar:first-child {
+    top: 9px;
+}
+
+.settings-btn>.bar:nth-child(2) {
+    top: 19px;
+}
+
+.settings-btn>.bar:last-child {
+    top: 29px;
 }
 
 /* chat panel */
+
 #chat-log {
-	max-height: 300px;
-	overflow-x: hidden;
-	overflow-y: auto;
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .chat-username {
-	color: gold;
-	font-weight: bold;
+    color: gold;
+    font-weight: bold;
 }
 
 .chat {
-	margin-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+/* status */
+
+.number {
+    font-size: 40px;
 }
 
 /* playlist */
+
 #playlist {
-	position: relative;
-	width: 980px;
-	height: 560px;
-	margin: 10px 0;
+    position: relative;
+    width: 100%;
+    height: 675px;
+    margin: 10px 0;
 }
 
 .song {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 184px;
-	height: 104px;
-	overflow: hidden;
-	transition: all 1s;
+    position: absolute;
+    width: 220px;
+    height: 124px;
+    overflow: hidden;
+    transition: all 1s;
+}
+
+.sample-song {
+    display: none;
 }
 
 .overlap {
-	width: 184px;
-	height: 104px;
-	position: absolute;
-	background: rgba(0, 0, 0, 0.8);
-	transition: all 0.2s;
-	opacity: 0;
+    width: 220px;
+    height: 124px;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    transition: all 0.2s;
+    opacity: 0;
 }
 
 a.yt-link {
-	display: block;
-	margin: 5px;
-	font-size: 13px;
-	text-decoration: none;
+    display: block;
+    margin: 5px;
+    font-size: 13px;
+    text-decoration: none;
 }
 
 a.yt-link:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 .overlap>span {
-	font-size: 13px;
-	color: #FFCC00;
+    font-size: 13px;
+    color: #FFCC00;
 }
 
 .order {
-	position: absolute;
-	right: 5px;
-	bottom: 5px;
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
 }
 
 .overlap:hover {
-	opacity: 1;
+    opacity: 1;
 }
 
 .song>img {
-	width: 184px;
+    width: 220px;
 }
 
+
 /* about */
+
 #about {
-	max-width: 340px;
-	margin: 30px auto;
+    max-width: 340px;
+    margin: 30px auto;
 }
 
 #about dd {
-	margin-bottom: 5px;
+    margin-bottom: 5px;
 }

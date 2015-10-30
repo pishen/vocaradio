@@ -1,11 +1,20 @@
-GET     /                           controllers.Application.index
-GET     /playing                    controllers.Application.playing
-GET     /playlist                   controllers.Application.playlist
+GET     /                             controllers.Application.index
 
-GET     /login                      controllers.Application.login
-GET     /callback                   controllers.Application.callback(code: Option[String], state: Option[String])
-GET     /logout                     controllers.Application.logout
+GET     /playing                      controllers.Application.playing
+GET     /playlist                     controllers.Application.playlist
 
-GET     /socket                     controllers.Application.socket
+GET     /login                        controllers.Application.login
+GET     /callback                     controllers.Application.callback(code: Option[String], state: Option[String])
+GET     /logout                       controllers.Application.logout
 
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /socket                       controllers.Application.socket
+
+GET     /backend                      controllers.Application.backend
+
+POST    /shift                        controllers.Application.shift
+POST    /kick/:id                     controllers.Application.kick(id: String)
+
+GET     /problemSongs                 controllers.Application.problemSongs
+POST    /changeSongId/:fromId/:toId   controllers.Application.changeSongId(fromId: Int, toId: Int)
+
+GET     /assets/*file                 controllers.Assets.versioned(path="/public", file: Asset)
