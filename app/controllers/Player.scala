@@ -18,7 +18,7 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   implicit val timeout = Timeout(15.seconds)
 
   //playing ++ playlistA ++ playlistB
-  
+
   //Option[(Song, start time(ms))]
   var playing: Option[(Song, Long)] = None
 
@@ -27,67 +27,78 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
 
   //hidden buffer list
   var playlistB: Seq[String] = Seq.empty
-  
+
   //counter for error
   var numOfNoSong = 0
 
-  def receive = default
+  //mode
+  var shifting = false
 
-  def default: Receive = {
+  def requestSongFromB() = {
+    if (playlistB.size > 300) {
+      //try to make the first key from toPlay to a Song
+      val key = playlistB.head
+      playlistB = playlistB.tail
+
+      (songBase ? SongBase.GetSong(key)).mapTo[Song]
+        .flatMap { song =>
+          //check if the song is still valid
+          YouTubeAPI.getSong(song.id)
+        }
+        .recoverWith {
+          case e: NoSuchElementException =>
+            //search for the song if the song is invalid or we don't have song with this key
+            YouTubeAPI.searchSong(key).flatMap(id => YouTubeAPI.getSong(id))
+        }
+        .onComplete {
+          case Success(song) =>
+            //send the song back to self and set the new song info for songbase
+            self ! song
+            songBase ! SongBase.SetSong(key, song)
+          case Failure(e) =>
+            //shift one more and set this song as fail in songbase
+            self ! SongNotFound
+            songBase ! SongBase.SongNotFound(key)
+        }
+    } else {
+      //get keys for refilling
+      (songBase ? SongBase.GetAllKeys).mapTo[Seq[String]]
+        .foreach(keys => self ! RefillB(keys))
+    }
+  }
+
+  def receive = {
     case GetPlaying =>
-      val currentTime = System.currentTimeMillis()
-      val songIsPlaying = playing.map {
-        case (song, startTime) => startTime + song.seconds * 1000 > currentTime
-      }.getOrElse(false)
-
-      if (songIsPlaying) {
-        //return (song, played seconds)
-        sender ! playing.map {
-          case (song, startTime) => (song, (currentTime - startTime) / 1000)
-        }.get
-      } else {
-        //shifting mode
+      println("getplaying, sender=" + sender)
+      if (shifting) {
         stash()
-        context.become(shifting)
-        self ! Shift
+      } else {
+        val currentTime = System.currentTimeMillis()
+        val songIsPlaying = playing.map {
+          case (song, startTime) => startTime + song.seconds * 1000 > currentTime
+        }.getOrElse(false)
+
+        if (songIsPlaying) {
+          //return (song, played seconds)
+          sender ! playing.map {
+            case (song, startTime) => (song, (currentTime - startTime) / 1000)
+          }.get
+        } else {
+          //shifting mode
+          stash()
+          shifting = true
+          requestSongFromB()
+        }
       }
     case GetPlaylistA =>
       sender ! playlistA
-  }
-
-  def shifting: Receive = {
-    case Shift =>
-      if (playlistB.size > 300) {
-        //try to make the first key from toPlay to a Song
-        val key = playlistB.head
-        playlistB = playlistB.tail
-
-        (songBase ? SongBase.GetSong(key)).mapTo[Song]
-          .flatMap { song =>
-            //check if the song is still valid
-            YouTubeAPI.getSong(song.id)
-          }
-          .recoverWith {
-            case e: NoSuchElementException =>
-              //search for the song if the song is invalid or we don't have song with this key
-              YouTubeAPI.searchSong(key).flatMap(id => YouTubeAPI.getSong(id))
-          }
-          .onComplete {
-            case Success(song) =>
-              //send the song back to self and set the new song info for songbase
-              self ! song
-              songBase ! SongBase.SetSong(key, song)
-            case Failure(e) =>
-              //shift one more and set this song as fail in songbase
-              self ! SongNotFound
-              songBase ! SongBase.SongNotFound(key)
-          }
-      } else {
-        //get keys for refilling
-        (songBase ? SongBase.GetAllKeys).mapTo[Seq[String]]
-          .foreach(keys => self ! AllKeys(keys))
-      }
-    case song: Song =>
+    case Shift if !shifting =>
+      //force player into shifting mode
+      shifting = true
+      requestSongFromB()
+      //force all the client to get the playing song again
+      hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
+    case song: Song if sender == self =>
       //got a valid song from toPlay
       numOfNoSong = 0
       playlistA :+= song
@@ -97,26 +108,28 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
         playlistA = playlistA.tail
         //broadcast updatePlaylist message
         hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
-        
+
+        shifting = false
         unstashAll()
-        context.become(default)
       } else {
         //not enough buffering songs
-        self ! Shift
+        requestSongFromB()
       }
-    case SongNotFound =>
+    case SongNotFound if sender == self =>
       numOfNoSong += 1
       if (numOfNoSong < 26) {
-        self ! Shift
+        requestSongFromB()
       } else {
         Logger.error("Keep getting SongNotFound, stop shifting, player is dead.")
       }
-    case AllKeys(keys) =>
+    case RefillB(keys) if sender == self =>
       //refill
       val remainingKeys = playlistB.toSet
       playlistB = playlistB ++ Random.shuffle(keys.filterNot(remainingKeys.contains))
-      self ! Shift
-    case _ => stash()
+      //TODO danger, could get infinite loop here
+      requestSongFromB()
+    case _ =>
+      //do nothing
   }
 }
 
@@ -128,5 +141,5 @@ object Player {
   //message for internal usage
   case object Shift
   case object SongNotFound
-  case class AllKeys(keys: Seq[String])
+  case class RefillB(keys: Seq[String])
 }

@@ -24,14 +24,21 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   val oauth2ClientId = config.as[String]("google.oauth2.id")
   val oauth2RedirectUri = config.as[String]("google.oauth2.redirect")
   val oauth2Secret = config.as[String]("google.oauth2.secret")
+  val admins = config.as[Seq[String]]("admins")
 
   val hub = system.actorOf(Props[Hub], "hub")
   val songBase = system.actorOf(Props[SongBase], "songBase")
   val player = system.actorOf(Player.props(songBase, hub), "player")
 
   //Google OAuth2 https://developers.google.com/identity/protocols/OAuth2WebServer
-  object AuthAction extends AuthenticatedBuilder({
+  object Authenticated extends AuthenticatedBuilder({
     request => request.session.get("user")
+  }, {
+    request => Unauthorized
+  })
+  
+  object AuthenticatedAdmin extends AuthenticatedBuilder({
+    request => request.session.get("user").filter(admins.contains)
   }, {
     request => Unauthorized
   })
@@ -102,6 +109,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
       .withSession(request.session + ("state" -> UUID.randomUUID.toString))
   }
 
+  //TODO move the json wrapper of playing and playlist into Player, let it possible to broadcast the json to client by websocket
   def playing = Action.async {
     (player ? GetPlaying).mapTo[(Song, Long)].map {
       case (song, playedSeconds) => Ok(Json.obj("song" -> song, "playedSeconds" -> playedSeconds))
@@ -118,12 +126,12 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     Client.props(out, hub)
   }
   
-  def backend = Action {
-    Ok
+  def backend = AuthenticatedAdmin {
+    Ok(views.html.backend())
   }
   
-  def shift = Action {
-    
+  def shift = AuthenticatedAdmin {
+    player ! Shift
     Ok
   }
   

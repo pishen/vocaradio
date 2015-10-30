@@ -57,8 +57,11 @@ function updateSocket() {
     }
     socket.onmessage = function(event) {
         var json = JSON.parse(event.data)
+        //TODO instead of updatePlaylist and play, get playing and playlist from websocket directly
         if (json.msg == "updatePlaylist") {
             updatePlaylist()
+        } else if (json.msg == "play") {
+            play()
         } else if (json.msg == "") {
             //TODO
         }
