@@ -117,17 +117,17 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     }
   }
 
-  private def buildSongHtml(song: Song, requesterOpt: Option[String]) = {
+  private def buildSongHtml(sw: SongWithRequester) = {
     //TODO use CSS background instead of img
-    <div style={ s"background-image:url('${song.thumbnail}');background-size:cover;" }>
+    <div style={ s"background-image:url('${sw.song.thumbnail}');background-size:cover;" }>
       <div class="overlay">
-        <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${song.id}" } target="_blank">
-          { song.title }
+        <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${sw.song.id}" } target="_blank">
+          { sw.song.title }
         </a>
         {
-          requesterOpt match {
-            case None => <button class="order btn btn-default btn-sm">Request</button>
-            case Some(requester) => <span class="order">{ requester }</span>
+          sw.requesterOpt match {
+            case None => <button class="request btn btn-default btn-sm">Request</button>
+            case Some(requester) => <span class="request">{ requester.name }</span>
           }
         }
       </div>
@@ -135,15 +135,23 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   }
 
   def playlist = Action.async {
-    (player ? GetPlaylistA).mapTo[Seq[(Song, Option[String])]].map { playlistA =>
+    (player ? GetPlaylistA).mapTo[Seq[SongWithRequester]].map { playlistA =>
       Ok(Json.toJson(playlistA.map {
-        case (song, requesterOpt) => Json.obj("id" -> song.id, "html" -> buildSongHtml(song, requesterOpt).toString)
+        sw => Json.obj("id" -> sw.song.id, "html" -> buildSongHtml(sw).toString)
       }))
     }
   }
 
-  def request(id: String) = Authenticated { request =>
-    Ok
+  def request = Authenticated(parse.urlFormEncoded) { request =>
+    val reqMap = request.body.mapValues(_.head)
+    val id = reqMap("id")
+    val name = reqMap("name")
+    if (name != "") {
+      player ! Player.Request(id, Requester(request.user, name))
+      Ok
+    } else {
+      Unauthorized("name cannot be empty")
+    }
   }
 
   def socket = WebSocket.acceptWithActor[String, String] { request => out =>

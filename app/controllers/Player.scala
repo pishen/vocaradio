@@ -22,8 +22,8 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   //Option[(Song, start time(ms))]
   var playing: Option[(Song, Long)] = None
 
-  //revealed songs for request Seq[(song, Option[requester])]
-  var playlistA: Seq[(Song, Option[String])] = Seq.empty
+  //revealed songs for request
+  var playlistA: Seq[SongWithRequester] = Seq.empty
 
   //hidden buffer list
   var playlistB: Seq[String] = Seq.empty
@@ -92,16 +92,18 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
     case GetPlaylistA =>
       sender ! playlistA
     case Request(id, requester) if mode == "normal" =>
-      playlistA.find { case (song, requesterOpt) => song.id == id && requesterOpt.isEmpty }.foreach {
-        case (song, _) =>
-          val (l, r) = playlistA.splitAt(playlistA.lastIndexWhere(_._2.map(_ == requester).getOrElse(false)) + 1)
+      playlistA.find(sw => sw.song.id == id && sw.requesterOpt.isEmpty ).foreach {
+        case SongWithRequester(song, _) =>
+          val indexToSplit = playlistA.lastIndexWhere(_.requesterOpt.map(_.email == requester.email).getOrElse(false)) + 1
+          val (l, r) = playlistA.splitAt(indexToSplit)
           val (rl, rr) = r.zipWithIndex.span {
-            case ((_, Some(other)), i) =>
-              !r.take(i).flatMap(_._2).contains(other)
-            case ((_, None), _) =>
+            case (SongWithRequester(_, Some(other)), i) =>
+              !r.take(i).flatMap(_.requesterOpt).map(_.email).contains(other.email)
+            case (SongWithRequester(_, None), _) =>
               false
           }
-          playlistA = (l ++ rl.map(_._1) :+ (song -> Some(requester))) ++ rr.map(_._1).filterNot(_._1.id == id)
+          playlistA = (l ++ rl.map(_._1) :+ SongWithRequester(song, Some(requester))) ++ rr.map(_._1).filterNot(_.song.id == id)
+          hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
       }
     case song: Song if sender == self =>
       def broadcastAndBecomeNormal() = {
@@ -111,11 +113,11 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       }
       //got a valid song from toPlay
       numOfNoSong = 0
-      playlistA :+= (song -> None)
+      playlistA :+= SongWithRequester(song, None)
       mode match {
         case "shifting" if playlistA.size == 26 =>
           //shift and play, keep 25 songs in the buffer
-          playing = Some((playlistA.head._1, System.currentTimeMillis))
+          playing = Some((playlistA.head.song, System.currentTimeMillis))
           playlistA = playlistA.tail
           broadcastAndBecomeNormal()
         case "kicking" if playlistA.size == 25 =>
@@ -144,9 +146,9 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       //force all the client to get the playing song again
       hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
     case Kick(id) if mode == "normal" =>
-      if (playlistA.exists(_._1.id == id)) {
+      if (playlistA.exists(_.song.id == id)) {
         context.become(receiver("kicking"))
-        playlistA = playlistA.filterNot(_._1.id == id)
+        playlistA = playlistA.filterNot(_.song.id == id)
         requestSongFromB()
       }
     case _ =>
@@ -156,10 +158,13 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
 
 object Player {
   def props(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) = Props(new Player(songBase, hub))
+  //helper classes
+  case class SongWithRequester(song: Song, requesterOpt: Option[Requester])
+  case class Requester(email: String, name: String)
   //message from Application
   case object GetPlaying
   case object GetPlaylistA
-  case class Request(id: String, requester: String)
+  case class Request(id: String, requester: Requester)
   //message for internal usage
   case object SongNotFound
   case class RefillB(keys: Seq[String])

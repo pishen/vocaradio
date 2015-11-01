@@ -210,6 +210,7 @@ a.plain:active {
 }
 
 .overlay {
+    position: absolute;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
@@ -221,11 +222,6 @@ a.yt-link {
     display: block;
     margin: 5px;
     font-size: 13px;
-    text-decoration: none;
-}
-
-a.yt-link:hover {
-    text-decoration: underline;
 }
 
 .overlay>span {
@@ -233,7 +229,7 @@ a.yt-link:hover {
     color: #FFCC00;
 }
 
-.order {
+.request {
     position: absolute;
     right: 5px;
     bottom: 5px;

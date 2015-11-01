@@ -13,6 +13,19 @@ Notification.requestPermission(function() {
 //online-list
 
 //username
+var username
+
+function setupUsername() {
+    username = $("#username")
+    if (localStorage.username) {
+        username.val(localStorage.username)
+    }
+    username.blur(function() {
+        localStorage.username = username.val()
+        socket.send(username.val())
+    })
+}
+setupUsername()
 
 //chat
 
@@ -35,6 +48,15 @@ function updatePlaylist() {
                 $("<div></div>").attr("id", song.id).addClass("song pos" + i).html(song.html).appendTo("#playlist")
             }
         })
+
+        $(".song button.request").off().click(function() {
+            $.post("/request", {
+                id: $(this).closest(".song").attr("id"),
+                name: username.val()
+            }).fail(function(){
+                $(".settings-btn").click()
+            })
+        })
     })
 }
 
@@ -43,7 +65,7 @@ var socket
 var secondsToWait = 1
 
 setInterval(function() {
-    socket.send("")
+    socket.send(username.val())
 }, 300000)
 
 function updateSocket() {
@@ -57,7 +79,7 @@ function updateSocket() {
     }
     socket.onmessage = function(event) {
         var json = JSON.parse(event.data)
-        //TODO instead of updatePlaylist and play, get playing and playlist from websocket directly
+            //TODO instead of updatePlaylist and play, get playing and playlist from websocket directly
         if (json.msg == "updatePlaylist") {
             updatePlaylist()
         } else if (json.msg == "play") {

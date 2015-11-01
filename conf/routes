@@ -6,7 +6,7 @@ GET     /                             controllers.Application.index
 
 GET     /playing                      controllers.Application.playing
 GET     /playlist                     controllers.Application.playlist
-POST    /request/:id                  controllers.Application.request(id: String)
+POST    /request                      controllers.Application.request
 
 GET     /socket                       controllers.Application.socket
 
