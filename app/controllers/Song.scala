@@ -3,18 +3,7 @@ package controllers
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-case class Song(id: String, title: String, thumbnail: String, seconds: Int) {
-  val html = {
-    //TODO use CSS background instead of img
-    <div class="overlap">
-      <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${id}" } target="_blank">
-        { title }
-      </a>
-      <button class="order btn btn-default btn-sm">Request</button>
-    </div>
-    <img src={ thumbnail }></img>
-  }.mkString
-}
+case class Song(id: String, title: String, thumbnail: String, seconds: Int)
 
 object Song {
   implicit val songFormat: Format[Song] = (

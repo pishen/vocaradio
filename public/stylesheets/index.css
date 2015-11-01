@@ -204,14 +204,14 @@ a.plain:active {
     transition: all 1s;
 }
 
-.sample-song {
-    display: none;
+.song>div {
+    width: 100%;
+    height: 100%;
 }
 
-.overlap {
-    width: 220px;
-    height: 124px;
-    position: absolute;
+.overlay {
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.8);
     transition: all 0.2s;
     opacity: 0;
@@ -228,7 +228,7 @@ a.yt-link:hover {
     text-decoration: underline;
 }
 
-.overlap>span {
+.overlay>span {
     font-size: 13px;
     color: #FFCC00;
 }
@@ -239,14 +239,9 @@ a.yt-link:hover {
     bottom: 5px;
 }
 
-.overlap:hover {
+.overlay:hover {
     opacity: 1;
 }
-
-.song>img {
-    width: 220px;
-}
-
 
 /* about */
 

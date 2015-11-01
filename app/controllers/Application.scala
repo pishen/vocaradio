@@ -117,18 +117,37 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     }
   }
 
+  private def buildSongHtml(song: Song, requesterOpt: Option[String]) = {
+    //TODO use CSS background instead of img
+    <div style={ s"background-image:url('${song.thumbnail}');background-size:cover;" }>
+      <div class="overlay">
+        <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${song.id}" } target="_blank">
+          { song.title }
+        </a>
+        {
+          requesterOpt match {
+            case None => <button class="order btn btn-default btn-sm">Request</button>
+            case Some(requester) => <span class="order">{ requester }</span>
+          }
+        }
+      </div>
+    </div>
+  }
+
   def playlist = Action.async {
-    (player ? GetPlaylistA).mapTo[Seq[Song]].map { playlistA =>
-      Ok(Json.toJson(playlistA.map(song => Json.obj("id" -> song.id, "html" -> song.html))))
+    (player ? GetPlaylistA).mapTo[Seq[(Song, Option[String])]].map { playlistA =>
+      Ok(Json.toJson(playlistA.map {
+        case (song, requesterOpt) => Json.obj("id" -> song.id, "html" -> buildSongHtml(song, requesterOpt).toString)
+      }))
     }
+  }
+
+  def request(id: String) = Authenticated { request =>
+    Ok
   }
 
   def socket = WebSocket.acceptWithActor[String, String] { request => out =>
     Client.props(out, hub)
-  }
-  
-  def request(id: String) = Authenticated { request =>
-    Ok
   }
 
   //\\backend//\\
@@ -184,10 +203,10 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     YouTubeAPI.getSong(newId).foreach(song => songBase ! SongBase.SetSong(key, song))
     Ok
   }
-  
+
   def mergeKeys = AuthenticatedAdmin(parse.multipartFormData) { request =>
     val file = request.body.file("keys").get.ref.file
-    val keys = file.toScala.lines.map(key => if(key.endsWith(".mp4")) key.dropRight(4) else key).toSet
+    val keys = file.toScala.lines.map(key => if (key.endsWith(".mp4")) key.dropRight(4) else key).toSet
     songBase ! SongBase.MergeKeys(keys)
     Ok
   }

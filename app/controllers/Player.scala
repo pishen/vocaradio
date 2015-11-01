@@ -22,17 +22,14 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   //Option[(Song, start time(ms))]
   var playing: Option[(Song, Long)] = None
 
-  //revealed songs for order
-  var playlistA: Seq[Song] = Seq.empty
+  //revealed songs for request Seq[(song, Option[requester])]
+  var playlistA: Seq[(Song, Option[String])] = Seq.empty
 
   //hidden buffer list
   var playlistB: Seq[String] = Seq.empty
 
   //counter for error
   var numOfNoSong = 0
-
-  //mode
-  //var shifting = false
 
   def requestSongFromB() = {
     if (playlistB.size > 300) {
@@ -68,7 +65,7 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   }
 
   def receive = receiver("normal")
-  
+
   //mode can be normal, shifting, kicking
   def receiver(mode: String): Receive = {
     case GetPlaying =>
@@ -94,6 +91,35 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       }
     case GetPlaylistA =>
       sender ! playlistA
+    case Request(id, requester) if mode == "normal" =>
+      playlistA.find { case (song, requesterOpt) => song.id == id && requesterOpt.isEmpty }
+        .foreach {
+          case (song, _) =>
+            val itemToInsert = (song, Some(requester))
+
+            val (_, result, inserted) = playlistA.filterNot(_._1.id == id).foldLeft {
+              (Set.empty[String], Seq.empty[(Song, Option[String])], false)
+            } {
+              case ((appeared, result, inserted), item @ (song, requesterOpt)) =>
+                if (inserted) {
+                  (appeared, result :+ item, inserted)
+                } else {
+                  requesterOpt match {
+                    case None =>
+                      (Set.empty, result ++ Seq(itemToInsert, item), true)
+                    case Some(oldRequester) =>
+                      if (oldRequester == requester) {
+                        (Set.empty, result :+ item, false)
+                      } else if (appeared.contains(oldRequester)) {
+                        (Set.empty, result ++ Seq(itemToInsert, item), true)
+                      } else {
+                        (appeared + oldRequester, result :+ item, false)
+                      }
+                  }
+                }
+            }
+            playlistA = if (inserted) result else result :+ itemToInsert
+        }
     case song: Song if sender == self =>
       def broadcastAndBecomeNormal() = {
         hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
@@ -102,11 +128,11 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       }
       //got a valid song from toPlay
       numOfNoSong = 0
-      playlistA :+= song
+      playlistA :+= (song -> None)
       mode match {
         case "shifting" if playlistA.size == 26 =>
           //shift and play, keep 25 songs in the buffer
-          playing = Some((playlistA.head, System.currentTimeMillis))
+          playing = Some((playlistA.head._1, System.currentTimeMillis))
           playlistA = playlistA.tail
           broadcastAndBecomeNormal()
         case "kicking" if playlistA.size == 25 =>
@@ -135,13 +161,13 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       //force all the client to get the playing song again
       hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
     case Kick(id) if mode == "normal" =>
-      if (playlistA.exists(_.id == id)) {
+      if (playlistA.exists(_._1.id == id)) {
         context.become(receiver("kicking"))
-        playlistA = playlistA.filterNot(_.id == id)
+        playlistA = playlistA.filterNot(_._1.id == id)
         requestSongFromB()
       }
     case _ =>
-      //do nothing
+    //do nothing
   }
 }
 
@@ -150,6 +176,7 @@ object Player {
   //message from Application
   case object GetPlaying
   case object GetPlaylistA
+  case class Request(id: String, requester: String)
   //message for internal usage
   case object SongNotFound
   case class RefillB(keys: Seq[String])
