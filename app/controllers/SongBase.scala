@@ -42,6 +42,22 @@ class SongBase extends Actor {
     case SongNotFound(key) =>
       songMap += key -> (songMap.get(key).flatMap(_._1) -> true)
       writeSongMap()
+    case GetNotFounds =>
+      //Seq[(key, id)]
+      val res = songMap.toSeq.filter(_._2._2).map {
+        case (key, (songOpt, notFound)) => (key, songOpt.map(_.id).getOrElse("NA"))
+      }
+      sender ! res
+    case GetSongById(id) =>
+      //Seq[key]
+      val res = songMap.toSeq.collect {
+        case (key, (Some(song), _)) if song.id == id => key
+      }
+      sender ! res
+    case MergeKeys(keys) =>
+      songMap = songMap.filterKeys(keys.contains)
+      songMap ++= (keys -- songMap.keySet).map(key => key -> (None -> false))
+      writeSongMap()
   }
 }
 
@@ -50,4 +66,8 @@ object SongBase {
   case class GetSong(key: String)
   case class SetSong(key: String, song: Song)
   case class SongNotFound(key: String)
+  //message from admin
+  case object GetNotFounds
+  case class GetSongById(id: String)
+  case class MergeKeys(keys: Set[String])
 }

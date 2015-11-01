@@ -15,6 +15,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import Player._
 import net.ceedubs.ficus.Ficus._
+import better.files._
 
 @Singleton
 class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends Controller {
@@ -36,7 +37,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   }, {
     request => Unauthorized
   })
-  
+
   object AuthenticatedAdmin extends AuthenticatedBuilder({
     request => request.session.get("user").filter(admins.contains)
   }, {
@@ -126,24 +127,68 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     Client.props(out, hub)
   }
   
+  def request(id: String) = Authenticated { request =>
+    Ok
+  }
+
+  //\\backend//\\
   def backend = AuthenticatedAdmin {
     Ok(views.html.backend())
   }
-  
+
   def shift = AuthenticatedAdmin {
     player ! Shift
     Ok
   }
-  
-  def kick(id: String) = Action {
+
+  def kick(id: String) = AuthenticatedAdmin {
+    player ! Kick(id)
+    Ok
+  }
+
+  private def buildBackendTable(seq: Seq[(String, String)]) = {
+    val rows = seq.map {
+      case (key, id) =>
+        <tr><td class="key">{ key }</td><td>{ id }</td></tr>
+    }
+    <table class="table">
+      <thead><tr><td>key</td><td>video id</td></tr></thead>
+      <tbody>{ rows }</tbody>
+    </table>
+  }
+
+  def getNotFounds = AuthenticatedAdmin.async {
+    (songBase ? SongBase.GetNotFounds).mapTo[Seq[(String, String)]]
+      .map(buildBackendTable)
+      .map(table => Ok(table.toString))
+  }
+
+  def getSongByKey(key: String) = AuthenticatedAdmin.async {
+    (songBase ? SongBase.GetSong(key)).mapTo[Song]
+      .map(song => Seq((key, song.id)))
+      .map(buildBackendTable)
+      .map(table => Ok(table.toString))
+  }
+
+  def getSongsById(id: String) = AuthenticatedAdmin.async {
+    (songBase ? SongBase.GetSongById(id)).mapTo[Seq[String]]
+      .map(keys => keys.map(_ -> id))
+      .map(buildBackendTable)
+      .map(table => Ok(table.toString))
+  }
+
+  def setSongId = AuthenticatedAdmin(parse.urlFormEncoded) { request =>
+    val reqMap = request.body.mapValues(_.head)
+    val key = reqMap("key")
+    val newId = reqMap("newId")
+    YouTubeAPI.getSong(newId).foreach(song => songBase ! SongBase.SetSong(key, song))
     Ok
   }
   
-  def problemSongs = Action {
-    Ok
-  }
-  
-  def changeSongId(fromId: Int, toId: Int) = Action {
+  def mergeKeys = AuthenticatedAdmin(parse.multipartFormData) { request =>
+    val file = request.body.file("keys").get.ref.file
+    val keys = file.toScala.lines.map(key => if(key.endsWith(".mp4")) key.dropRight(4) else key).toSet
+    songBase ! SongBase.MergeKeys(keys)
     Ok
   }
 }

@@ -32,7 +32,7 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   var numOfNoSong = 0
 
   //mode
-  var shifting = false
+  //var shifting = false
 
   def requestSongFromB() = {
     if (playlistB.size > 300) {
@@ -67,10 +67,12 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
     }
   }
 
-  def receive = {
+  def receive = receiver("normal")
+  
+  //mode can be normal, shifting, kicking
+  def receiver(mode: String): Receive = {
     case GetPlaying =>
-      println("getplaying, sender=" + sender)
-      if (shifting) {
+      if (mode != "normal") {
         stash()
       } else {
         val currentTime = System.currentTimeMillis()
@@ -86,34 +88,32 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
         } else {
           //shifting mode
           stash()
-          shifting = true
+          context.become(receiver("shifting"))
           requestSongFromB()
         }
       }
     case GetPlaylistA =>
       sender ! playlistA
-    case Shift if !shifting =>
-      //force player into shifting mode
-      shifting = true
-      requestSongFromB()
-      //force all the client to get the playing song again
-      hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
     case song: Song if sender == self =>
+      def broadcastAndBecomeNormal() = {
+        hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
+        context.become(receiver("normal"))
+        unstashAll()
+      }
       //got a valid song from toPlay
       numOfNoSong = 0
       playlistA :+= song
-      if (playlistA.size == 26) {
-        //shift and play, keep 25 songs in the buffer
-        playing = Some((playlistA.head, System.currentTimeMillis))
-        playlistA = playlistA.tail
-        //broadcast updatePlaylist message
-        hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
-
-        shifting = false
-        unstashAll()
-      } else {
-        //not enough buffering songs
-        requestSongFromB()
+      mode match {
+        case "shifting" if playlistA.size == 26 =>
+          //shift and play, keep 25 songs in the buffer
+          playing = Some((playlistA.head, System.currentTimeMillis))
+          playlistA = playlistA.tail
+          broadcastAndBecomeNormal()
+        case "kicking" if playlistA.size == 25 =>
+          broadcastAndBecomeNormal()
+        case _ =>
+          //not enough buffering songs
+          requestSongFromB()
       }
     case SongNotFound if sender == self =>
       numOfNoSong += 1
@@ -128,6 +128,18 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       playlistB = playlistB ++ Random.shuffle(keys.filterNot(remainingKeys.contains))
       //TODO danger, could get infinite loop here
       requestSongFromB()
+    case Shift if mode == "normal" =>
+      //force player into shifting mode
+      context.become(receiver("shifting"))
+      requestSongFromB()
+      //force all the client to get the playing song again
+      hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
+    case Kick(id) if mode == "normal" =>
+      if (playlistA.exists(_.id == id)) {
+        context.become(receiver("kicking"))
+        playlistA = playlistA.filterNot(_.id == id)
+        requestSongFromB()
+      }
     case _ =>
       //do nothing
   }
@@ -139,7 +151,9 @@ object Player {
   case object GetPlaying
   case object GetPlaylistA
   //message for internal usage
-  case object Shift
   case object SongNotFound
   case class RefillB(keys: Seq[String])
+  //message for admin
+  case object Shift
+  case class Kick(id: String)
 }
