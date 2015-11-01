@@ -92,34 +92,17 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
     case GetPlaylistA =>
       sender ! playlistA
     case Request(id, requester) if mode == "normal" =>
-      playlistA.find { case (song, requesterOpt) => song.id == id && requesterOpt.isEmpty }
-        .foreach {
-          case (song, _) =>
-            val itemToInsert = (song, Some(requester))
-
-            val (_, result, inserted) = playlistA.filterNot(_._1.id == id).foldLeft {
-              (Set.empty[String], Seq.empty[(Song, Option[String])], false)
-            } {
-              case ((appeared, result, inserted), item @ (song, requesterOpt)) =>
-                if (inserted) {
-                  (appeared, result :+ item, inserted)
-                } else {
-                  requesterOpt match {
-                    case None =>
-                      (Set.empty, result ++ Seq(itemToInsert, item), true)
-                    case Some(oldRequester) =>
-                      if (oldRequester == requester) {
-                        (Set.empty, result :+ item, false)
-                      } else if (appeared.contains(oldRequester)) {
-                        (Set.empty, result ++ Seq(itemToInsert, item), true)
-                      } else {
-                        (appeared + oldRequester, result :+ item, false)
-                      }
-                  }
-                }
-            }
-            playlistA = if (inserted) result else result :+ itemToInsert
-        }
+      playlistA.find { case (song, requesterOpt) => song.id == id && requesterOpt.isEmpty }.foreach {
+        case (song, _) =>
+          val (l, r) = playlistA.splitAt(playlistA.lastIndexWhere(_._2.map(_ == requester).getOrElse(false)) + 1)
+          val (rl, rr) = r.zipWithIndex.span {
+            case ((_, Some(other)), i) =>
+              !r.take(i).flatMap(_._2).contains(other)
+            case ((_, None), _) =>
+              false
+          }
+          playlistA = (l ++ rl.map(_._1) :+ (song -> Some(requester))) ++ rr.map(_._1).filterNot(_._1.id == id)
+      }
     case song: Song if sender == self =>
       def broadcastAndBecomeNormal() = {
         hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
