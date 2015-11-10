@@ -73,18 +73,21 @@ function updateSocket() {
     socket.onopen = function() {
         console.log("websocket connected.")
         secondsToWait = 1
-        socket.send("")
+        socket.send(username.val())
             //TODO update the information at connection lost
         updatePlaylist()
     }
     socket.onmessage = function(event) {
         var json = JSON.parse(event.data)
             //TODO instead of updatePlaylist and play, get playing and playlist from websocket directly
-        if (json.msg == "updatePlaylist") {
+        if (json.msgType == "updatePlaylist") {
             updatePlaylist()
-        } else if (json.msg == "play") {
+        } else if (json.msgType == "play") {
             play()
-        } else if (json.msg == "") {
+        } else if (json.msgType == "updateStatus") {
+            $("#numOfListeners").text(json.json.numOfListeners)
+            
+        } else if (json.msgType == "") {
             //TODO
         }
     }

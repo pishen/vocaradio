@@ -31,6 +31,8 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
   //counter for error
   var numOfNoSong = 0
 
+  def buildPlaylistAJson() = Json.toJson(playlistA.map(_.json))
+  
   def requestSongFromB() = {
     if (playlistB.size > 300) {
       //try to make the first key from toPlay to a Song
@@ -90,9 +92,9 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
         }
       }
     case GetPlaylistA =>
-      sender ! playlistA
+      sender ! buildPlaylistAJson()
     case Request(id, requester) if mode == "normal" =>
-      playlistA.find(sw => sw.song.id == id && sw.requesterOpt.isEmpty ).foreach {
+      playlistA.find(sw => sw.song.id == id && sw.requesterOpt.isEmpty).foreach {
         case SongWithRequester(song, _) =>
           val indexToSplit = playlistA.lastIndexWhere(_.requesterOpt.map(_.email == requester.email).getOrElse(false)) + 1
           val (l, r) = playlistA.splitAt(indexToSplit)
@@ -103,11 +105,11 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
               false
           }
           playlistA = (l ++ rl.map(_._1) :+ SongWithRequester(song, Some(requester))) ++ rr.map(_._1).filterNot(_.song.id == id)
-          hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
+          hub ! Hub.Broadcast(Client.Send("updatePlaylist", buildPlaylistAJson))
       }
     case song: Song if sender == self =>
       def broadcastAndBecomeNormal() = {
-        hub ! Hub.Broadcast(Json.obj("msg" -> "updatePlaylist"))
+        hub ! Hub.Broadcast(Client.Send("updatePlaylist", buildPlaylistAJson))
         context.become(receiver("normal"))
         unstashAll()
       }
@@ -144,7 +146,7 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
       context.become(receiver("shifting"))
       requestSongFromB()
       //force all the client to get the playing song again
-      hub ! Hub.Broadcast(Json.obj("msg" -> "play"))
+      hub ! Hub.Broadcast(Client.Send("play", Json.obj()))
     case Kick(id) if mode == "normal" =>
       if (playlistA.exists(_.song.id == id)) {
         context.become(receiver("kicking"))
@@ -159,7 +161,25 @@ class Player(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) extends A
 object Player {
   def props(songBase: ActorRef, hub: ActorRef)(implicit ws: WSClient) = Props(new Player(songBase, hub))
   //helper classes
-  case class SongWithRequester(song: Song, requesterOpt: Option[Requester])
+  case class SongWithRequester(song: Song, requesterOpt: Option[Requester]) {
+    val json = {
+      val xml =
+        <div style={ s"background-image:url('${song.thumbnail}');background-size:cover;" }>
+          <div class="overlay">
+            <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${song.id}" } target="_blank">
+              { song.title }
+            </a>
+            {
+              requesterOpt match {
+                case None => <button class="request btn btn-default btn-sm">Request</button>
+                case Some(requester) => <span class="request">{ requester.name }</span>
+              }
+            }
+          </div>
+        </div>
+      Json.obj("id" -> song.id, "html" -> xml.toString)
+    }
+  }
   case class Requester(email: String, name: String)
   //message from Application
   case object GetPlaying

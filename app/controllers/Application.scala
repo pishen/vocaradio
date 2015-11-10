@@ -19,8 +19,8 @@ import better.files._
 
 @Singleton
 class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends Controller {
-  implicit val timeout = Timeout(20.seconds)
-
+  implicit val timeout = Application.timeout
+  
   val config = com.typesafe.config.ConfigFactory.load()
   val oauth2ClientId = config.as[String]("google.oauth2.id")
   val oauth2RedirectUri = config.as[String]("google.oauth2.redirect")
@@ -118,7 +118,6 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   }
 
   private def buildSongHtml(sw: SongWithRequester) = {
-    //TODO use CSS background instead of img
     <div style={ s"background-image:url('${sw.song.thumbnail}');background-size:cover;" }>
       <div class="overlay">
         <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${sw.song.id}" } target="_blank">
@@ -155,7 +154,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   }
 
   def socket = WebSocket.acceptWithActor[String, String] { request => out =>
-    Client.props(out, hub)
+    Client.props(out, hub, player)
   }
 
   //\\backend//\\
@@ -218,4 +217,8 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     songBase ! SongBase.MergeKeys(keys)
     Ok
   }
+}
+
+object Application {
+  val timeout = Timeout(20.seconds)
 }
