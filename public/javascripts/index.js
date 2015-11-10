@@ -30,32 +30,30 @@ setupUsername()
 //chat
 
 //playlist
-function updatePlaylist() {
-    $.getJSON("/playlist", function(songs) {
-        var songIds = songs.map(function(song) {
-            return song.id
-        })
+function updatePlaylist(songs) {
+    var songIds = songs.map(function(song) {
+        return song.id
+    })
 
-        $(".song").filter(function(i, s) {
-            return songIds.indexOf(s.id) < 0
-        }).remove()
+    $(".song").filter(function(i, s) {
+        return songIds.indexOf(s.id) < 0
+    }).remove()
 
-        songs.forEach(function(song, i) {
-            var target = $("#" + song.id.replace(/(#|:|\.|\[|\]|,)/g, "\\$1"))
-            if (target.length != 0) {
-                target.attr("class", "song pos" + i).html(song.html)
-            } else {
-                $("<div></div>").attr("id", song.id).addClass("song pos" + i).html(song.html).appendTo("#playlist")
-            }
-        })
+    songs.forEach(function(song, i) {
+        var target = $("#" + song.id.replace(/(#|:|\.|\[|\]|,)/g, "\\$1"))
+        if (target.length != 0) {
+            target.attr("class", "song pos" + i).html(song.html)
+        } else {
+            $("<div></div>").attr("id", song.id).addClass("song pos" + i).html(song.html).appendTo("#playlist")
+        }
+    })
 
-        $(".song button.request").off().click(function() {
-            $.post("/request", {
-                id: $(this).closest(".song").attr("id"),
-                name: username.val()
-            }).fail(function(){
-                $(".settings-btn").click()
-            })
+    $(".song button.request").off().click(function() {
+        $.post("/request", {
+            id: $(this).closest(".song").attr("id"),
+            name: username.val()
+        }).fail(function() {
+            $(".settings-btn").click()
         })
     })
 }
@@ -74,19 +72,17 @@ function updateSocket() {
         console.log("websocket connected.")
         secondsToWait = 1
         socket.send(username.val())
-            //TODO update the information at connection lost
-        updatePlaylist()
+            //TODO update the information at connection lost, maybe we don't need this now?
     }
     socket.onmessage = function(event) {
         var json = JSON.parse(event.data)
-            //TODO instead of updatePlaylist and play, get playing and playlist from websocket directly
         if (json.msgType == "updatePlaylist") {
-            updatePlaylist()
+            updatePlaylist(json.json)
         } else if (json.msgType == "play") {
             play()
         } else if (json.msgType == "updateStatus") {
             $("#numOfListeners").text(json.json.numOfListeners)
-            
+            //TODO update clientNames
         } else if (json.msgType == "") {
             //TODO
         }

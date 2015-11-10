@@ -117,30 +117,6 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
     }
   }
 
-  private def buildSongHtml(sw: SongWithRequester) = {
-    <div style={ s"background-image:url('${sw.song.thumbnail}');background-size:cover;" }>
-      <div class="overlay">
-        <a class="yt-link plain" href={ s"http://www.youtube.com/watch?v=${sw.song.id}" } target="_blank">
-          { sw.song.title }
-        </a>
-        {
-          sw.requesterOpt match {
-            case None => <button class="request btn btn-default btn-sm">Request</button>
-            case Some(requester) => <span class="request">{ requester.name }</span>
-          }
-        }
-      </div>
-    </div>
-  }
-
-  def playlist = Action.async {
-    (player ? GetPlaylistA).mapTo[Seq[SongWithRequester]].map { playlistA =>
-      Ok(Json.toJson(playlistA.map {
-        sw => Json.obj("id" -> sw.song.id, "html" -> buildSongHtml(sw).toString)
-      }))
-    }
-  }
-
   def request = Authenticated(parse.urlFormEncoded) { request =>
     val reqMap = request.body.mapValues(_.head)
     val id = reqMap("id")

@@ -5,7 +5,6 @@ GET     /logout                       controllers.Application.logout
 GET     /                             controllers.Application.index
 
 GET     /playing                      controllers.Application.playing
-GET     /playlist                     controllers.Application.playlist
 POST    /request                      controllers.Application.request
 
 GET     /socket                       controllers.Application.socket
