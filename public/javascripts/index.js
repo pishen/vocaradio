@@ -13,6 +13,7 @@ Notification.requestPermission(function() {
 //online-list
 
 //username
+//TODO prevent this input from refresh triggered by enter
 var username = $("#username")
 
 if (localStorage.username) {
@@ -77,7 +78,7 @@ setInterval(function() {
 }, 300000)
 
 function updateSocket() {
-    socket = new WebSocket("ws://" + window.location.host + "/socket")
+    socket = new WebSocket("wss://" + window.location.host + "/socket")
     socket.onopen = function() {
         console.log("websocket connected.")
         secondsToWait = 1
