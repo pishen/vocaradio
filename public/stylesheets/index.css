@@ -172,13 +172,13 @@ a.plain:active {
     overflow-y: auto;
 }
 
-.chat-username {
+.chat-user {
     color: gold;
     font-weight: bold;
 }
 
-.chat {
-    margin-bottom: 5px;
+.chat-time {
+    color: gray;
 }
 
 /* status */

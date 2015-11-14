@@ -7,11 +7,14 @@ import play.api.libs.json._
 import Player.SongWithRequester
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Client(out: ActorRef, hub: ActorRef, player: ActorRef) extends Actor {
+class Client(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRef) extends Actor {
   implicit val timeout = Application.timeout
   
   (player ? Player.GetPlaylistA).mapTo[JsValue]
     .foreach(json => self ! Send("updatePlaylist", json))
+  //TODO send chat log to client
+  (chatLogger ? ChatLogger.GetChats).mapTo[JsValue]
+    .foreach(json => self ! Send("reloadChat", json))
   
   def receive = {
     case name: String =>
@@ -26,7 +29,7 @@ class Client(out: ActorRef, hub: ActorRef, player: ActorRef) extends Actor {
 }
 
 object Client {
-  def props(out: ActorRef, hub: ActorRef, player: ActorRef) = Props(new Client(out, hub, player))
+  def props(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRef) = Props(new Client(out, hub, player, chatLogger))
   
   case class Send(msgType: String, json: JsValue)
 }

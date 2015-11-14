@@ -13,21 +13,31 @@ Notification.requestPermission(function() {
 //online-list
 
 //username
-var username
+var username = $("#username")
 
-function setupUsername() {
-    username = $("#username")
-    if (localStorage.username) {
-        username.val(localStorage.username)
-    }
-    username.blur(function() {
-        localStorage.username = username.val()
-        socket.send(username.val())
-    })
+if (localStorage.username) {
+    username.val(localStorage.username)
 }
-setupUsername()
+
+username.blur(function() {
+    localStorage.username = username.val()
+    socket.send(username.val())
+})
 
 //chat
+$("#new-chat").keydown(function(e) {
+    if (e.keyCode == 13) {
+        $.post("/chat", {
+            name: username.val(),
+            text: $(this).val()
+        }, function() {
+            $("#new-chat").val("")
+        }).fail(function() {
+            $(".settings-btn").click()
+        })
+        return false
+    }
+})
 
 //playlist
 function updatePlaylist(songs) {
@@ -75,6 +85,7 @@ function updateSocket() {
             //TODO update the information at connection lost, maybe we don't need this now?
     }
     socket.onmessage = function(event) {
+        //TODO bind notifications
         var json = JSON.parse(event.data)
         if (json.msgType == "updatePlaylist") {
             updatePlaylist(json.json)
@@ -82,7 +93,11 @@ function updateSocket() {
             play()
         } else if (json.msgType == "updateStatus") {
             $("#numOfListeners").text(json.json.numOfListeners)
-            //TODO update clientNames
+                //TODO update clientNames
+        } else if (json.msgType == "appendChat") {
+            $("#chat-log").append(json.json.html)
+        } else if (json.msgType == "reloadChat") {
+            $("#chat-log").html(json.json.html)
         } else if (json.msgType == "") {
             //TODO
         }

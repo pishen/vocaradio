@@ -30,6 +30,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   val hub = system.actorOf(Props[Hub], "hub")
   val songBase = system.actorOf(Props[SongBase], "songBase")
   val player = system.actorOf(Player.props(songBase, hub), "player")
+  val chatLogger = system.actorOf(ChatLogger.props(hub), "chatLogger")
 
   //Google OAuth2 https://developers.google.com/identity/protocols/OAuth2WebServer
   object Authenticated extends AuthenticatedBuilder({
@@ -110,7 +111,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
       .withSession(request.session + ("state" -> UUID.randomUUID.toString))
   }
 
-  //TODO move the json wrapper of playing and playlist into Player, let it possible to broadcast the json to client by websocket
+  //TODO move the json wrapper of playing into Player, let it possible to broadcast the json to client by websocket
   def playing = Action.async {
     (player ? GetPlaying).mapTo[(Song, Long)].map {
       case (song, playedSeconds) => Ok(Json.obj("song" -> song, "playedSeconds" -> playedSeconds))
@@ -119,6 +120,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
 
   def request = Authenticated(parse.urlFormEncoded) { request =>
     val reqMap = request.body.mapValues(_.head)
+    //TODO handle exception here
     val id = reqMap("id")
     val name = reqMap("name")
     if (name != "") {
@@ -128,9 +130,21 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
       Unauthorized("name cannot be empty")
     }
   }
+  
+  def chat = Authenticated(parse.urlFormEncoded) { request =>
+    val reqMap = request.body.mapValues(_.head)
+    val opt = for {
+      name <- reqMap.get("name").filter(_ != "")
+      text <- reqMap.get("text").filter(_ != "")
+    } yield {
+      chatLogger ! ChatLogger.Chat(name, text, System.currentTimeMillis, admins.contains(request.user))
+      Ok("got it")
+    }
+    opt.getOrElse(BadRequest)
+  }
 
   def socket = WebSocket.acceptWithActor[String, String] { request => out =>
-    Client.props(out, hub, player)
+    Client.props(out, hub, player, chatLogger)
   }
 
   //\\backend//\\

@@ -7,6 +7,8 @@ GET     /                             controllers.Application.index
 GET     /playing                      controllers.Application.playing
 POST    /request                      controllers.Application.request
 
+POST    /chat                         controllers.Application.chat
+
 GET     /socket                       controllers.Application.socket
 
 GET     /backend                      controllers.Application.backend
