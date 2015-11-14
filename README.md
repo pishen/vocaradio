@@ -15,4 +15,6 @@ google {
 }
 
 admins = ["admin@admin.com"]
+
+backgrounds = ["bg-1.jpg"]
 ```
