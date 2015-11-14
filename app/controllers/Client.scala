@@ -12,7 +12,6 @@ class Client(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRe
   
   (player ? Player.GetPlaylistA).mapTo[JsValue]
     .foreach(json => self ! Send("updatePlaylist", json))
-  //TODO send chat log to client
   (chatLogger ? ChatLogger.GetChats).mapTo[JsValue]
     .foreach(json => self ! Send("reloadChat", json))
   

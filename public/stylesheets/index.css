@@ -85,7 +85,6 @@ a.plain:active {
 }
 
 .player-bg {
-    background: url('/assets/images/spaghetti.jpg');
     background-position: center;
     box-shadow: 0 0 10px black;
 }

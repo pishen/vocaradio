@@ -13,6 +13,7 @@ import akka.util.Timeout
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 import Player._
 import net.ceedubs.ficus.Ficus._
 import better.files._
@@ -26,6 +27,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   val oauth2RedirectUri = config.as[String]("google.oauth2.redirect")
   val oauth2Secret = config.as[String]("google.oauth2.secret")
   val admins = config.as[Seq[String]]("admins")
+  val backgrounds = config.as[Seq[String]]("backgrounds")
 
   val hub = system.actorOf(Props[Hub], "hub")
   val songBase = system.actorOf(Props[SongBase], "songBase")
@@ -107,7 +109,7 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
           <span>{ user } </span><a class="btn btn-default pull-right" href="/logout">Logout</a>
         </div>
     }
-    Ok(views.html.index(verification))
+    Ok(views.html.index(verification, Random.shuffle(backgrounds).head))
       .withSession(request.session + ("state" -> UUID.randomUUID.toString))
   }
 

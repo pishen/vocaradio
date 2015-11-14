@@ -1,4 +1,4 @@
-@(verification: xml.Elem)
+@(verification: xml.Elem, background: String)
 <!DOCTYPE html>
 <html>
 
@@ -43,7 +43,7 @@
     </div>
     <!-- default content -->
     <div class="logo">VocaRadio</div>
-    <div class="player-bg">
+    <div class="player-bg" style="background-image: url('/assets/images/@background');">
         <div class="player-pad hidden-xs"></div>
         <div class="player-wrap">
             <div id="player"></div>
