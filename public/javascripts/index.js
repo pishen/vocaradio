@@ -97,8 +97,11 @@ function updateSocket() {
                 //TODO update clientNames
         } else if (json.msgType == "appendChat") {
             $("#chat-log").append(json.json.html)
+            $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
+            notify(json.json.user, json.json.text)
         } else if (json.msgType == "reloadChat") {
             $("#chat-log").html(json.json.html)
+            $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
         } else if (json.msgType == "") {
             //TODO
         }

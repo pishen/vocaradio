@@ -12,7 +12,7 @@ class ChatLogger(hub: ActorRef) extends Actor {
     case chat: Chat =>
       chats :+= chat
       if (chats.length > 500) chats = chats.tail
-      hub ! Hub.Broadcast(Client.Send("appendChat", Json.obj("html" -> chat.html)))
+      hub ! Hub.Broadcast(Client.Send("appendChat", Json.obj("html" -> chat.html, "user" -> chat.user, "text" -> chat.text)))
     case GetChats =>
       sender ! Json.obj("html" -> chats.map(_.html).mkString)
   }
