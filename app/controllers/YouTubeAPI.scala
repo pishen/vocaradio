@@ -25,7 +25,7 @@ object YouTubeAPI {
         val title = (item \ "snippet" \ "title").as[String]
         val thumbnail = (item \ "snippet" \ "thumbnails" \ "medium" \ "url").as[String]
         val seconds = Period.parse((item \ "contentDetails" \ "duration").as[String]).toStandardSeconds().getSeconds()
-        assert(seconds <= 900, "song is too long") //don't accept song with length larger than 15mins
+        assert(seconds <= 1800, "song is too long") //don't accept song with length larger than 30mins
         Song(id, title, thumbnail, seconds)
       }
   }
