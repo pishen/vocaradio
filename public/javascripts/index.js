@@ -13,7 +13,6 @@ Notification.requestPermission(function() {
 //online-list
 
 //username
-//TODO prevent this input from refresh triggered by enter
 var username = $("#username")
 
 if (localStorage.username) {

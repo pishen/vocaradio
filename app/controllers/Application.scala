@@ -101,11 +101,11 @@ class Application @Inject() (implicit ws: WSClient, system: ActorSystem) extends
   def index = Action { request =>
     val verification = request.session.get("user") match {
       case None =>
-        <div>
+        <div style="height:34px">
           <span>Not connected.</span><a class="btn btn-primary pull-right" href="/login">Login with Google</a>
         </div>
       case Some(user) =>
-        <div>
+        <div style="height:34px">
           <span>{ user } </span><a class="btn btn-default pull-right" href="/logout">Logout</a>
         </div>
     }
