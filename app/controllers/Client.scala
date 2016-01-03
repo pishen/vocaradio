@@ -18,8 +18,8 @@ class Client(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRe
   def receive = {
     case name: String =>
       hub ! Hub.AddClient(self, name)
-    case Send(msgType, json) =>
-      out ! Json.stringify(Json.obj("msgType" -> msgType, "json" -> json))
+    case Send(msgType, msg) =>
+      out ! Json.stringify(Json.obj("msgType" -> msgType, "msg" -> msg))
   }
   
   override def postStop() = {
@@ -30,5 +30,5 @@ class Client(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRe
 object Client {
   def props(out: ActorRef, hub: ActorRef, player: ActorRef, chatLogger: ActorRef) = Props(new Client(out, hub, player, chatLogger))
   
-  case class Send(msgType: String, json: JsValue)
+  case class Send(msgType: String, msg: JsValue)
 }

@@ -88,18 +88,21 @@ function updateSocket() {
         //TODO bind notifications
         var json = JSON.parse(event.data)
         if (json.msgType == "updatePlaylist") {
-            updatePlaylist(json.json)
+            updatePlaylist(json.msg)
         } else if (json.msgType == "play") {
+            toSync = true
             play()
         } else if (json.msgType == "updateStatus") {
-            $("#numOfListeners").text(json.json.numOfListeners)
+            $("#numOfListeners").text(json.msg.numOfListeners)
                 //TODO update clientNames
         } else if (json.msgType == "appendChat") {
-            $("#chat-log").append(json.json.html)
+            $("#chat-log").append(json.msg.html)
             $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
-            notify(json.json.user, json.json.text)
+            if (json.msg.user != username.val()) {
+                notify(json.msg.user, json.msg.text)
+            }
         } else if (json.msgType == "reloadChat") {
-            $("#chat-log").html(json.json.html)
+            $("#chat-log").html(json.msg.html)
             $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
         } else if (json.msgType == "") {
             //TODO
@@ -141,6 +144,8 @@ function onYouTubeIframeAPIReady() {
     })
 }
 
+var toSync = false
+
 function onPlayerReady(event) {
     console.log("ready")
     if (localStorage.volume) {
@@ -154,24 +159,27 @@ function onPlayerReady(event) {
     $("#playback").click(function() {
         player.playVideo()
     })
+    toSync = false
 }
-
-var toSync = true
-var isFirst = true
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.ENDED) {
         //if come from opening video, seek, otherwise just continue next song
+        console.log("ended")
+        if (player.getVideoData().video_id == "7NptssoOJ78") {
+            toSync = true
+        }
         play()
     } else if (event.data == YT.PlayerState.PLAYING) {
-        if (toSync && !isFirst) {
+        console.log("playing")
+        if (toSync) {
             play()
         }
-        isFirst = false
         $("#playback").text("PAUSE").off().click(function() {
             player.pauseVideo()
         })
     } else if (event.data == YT.PlayerState.PAUSED) {
+        console.log("paused")
         toSync = true
         $("#playback").text("PLAY").off().click(function() {
             play()
@@ -189,7 +197,7 @@ function onPlayerError(event) {
 
 function play() {
     $.getJSON("/playing", function(json) {
-        console.log("playing id: " + json.song.id)
+        console.log("playing id: " + json.song.id + ", toSync: " + toSync)
         player.loadVideoById(json.song.id, toSync ? json.playedSeconds : 0)
         toSync = false
         player.setVolume($("#volume").prop("value"))
