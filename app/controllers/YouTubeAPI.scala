@@ -13,7 +13,7 @@ object YouTubeAPI {
   def getSong(id: String)(implicit ws: WSClient) = {
     ws.url("https://www.googleapis.com/youtube/v3/videos")
       .withQueryString(
-        "part" -> "contentDetails,snippet",
+        "part" -> "contentDetails,snippet,status",
         "id" -> id,
         "key" -> googleApiKey
       )
@@ -22,6 +22,8 @@ object YouTubeAPI {
       .map { json =>
         val item = (json \ "items").as[Seq[JsValue]].head //may throw exception
 
+        val uploadStatus = (item \ "status" \ "uploadStatus").as[String]
+        assert(uploadStatus != "rejected", "song is rejected") //don't accept song whose uploader is removed
         val title = (item \ "snippet" \ "title").as[String]
         val thumbnail = (item \ "snippet" \ "thumbnails" \ "medium" \ "url").as[String]
         val seconds = Period.parse((item \ "contentDetails" \ "duration").as[String]).toStandardSeconds().getSeconds()
