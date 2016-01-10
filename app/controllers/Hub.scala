@@ -16,7 +16,7 @@ class Hub extends Actor {
   
   private def getStatusJson() = {
     val numOfListeners = clients.size
-    val clientNames = clients.values.toSeq.map(_._1).filterNot(_ == "")
+    val clientNames = clients.values.toSeq.map(_._1).distinct.filterNot(_ == "")
     Json.obj("numOfListeners" -> numOfListeners, "clientNames" -> clientNames)
   }
   
