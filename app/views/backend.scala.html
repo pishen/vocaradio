@@ -1,52 +1,55 @@
 @()
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>VocaRadio - backend</title>
-        <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-        <style>
-            .vid input {
-                display: none;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>VocaRadio Backend</h1>
-            <hr/>
-            <button id="shift-btn" class="btn btn-default">Shift</button>
-            <hr/>
-            <form class="form-inline">
-                <input id="kick-vid" type="text" class="form-control" placeholder="video id">
-                <button id="kick-btn" class="btn btn-default">Kick</button>
-            </form>
-            <hr/>
-            <form class="form-inline">
-                <input type="text" class="form-control" placeholder="key to search">
-                <button id="search-by-key-btn" type="button" class="btn btn-default">Search by key</button>
-                <input type="text" class="form-control" placeholder="id to search">
-                <button id="search-by-id-btn" type="button" class="btn btn-default">Search by id</button>
-                <button id="get-not-founds-btn" type="button" class="btn btn-default">Show problem songs</button>
-            </form>
-            <div id="table"></div>
-            <hr/>
-            <form class="form-inline">
-                <input type="text" class="form-control" placeholder="key">
-                <input type="text" class="form-control" placeholder="new id">
-                <button id="set-id-btn" type="button" class="btn btn-default">Set new id</button>
-            </form>
-            <hr/>
-            <form id="keys-to-merge-form">
-                <div class="form-group">
-                    <label>Keys to merge</label>
-                    <input type="file" name="keys">
-                </div>
-                <button type="submit" class="btn btn-default">Submit</button>
-            </form>
+
+<head>
+    <title>VocaRadio - backend</title>
+    <link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <style>
+        .vid input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>VocaRadio Backend</h1>
+        <hr/>
+        <button id="shift-btn" class="btn btn-default">Shift</button>
+        <hr/>
+        <div class="form-inline">
+            <input id="kick-vid" type="text" class="form-control" placeholder="video id">
+            <button id="kick-btn" class="btn btn-default">Kick</button>
         </div>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-        <script src="/assets/javascripts/backend.js"></script>
-    </body>
+        <hr/>
+        <div class="form-inline">
+            <input type="text" class="form-control" placeholder="key to search">
+            <button id="search-by-key-btn" type="button" class="btn btn-default">Search by key</button>
+            <input type="text" class="form-control" placeholder="id to search">
+            <button id="search-by-id-btn" type="button" class="btn btn-default">Search by id</button>
+            <button id="get-not-founds-btn" type="button" class="btn btn-default">Show problem songs</button>
+        </div>
+        <div id="table"></div>
+        <hr/>
+        <div class="form-inline">
+            <input type="text" class="form-control" placeholder="key">
+            <input type="text" class="form-control" placeholder="new id">
+            <button id="set-id-btn" type="button" class="btn btn-default">Set new id</button>
+        </div>
+        <hr/>
+        <form id="keys-to-merge-form">
+            <div class="form-group">
+                <label>Keys to merge</label>
+                <input type="file" name="keys">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="/assets/javascripts/backend.js"></script>
+</body>
+
 </html>
