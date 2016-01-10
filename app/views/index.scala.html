@@ -62,7 +62,11 @@
     <div class="container">
         <div class="row" style="margin-top:15px;">
             <div class="col-sm-6">
-                <p class="lead text-center"><span id="numOfListeners" class="number">*</span> listeners are online.</p>
+                <p class="status text-center">
+                    <span id="numOfListeners" class="number">*</span> listeners are online. 
+                    <a class="plain" data-toggle="collapse" href="#clientNames"><span class="glyphicon glyphicon-align-left" aria-hidden="true"></span></a>
+                </p>
+                <p id="clientNames" class="collapse status text-center"></p>
             </div>
             <div class="col-sm-6">
                 <div id="chat-log"></div>

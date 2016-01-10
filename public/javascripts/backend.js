@@ -35,7 +35,6 @@ $("#set-id-btn").click(function() {
             return $(this).text() == key
         }).next().text(newId)
     })
-
 })
 
 $("#keys-to-merge-form").submit(function(e){

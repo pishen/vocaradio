@@ -182,8 +182,17 @@ a.plain:active {
 
 /* status */
 
+.status {
+    font-size: 21px;
+}
+
 .number {
     font-size: 40px;
+}
+
+#clientNames {
+    max-height: 300px;
+    color: gold;
 }
 
 /* playlist */

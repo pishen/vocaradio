@@ -95,6 +95,7 @@ function updateSocket() {
         } else if (json.msgType == "updateStatus") {
             $("#numOfListeners").text(json.msg.numOfListeners)
                 //TODO update clientNames
+            $("#clientNames").text(json.msg.clientNames.join(", "))
         } else if (json.msgType == "appendChat") {
             $("#chat-log").append(json.msg.html)
             $("#chat-log").scrollTop($("#chat-log").prop("scrollHeight"))
