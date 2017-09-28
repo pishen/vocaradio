@@ -43,10 +43,13 @@ object IndexView extends ViewHelper {
             IndexStyles.playlist,
             (1 to 25).map { i =>
               div(
-                IndexStyles.playlistItemWrapper,
-                img(
-                  IndexStyles.playlistItem,
-                  src := "https://i.ytimg.com/vi/OuLZlZ18APQ/mqdefault.jpg"
+                IndexStyles.playlistW1,
+                div(
+                  IndexStyles.playlistW2,
+                  img(
+                    IndexStyles.playlistItem,
+                    src := "https://i.ytimg.com/vi/OuLZlZ18APQ/mqdefault.jpg"
+                  )
                 )
               )
             }

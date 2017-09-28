@@ -6,28 +6,32 @@ object IndexStyles extends StyleSheet.Inline {
   import dsl._
 
   val html = style(
-    height(100.%%)
+    minHeight(100.vh)
   )
 
   val body = style(
-    height(100.%%),
-    margin(0.px),
-    display.flex
+    minHeight(100.vh),
+    margin(0.px)
   )
 
   val leftPanel = style(
-    flexGrow(2),
+    position.fixed,
+    top.`0`,
+    left.`0`,
+    width(23.%%),
+    height(100.vh),
     backgroundImage := "url('/assets/img/neige.jpg')",
     backgroundPosition := "center",
     backgroundSize := "cover"
   )
 
   val middlePanel = style(
-    flexGrow(5),
-    flexBasis := "0",
+    position.relative,
+    left(23.%%),
+    width(54.%%),
+    minHeight(100.vh),
     backgroundColor(c"#3d3d3d"),
     boxShadow := "0px 0px 10px black",
-    overflowY.auto
   )
 
   val logo = style(
@@ -60,13 +64,19 @@ object IndexStyles extends StyleSheet.Inline {
     flexWrap.wrap
   )
 
-  val playlistItemWrapper = style(
+  val playlistW1 = style(
+    width(210.px),
+    margin(2.px),
+    flexGrow(1)
+  )
+
+  val playlistW2 = style(
     position.relative,
     height(0.px),
     overflow.hidden,
-    width(200.px),
-    paddingTop((56.25).%%),
-    flexGrow(1)
+    width(100.%%),
+    paddingTop(56.25.%%)
+    //flexGrow(1)
   )
 
   val playlistItem = style(
@@ -79,7 +89,11 @@ object IndexStyles extends StyleSheet.Inline {
   )
 
   val rightPanel = style(
-    flexGrow(2),
+    position.fixed,
+    top.`0`,
+    right.`0`,
+    width(23.%%),
+    height(100.vh),
     backgroundColor(c"#1e1e1e")
   )
 }
