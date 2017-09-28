@@ -1,0 +1,3 @@
+package vocaradio
+
+object Index {}

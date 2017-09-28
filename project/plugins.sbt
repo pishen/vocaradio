@@ -1,1 +1,3 @@
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.3")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.20")
+
+addSbtPlugin("com.lucidchart" % "sbt-scalafmt" % "1.11")
