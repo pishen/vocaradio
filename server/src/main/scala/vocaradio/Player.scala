@@ -1,3 +1,3 @@
 package vocaradio
 
-object Index {}
+object Player {}
