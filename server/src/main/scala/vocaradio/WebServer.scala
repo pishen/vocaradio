@@ -55,10 +55,8 @@ object WebServer extends App with LazyLogging {
     .toMat(BroadcastHub.sink)(Keep.both).run
 
   val route = get {
-    (pathSingleSlash & optionalUserId) { userIdOpt =>
-      complete(IndexView())
-    } ~ (path("backend") & requireUserId) { userId =>
-      complete(BackendView())
+    pathSingleSlash {
+      getFromResource("assets/html/index.html")
     } ~ path("login") {
       redirect(
         Uri("https://www.facebook.com/v2.11/dialog/oauth").withQuery(

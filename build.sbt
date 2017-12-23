@@ -1,11 +1,12 @@
-name in ThisBuild := "vocaradio"
-
-version in ThisBuild := "2.0.0-SNAPSHOT"
-
-scalaVersion in ThisBuild := "2.12.4"
+val commonSettings = Seq(
+  name := "vocaradio",
+  version := "2.0.0-SNAPSHOT",
+  scalaVersion := "2.12.4"
+)
 
 lazy val server = (project in file("server"))
   .settings(
+    commonSettings,
     libraryDependencies ++= Seq(
       //logging
       "ch.qos.logback" % "logback-classic" % "1.2.3",
@@ -41,6 +42,7 @@ lazy val server = (project in file("server"))
 lazy val client = (project in file("client"))
   .enablePlugins(ScalaJSPlugin)
   .settings(
+    commonSettings,
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
