@@ -7,15 +7,6 @@ object Main {
   def main(args: Array[String]): Unit = {
     println("Welcome to VocaRadio!")
 
-    val wsUrl = window
-      .location
-      .origin
-      .get
-      .replaceFirst("http", "ws")
-      .+("/connect")
-
-    val ws = new WebSocket(wsUrl)
-
     val root = div(
       div(cls := "left-panel"),
       div(
@@ -25,7 +16,7 @@ object Main {
           cls := "fix-ratio-wrapper",
           iframe(
             cls := "fix-ratio-item",
-            src := "https://www.youtube.com/embed/KdNHFKTKX2s?rel=0"
+            src := "https://www.youtube.com/embed/hA0W2lJikso?rel=0"
           )
         )
       ),
@@ -34,5 +25,9 @@ object Main {
 
     document.getElementById("root")
       .appendChild(root)
+
+    WS.init() {
+      case TurnOnPlayerControl => println("haha")
+    }
   }
 }

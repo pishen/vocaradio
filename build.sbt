@@ -52,7 +52,11 @@ lazy val client = (project in file("client"))
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
-      "com.lihaoyi" %%% "scalatags" % "0.6.5"
+      "com.lihaoyi" %%% "scalatags" % "0.6.5",
+      // json
+      "io.circe" %%% "circe-core" % "0.8.0",
+      "io.circe" %%% "circe-generic" % "0.8.0",
+      "io.circe" %%% "circe-parser" % "0.8.0"
     )
   )
   .dependsOn(sharedJs)

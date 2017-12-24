@@ -9,10 +9,9 @@ import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
-// import io.circe.generic.auto._
-// import io.circe.parser.decode
-// import io.circe.syntax._
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+import io.circe.generic.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
 import com.softwaremill.session._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
