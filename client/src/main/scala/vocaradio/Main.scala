@@ -5,7 +5,7 @@ import scalatags.JsDom.all._
 
 object Main {
   def main(args: Array[String]): Unit = {
-    println("Welcom to VocaRadio!")
+    println("Welcome to VocaRadio!")
 
     val wsUrl = window
       .location
@@ -13,7 +13,7 @@ object Main {
       .get
       .replaceFirst("http", "ws")
       .+("/connect")
-    println(wsUrl)
+
     val ws = new WebSocket(wsUrl)
 
     val root = div(
@@ -25,7 +25,7 @@ object Main {
           cls := "fix-ratio-wrapper",
           iframe(
             cls := "fix-ratio-item",
-            src := "https://www.youtube.com/embed/OuLZlZ18APQ"
+            src := "https://www.youtube.com/embed/KdNHFKTKX2s?rel=0"
           )
         )
       ),

@@ -3,24 +3,38 @@ package vocaradio
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
+// import io.circe.generic.auto._
+// import io.circe.parser.decode
+// import io.circe.syntax._
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 import com.softwaremill.session._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
+import java.util.UUID
 import scala.concurrent.Promise
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.io.StdIn
 import slick.jdbc.H2Profile.api._
 import CirceHelpers._
 import H2._
 import HttpHelpers._
+
+case class WrappedMsgIn(
+  msg: MsgIn,
+  socketId: String,
+  userIdOpt: Option[String]
+)
+case class WrappedMsgOut(
+  msg: MsgOut,
+  socketIdOpt: Option[String]
+)
 
 object WebServer extends App with LazyLogging {
   val conf = ConfigFactory.load()
@@ -41,19 +55,7 @@ object WebServer extends App with LazyLogging {
 
   val goHome = redirect("/", PermanentRedirect)
 
-  val (wsSink, wsSource) = MergeHub.source[String]
-    .scan((0, "Welcome!")) { case ((count, _), msg) =>
-      println(msg)
-      if (msg == "JOIN") {
-        (count + 1, s"There are ${count + 1} people in the room.")
-      } else if (msg == "LEAVE") {
-        (count - 1, s"There are ${count - 1} people in the room.")
-      } else {
-        (count, msg)
-      }
-    }
-    .map(_._2)
-    .toMat(BroadcastHub.sink)(Keep.both).run
+  val (playerSink, playerSource) = Player.createSinkAndSource()
 
   val route = get {
     pathSingleSlash {
@@ -89,17 +91,26 @@ object WebServer extends App with LazyLogging {
       } ~ goHome
     } ~ path("logout") {
       clearUserId(goHome)
-    } ~ (path("connect")) {
+    } ~ (path("connect") & optionalUserId) { userIdOpt =>
+      val uuid = UUID.randomUUID.toString
       handleWebSocketMessages {
         Flow.fromSinkAndSource(
           Flow[Message]
-            .collect {
-              case TextMessage.Strict(msg) => msg
+            .mapAsync(1) {
+              case tm: TextMessage =>
+                tm.textStream.runReduce(_ + _).map {
+                  str => decode[MsgIn](str).toOption
+                }
+              case bm: BinaryMessage =>
+                bm.dataStream.runWith(Sink.ignore).map(_ => None)
             }
-            .prepend(Source.single("JOIN"))
-            .++(Source.single("LEAVE"))
-            .to(wsSink),
-          wsSource.map(msg => TextMessage(msg))
+            .mapConcat(_.toList)
+            .map(msg => WrappedMsgIn(msg, uuid, userIdOpt))
+            .to(playerSink),
+          playerSource
+            .filter(_.socketIdOpt.map(_ == uuid).getOrElse(true))
+            .map(_.msg.asJson.noSpaces)
+            .map(TextMessage.apply)
         )
       }
     }
