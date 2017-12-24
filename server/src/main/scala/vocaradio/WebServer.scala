@@ -18,6 +18,7 @@ import scala.concurrent.Promise
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.StdIn
 import slick.jdbc.H2Profile.api._
+import CirceHelpers._
 import H2._
 import HttpHelpers._
 
@@ -79,10 +80,10 @@ object WebServer extends App with LazyLogging {
             .flatMap { json =>
               Uri("https://graph.facebook.com/v2.11/me")
                 .withQuery(
-                  "access_token" -> (json \ "access_token").as[String]
+                  "access_token" -> (json \ "access_token").asUnsafe[String]
                 )
                 .getJson()
-                .map(json => (json \ "id").as[String])
+                .map(json => (json \ "id").asUnsafe[String])
             }
         }(id => setUserId(id)(goHome))
       } ~ goHome

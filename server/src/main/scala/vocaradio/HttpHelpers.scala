@@ -2,19 +2,15 @@ package vocaradio
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{
-  FormData,
-  HttpMethods,
-  HttpRequest,
-  HttpResponse,
-  Uri
-}
+import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import play.api.libs.json._
+import com.typesafe.scalalogging.LazyLogging
+import io.circe._
+import io.circe.parser._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-object HttpHelpers {
+object HttpHelpers extends LazyLogging {
   implicit class RichUri(uri: Uri) {
     def withQuery(query: (String, String)*) = {
       uri.withQuery(Uri.Query(query: _*))
@@ -28,7 +24,9 @@ object HttpHelpers {
         ec: ExecutionContext
     ) = {
       get().flatMap(
-        _.entity.toStrict(timeout).map(_.data.utf8String).map(Json.parse)
+        _.entity.toStrict(timeout).map(_.data.utf8String).map {
+          str => parse(str).toTry.get
+        }
       )
     }
     def post(data: (String, String)*)(

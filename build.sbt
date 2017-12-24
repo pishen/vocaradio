@@ -17,8 +17,10 @@ lazy val server = (project in file("server"))
       "com.typesafe.slick" %% "slick" % "3.2.1",
       "com.typesafe.slick" %% "slick-hikaricp" % "3.2.1",
       //json
-      "com.typesafe.play" %% "play-json" % "2.6.7",
-      "de.heikoseeberger" %% "akka-http-play-json" % "1.18.0",
+      "io.circe" %% "circe-core" % "0.8.0",
+      "io.circe" %% "circe-generic" % "0.8.0",
+      "io.circe" %% "circe-parser" % "0.8.0",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.18.0",
       //akka-http
       "com.typesafe.akka" %% "akka-http" % "10.0.11",
       "com.softwaremill.akka-http-session" %% "core" % "0.5.1"
