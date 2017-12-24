@@ -1,8 +1,15 @@
+val scalaV = "2.12.4"
+
 val commonSettings = Seq(
   name := "vocaradio",
   version := "2.0.0-SNAPSHOT",
-  scalaVersion := "2.12.4"
+  scalaVersion := scalaV
 )
+
+lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
+  .settings(scalaVersion := scalaV)
+lazy val sharedJvm = shared.jvm
+lazy val sharedJs = shared.js
 
 lazy val server = (project in file("server"))
   .settings(
@@ -36,6 +43,7 @@ lazy val server = (project in file("server"))
       }
     }
   )
+  .dependsOn(sharedJvm)
 
 lazy val client = (project in file("client"))
   .enablePlugins(ScalaJSPlugin)
@@ -47,3 +55,8 @@ lazy val client = (project in file("client"))
       "com.lihaoyi" %%% "scalatags" % "0.6.5"
     )
   )
+  .dependsOn(sharedJs)
+
+lazy val root = (project in file("."))
+  .settings(commonSettings)
+  .aggregate(server, client)

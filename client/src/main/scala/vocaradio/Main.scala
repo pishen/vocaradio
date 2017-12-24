@@ -16,7 +16,7 @@ object Main {
           cls := "fix-ratio-wrapper",
           iframe(
             cls := "fix-ratio-item",
-            src := "https://www.youtube.com/embed/Vn7sgxG8WFs"
+            src := "https://www.youtube.com/embed/o1iz4L-5zkQ"
           )
         )
       ),
