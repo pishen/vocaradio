@@ -13,9 +13,19 @@ object Player extends LazyLogging {
       .scan(
         PlayerState() -> List.empty[WrappedMsgOut]
       ) {
-        case ((state, _), msg) =>
-          logger.info(msg.toString)
-          state -> List.empty[WrappedMsgOut]
+        case ((state, _), wrapped) =>
+          logger.info(wrapped.toString)
+          wrapped.msg match {
+            case Join =>
+              state -> wrapped.userIdOpt
+                .filter(_ == WebServer.adminId)
+                .map {
+                  _ => WrappedMsgOut(TurnOnPlayerControl, Some(wrapped.socketId))
+                }
+                .toList
+            case Leave =>
+              state -> List.empty[WrappedMsgOut]
+          }
       }
       .mapConcat(_._2)
       .toMat(BroadcastHub.sink)(Keep.both)

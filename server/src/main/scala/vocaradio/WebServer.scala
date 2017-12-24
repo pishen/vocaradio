@@ -48,6 +48,8 @@ object WebServer extends App with LazyLogging {
   val optionalUserId = optionalSession(oneOff, usingCookies)
   val clearUserId = invalidateSession(oneOff, usingCookies)
 
+  val adminId = conf.getString("admin-id")
+
   val fbAppId = conf.getString("facebook.app-id")
   val fbRedirectUri = conf.getString("facebook.redirect-uri")
   val fbAppSecret = conf.getString("facebook.app-secret")
