@@ -12,10 +12,6 @@ lazy val server = (project in file("server"))
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "com.typesafe.akka" %% "akka-slf4j" % "2.4.20",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
-      //html & css
-      "com.lihaoyi" %% "scalatags" % "0.6.5",
-      "com.github.japgolly.scalacss" %% "core" % "0.5.3",
-      "com.github.japgolly.scalacss" %% "ext-scalatags" % "0.5.3",
       //database
       "com.h2database" % "h2" % "1.4.196",
       "com.typesafe.slick" %% "slick" % "3.2.1",
