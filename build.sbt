@@ -53,6 +53,7 @@ lazy val client = (project in file("client"))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "com.lihaoyi" %%% "scalatags" % "0.6.5",
+      "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
       // json
       "io.circe" %%% "circe-core" % "0.8.0",
       "io.circe" %%% "circe-generic" % "0.8.0",
