@@ -59,4 +59,27 @@ object CSS extends StyleSheet.Inline {
   val iframe = style(
     border.`0`
   )
+
+  val btnGroup = style(
+    display.flex
+  )
+
+  val btn = style(
+    flexGrow(1),
+    paddingTop(0.5.rem),
+    paddingBottom(0.5.rem),
+    textAlign.center,
+    textDecoration := "none",
+    color(c"#eaeaea"),
+    transition := "all .15s",
+    borderBottom(1.px, solid, c"#868686"),
+    borderLeft(1.px, solid, c"#868686"),
+    &.firstChild(
+      borderLeft.none
+    ),
+    &.hover(
+      backgroundColor(c"#eaeaea"),
+      color(c"#333333")
+    )
+  )
 }

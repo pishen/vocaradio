@@ -33,7 +33,17 @@ object Main {
         ),
         playerControl
       ),
-      div(CSS.rightPanel)
+      div(
+        CSS.rightPanel,
+        div(
+          CSS.btnGroup,
+          a(
+            CSS.btn,
+            href := "/login",
+            "登入"
+          )
+        )
+      )
     ).render
 
     document.querySelector("head")
