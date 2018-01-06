@@ -60,8 +60,21 @@ object CSS extends StyleSheet.Inline {
     border.`0`
   )
 
+  val textarea = style(
+    width(100.%%),
+    color(c"#eaeaea"),
+    backgroundColor(c"#2d2d2d"),
+    border.none,
+    fontSize(1.rem),
+    padding(0.5.rem),
+    outline.none,
+    boxSizing.borderBox,
+    resize.vertical
+  )
+
   val btnGroup = style(
-    display.flex
+    display.flex,
+    borderBottom(1.px, solid, c"#868686")
   )
 
   val btn = style(
@@ -70,10 +83,16 @@ object CSS extends StyleSheet.Inline {
     paddingBottom(0.5.rem),
     textAlign.center,
     textDecoration := "none",
+    fontSize(1.rem),
     color(c"#eaeaea"),
+    background := "none",
+    cursor.pointer,
     transition := "all .15s",
-    borderBottom(1.px, solid, c"#868686"),
+    borderTop.none,
+    borderRight.none,
+    borderBottom.none,
     borderLeft(1.px, solid, c"#868686"),
+    outline.none,
     &.firstChild(
       borderLeft.none
     ),

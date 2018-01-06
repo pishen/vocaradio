@@ -31,12 +31,31 @@ object Main {
       )
     ).render
 
-    val playerControl = div(
-      display := "none",
+    val playerControl = {
+      val food = textarea(
+        CSS.textarea,
+        placeholder := "Feed Me!",
+        rows := "10"
+      ).render
       div(
-        textarea(rows := "10")
-      )
-    ).render
+        display := "none",
+        paddingTop := "50px",
+        paddingBottom := "50px",
+        food,
+        div(
+          CSS.btnGroup,
+          button(
+            CSS.btn,
+            onclick := { () =>
+              food.value.split("\n").foreach { str =>
+
+              }
+            },
+            "送出"
+          )
+        )
+      ).render
+    }
 
     val root = div(
       div(CSS.leftPanel),
@@ -48,7 +67,7 @@ object Main {
           iframe(
             CSS.fixRatioItem,
             CSS.iframe,
-            src := "https://www.youtube.com/embed/o1iz4L-5zkQ?rel=0"
+            src := "https://www.youtube.com/embed/FT91CrPPAqc?rel=0"
           )
         ),
         playerControl
@@ -69,6 +88,7 @@ object Main {
       case UserStatus(isLoggedIn, isAdmin) =>
         if (isLoggedIn) {
           userPortal.style.display = "flex"
+          if (isAdmin) playerControl.style.display = "block"
         } else {
           guestPortal.style.display = "flex"
         }
