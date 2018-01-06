@@ -21,6 +21,16 @@ object Main {
       )
     ).render
 
+    val userPortal = div(
+      CSS.btnGroup,
+      display := "none",
+      a(
+        CSS.btn,
+        href := "/logout",
+        "登出"
+      )
+    ).render
+
     val playerControl = div(
       display := "none",
       div(
@@ -45,7 +55,8 @@ object Main {
       ),
       div(
         CSS.rightPanel,
-        guestPortal
+        guestPortal,
+        userPortal
       )
     ).render
 
@@ -56,7 +67,9 @@ object Main {
 
     WS.init() {
       case UserStatus(isLoggedIn, isAdmin) =>
-        if (!isLoggedIn) {
+        if (isLoggedIn) {
+          userPortal.style.display = "flex"
+        } else {
           guestPortal.style.display = "flex"
         }
     }
