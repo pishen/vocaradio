@@ -5,4 +5,4 @@ case object Join extends MsgIn
 case object Leave extends MsgIn
 
 sealed trait MsgOut
-case object TurnOnPlayerControl extends MsgOut
+case class UserStatus(isLoggedIn: Boolean, isAdmin: Boolean) extends MsgOut

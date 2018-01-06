@@ -25,16 +25,6 @@ import CirceHelpers._
 import H2._
 import HttpHelpers._
 
-case class WrappedMsgIn(
-  msg: MsgIn,
-  socketId: String,
-  userIdOpt: Option[String]
-)
-case class WrappedMsgOut(
-  msg: MsgOut,
-  socketIdOpt: Option[String]
-)
-
 object WebServer extends App with LazyLogging {
   val conf = ConfigFactory.load()
   implicit val system = ActorSystem("vocaradio")
@@ -54,7 +44,7 @@ object WebServer extends App with LazyLogging {
   val fbRedirectUri = conf.getString("facebook.redirect-uri")
   val fbAppSecret = conf.getString("facebook.app-secret")
 
-  val goHome = redirect("/", PermanentRedirect)
+  val goHome = redirect("/", TemporaryRedirect)
 
   val (playerSink, playerSource) = Player.createSinkAndSource()
 
@@ -67,7 +57,7 @@ object WebServer extends App with LazyLogging {
           "client_id" -> fbAppId,
           "redirect_uri" -> fbRedirectUri
         ),
-        PermanentRedirect
+        TemporaryRedirect
       )
     } ~ path("callback") {
       parameters("code") { code =>
@@ -110,7 +100,16 @@ object WebServer extends App with LazyLogging {
             .to(playerSink),
           playerSource
             .filter(_.socketIdOpt.map(_ == uuid).getOrElse(true))
-            .map(_.msg.asJson.noSpaces)
+            .map(_.msg)
+            .prepend(
+              Source.single(
+                UserStatus(
+                  userIdOpt.isDefined,
+                  userIdOpt.map(_ == adminId).getOrElse(false)
+                )
+              )
+            )
+            .map(_.asJson.noSpaces)
             .map(TextMessage.apply)
         )
       }

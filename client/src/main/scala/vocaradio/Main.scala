@@ -11,6 +11,16 @@ object Main {
   def main(args: Array[String]): Unit = {
     println("Welcome to VocaRadio!")
 
+    val guestPortal = div(
+      CSS.btnGroup,
+      display := "none",
+      a(
+        CSS.btn,
+        href := "/login",
+        "登入"
+      )
+    ).render
+
     val playerControl = div(
       display := "none",
       div(
@@ -28,21 +38,14 @@ object Main {
           iframe(
             CSS.fixRatioItem,
             CSS.iframe,
-            src := "https://www.youtube.com/embed/kWJ4z-I25LU?rel=0"
+            src := "https://www.youtube.com/embed/o1iz4L-5zkQ?rel=0"
           )
         ),
         playerControl
       ),
       div(
         CSS.rightPanel,
-        div(
-          CSS.btnGroup,
-          a(
-            CSS.btn,
-            href := "/login",
-            "登入"
-          )
-        )
+        guestPortal
       )
     ).render
 
@@ -52,8 +55,10 @@ object Main {
       .appendChild(root)
 
     WS.init() {
-      case TurnOnPlayerControl =>
-        playerControl.style.display = "block"
+      case UserStatus(isLoggedIn, isAdmin) =>
+        if (!isLoggedIn) {
+          guestPortal.style.display = "flex"
+        }
     }
   }
 }

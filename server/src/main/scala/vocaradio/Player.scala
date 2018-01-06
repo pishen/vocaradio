@@ -17,12 +17,7 @@ object Player extends LazyLogging {
           logger.info(wrapped.toString)
           wrapped.msg match {
             case Join =>
-              state -> wrapped.userIdOpt
-                .filter(_ == WebServer.adminId)
-                .map {
-                  _ => WrappedMsgOut(TurnOnPlayerControl, Some(wrapped.socketId))
-                }
-                .toList
+              state -> List.empty[WrappedMsgOut]
             case Leave =>
               state -> List.empty[WrappedMsgOut]
           }

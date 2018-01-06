@@ -30,7 +30,7 @@ lazy val server = (project in file("server"))
       "de.heikoseeberger" %% "akka-http-circe" % "1.18.0",
       //akka-http
       "com.typesafe.akka" %% "akka-http" % "10.0.11",
-      "com.softwaremill.akka-http-session" %% "core" % "0.5.1"
+      "com.softwaremill.akka-http-session" %% "core" % "0.5.3"
     ),
     resourceGenerators in Compile += Def.task {
       Seq(
