@@ -19,10 +19,8 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import java.util.UUID
 import scala.concurrent.Promise
-import scala.concurrent.ExecutionContext.Implicits.global
 import slick.jdbc.H2Profile.api._
 import CirceHelpers._
-import H2._
 import HttpHelpers._
 
 object WebServer extends App with LazyLogging {
@@ -47,6 +45,18 @@ object WebServer extends App with LazyLogging {
   val goHome = redirect("/", TemporaryRedirect)
 
   val (playerSink, playerSource) = Player.createSinkAndSource()
+  val songbaseSink = Flow[WrappedMsgIn]
+    .takeWhile(_.userIdOpt.map(_ == adminId).getOrElse(false))
+    .map(_.msg)
+    .to {
+      Sink.foreach {
+        case add: AddSong =>
+          H2.addSong(add)
+        case _ => //do nothing
+      }
+    }
+
+  H2.init()
 
   val route = get {
     pathSingleSlash {
@@ -97,6 +107,7 @@ object WebServer extends App with LazyLogging {
             }
             .mapConcat(_.toList)
             .map(msg => WrappedMsgIn(msg, uuid, userIdOpt))
+            .alsoTo(songbaseSink)
             .to(playerSink),
           playerSource
             .filter(_.socketIdOpt.map(_ == uuid).getOrElse(true))
@@ -116,13 +127,6 @@ object WebServer extends App with LazyLogging {
     }
   } ~ pathPrefix("assets") {
     getFromResourceDirectory("assets")
-  } ~ (post & requireUserId) { userId =>
-    println(userId)
-      (path("song") & formFields("query", "id".?)) { (query, id) =>
-      complete {
-        db.run(songs += Song(query, id)).map(_.toString)
-      }
-    }
   }
 
   val promise = Promise[String]()

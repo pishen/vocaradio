@@ -14,11 +14,14 @@ object Player extends LazyLogging {
         PlayerState() -> List.empty[WrappedMsgOut]
       ) {
         case ((state, _), wrapped) =>
-          logger.info(wrapped.toString)
           wrapped.msg match {
             case Join =>
+              logger.info(wrapped.toString)
               state -> List.empty[WrappedMsgOut]
             case Leave =>
+              logger.info(wrapped.toString)
+              state -> List.empty[WrappedMsgOut]
+            case _ =>
               state -> List.empty[WrappedMsgOut]
           }
       }

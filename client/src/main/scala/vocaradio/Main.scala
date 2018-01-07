@@ -48,7 +48,7 @@ object Main {
             CSS.btn,
             onclick := { () =>
               food.value.split("\n").foreach { str =>
-
+                WS.send(AddSong(str, None))
               }
             },
             "送出"
