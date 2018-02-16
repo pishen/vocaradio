@@ -16,12 +16,12 @@ object H2 extends LazyLogging {
   }
   val songs = TableQuery[Songs]
 
-  def addSong(add: AddSong)(implicit ex: ExecutionContext) = {
-    logger.info("AddSong " + add)
-    db.run(songs += Song(add.query, add.id, true))
-      .failed
-      .foreach(t => logger.error("AddSong", t))
-  }
+  // def addSong(add: AddSong)(implicit ex: ExecutionContext) = {
+  //   logger.info("AddSong " + add)
+  //   db.run(songs += Song(add.query, add.id, true))
+  //     .failed
+  //     .foreach(t => logger.error("AddSong", t))
+  // }
 
   def init()(implicit ec: ExecutionContext) = {
     db.run(songs.schema.create)

@@ -15,7 +15,7 @@ object WS {
     .+("/connect")
 
   def init(retrySeconds: FiniteDuration = 1.second)(
-      msgHandler: MsgOut => Unit
+      msgHandler: VocaMessage => Unit
   ): Unit = {
     def closeHandler(d: FiniteDuration) = { e: CloseEvent =>
       println(s"WebSocket closed. Reconnect in ${d.toSeconds} seconds.")
@@ -28,13 +28,13 @@ object WS {
       send(Join)
     }
     underlying.onmessage = { e =>
-      val msg = decode[MsgOut](e.data.toString).toTry.get
+      val msg = decode[VocaMessage](e.data.toString).toTry.get
       msgHandler(msg)
     }
     underlying.onclose = closeHandler(retrySeconds)
   }
 
-  def send(msg: MsgIn) = {
+  def send(msg: VocaMessage) = {
     underlying.send(msg.asJson.noSpaces)
   }
 }

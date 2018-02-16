@@ -9,20 +9,20 @@ object Player extends LazyLogging {
 
   def createSinkAndSource()(implicit materializer: ActorMaterializer) =
     MergeHub
-      .source[WrappedMsgIn]
+      .source[IncomingMessage]
       .scan(
-        PlayerState() -> List.empty[WrappedMsgOut]
+        PlayerState() -> List.empty[OutgoingMessage]
       ) {
         case ((state, _), wrapped) =>
           wrapped.msg match {
             case Join =>
               logger.info(wrapped.toString)
-              state -> List.empty[WrappedMsgOut]
+              state -> List.empty[OutgoingMessage]
             case Leave =>
               logger.info(wrapped.toString)
-              state -> List.empty[WrappedMsgOut]
+              state -> List.empty[OutgoingMessage]
             case _ =>
-              state -> List.empty[WrappedMsgOut]
+              state -> List.empty[OutgoingMessage]
           }
       }
       .mapConcat(_._2)

@@ -7,8 +7,9 @@ import akka.stream.Materializer
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.parser._
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object HttpHelpers extends LazyLogging {
   implicit class RichUri(uri: Uri) {
@@ -25,7 +26,7 @@ object HttpHelpers extends LazyLogging {
     ) = {
       get().flatMap(
         _.entity.toStrict(timeout).map(_.data.utf8String).map {
-          str => parse(str).toTry.get
+          str => parse(str)
         }
       )
     }

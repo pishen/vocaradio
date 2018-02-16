@@ -1,55 +1,46 @@
 package vocaradio
 
 import org.scalajs.dom._
-import org.scalajs.dom.raw.HTMLStyleElement
+import org.scalajs.dom.raw._
+import scala.language.implicitConversions
+import scala.scalajs.js
 import scalatags.JsDom.all._
 import scalatags.JsDom.TypedTag
 import scalacss.ScalatagsCss._
 import scalacss.DevDefaults._
 
 object Main {
+  implicit class RichHTMLElement(h: HTMLElement) {
+    def hide() = h.asInstanceOf[js.Dynamic].hidden = true
+    def show() = h.asInstanceOf[js.Dynamic].hidden = false
+  }
+
   def main(args: Array[String]): Unit = {
     println("Welcome to VocaRadio!")
 
-    val guestPortal = div(
-      CSS.btnGroup,
-      display := "none",
-      a(
-        CSS.btn,
-        href := "/login",
-        "登入"
-      )
+    val portalName = input(
+      CSS.portalName,
+      CSS.textarea
     ).render
+    portalName.hide()
 
-    val userPortal = div(
-      CSS.btnGroup,
-      display := "none",
-      a(
-        CSS.btn,
-        href := "/logout",
-        "登出"
-      )
+    val portalBtn = a(
+      CSS.btn,
+      CSS.portalBtn,
+      href := "/login", "登入"
     ).render
 
     val playerControl = {
-      val food = textarea(
-        CSS.textarea,
-        placeholder := "Feed Me!",
-        rows := "10"
-      ).render
       div(
         display := "none",
         paddingTop := "50px",
         paddingBottom := "50px",
-        food,
+        input(),
         div(
-          CSS.btnGroup,
           button(
             CSS.btn,
             onclick := { () =>
-              food.value.split("\n").foreach { str =>
-                WS.send(AddSong(str, None))
-              }
+
             },
             "送出"
           )
@@ -67,15 +58,14 @@ object Main {
           iframe(
             CSS.fixRatioItem,
             CSS.iframe,
-            src := "https://www.youtube.com/embed/FT91CrPPAqc?rel=0"
+            src := "https://www.youtube.com/embed/xYVcxsuj0PI?rel=0"
           )
         ),
         playerControl
       ),
       div(
         CSS.rightPanel,
-        guestPortal,
-        userPortal
+        div(CSS.portal, portalName, portalBtn)
       )
     ).render
 
@@ -87,11 +77,13 @@ object Main {
     WS.init() {
       case UserStatus(isLoggedIn, isAdmin) =>
         if (isLoggedIn) {
-          userPortal.style.display = "flex"
+          portalName.show()
+          portalBtn.setAttribute("href", "/logout")
+          portalBtn.textContent = "登出"
           if (isAdmin) playerControl.style.display = "block"
         } else {
-          guestPortal.style.display = "flex"
         }
+      case _ => //TODO
     }
   }
 }

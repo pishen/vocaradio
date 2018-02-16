@@ -60,8 +60,21 @@ object CSS extends StyleSheet.Inline {
     border.`0`
   )
 
+  val portal = style(
+    display.flex,
+    padding(0.4.rem),
+  )
+
+  val portalName = style(
+    flexGrow(3),
+    marginRight(0.4.rem),
+  )
+
+  val portalBtn = style(
+    flexGrow(1)
+  )
+
   val textarea = style(
-    width(100.%%),
     color(c"#eaeaea"),
     backgroundColor(c"#2d2d2d"),
     border.none,
@@ -69,36 +82,29 @@ object CSS extends StyleSheet.Inline {
     padding(0.5.rem),
     outline.none,
     boxSizing.borderBox,
-    resize.vertical
-  )
-
-  val btnGroup = style(
-    display.flex,
-    borderBottom(1.px, solid, c"#868686")
+    resize.none,
+    borderRadius(0.25.rem)
   )
 
   val btn = style(
-    flexGrow(1),
-    paddingTop(0.5.rem),
-    paddingBottom(0.5.rem),
+    padding(0.375.rem, 0.75.rem, 0.375.rem, 0.75.rem),
+    display.inlineBlock,
     textAlign.center,
     textDecoration := "none",
     fontSize(1.rem),
     color(c"#eaeaea"),
-    background := "none",
+    backgroundColor(c"#2d2d2d"),
     cursor.pointer,
     transition := "all .15s",
-    borderTop.none,
-    borderRight.none,
-    borderBottom.none,
-    borderLeft(1.px, solid, c"#868686"),
+    border.none,
+    borderRadius(0.25.rem),
     outline.none,
-    &.firstChild(
-      borderLeft.none
-    ),
     &.hover(
-      backgroundColor(c"#eaeaea"),
-      color(c"#333333")
+      backgroundColor(c"#d9534f"),
+      color(c"#ffffff")
+    ),
+    &.active(
+      backgroundColor(c"#c9302c")
     )
   )
 }
