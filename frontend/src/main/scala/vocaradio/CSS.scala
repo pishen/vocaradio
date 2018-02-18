@@ -78,6 +78,10 @@ object CSS extends StyleSheet.Inline {
     padding(1.rem, 0.5.rem)
   )
 
+  val uploadLabel = style(
+    marginRight(0.5.rem)
+  )
+
   val textarea = style(
     color(c"#eaeaea"),
     backgroundColor(c"#2d2d2d"),

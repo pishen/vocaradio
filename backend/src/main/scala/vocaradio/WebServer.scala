@@ -46,11 +46,10 @@ object WebServer extends App with LazyLogging {
 
   val goHome = redirect("/", TemporaryRedirect)
 
-  val (playerSink, playerSource) = Player.createSinkAndSource()
-
   implicit val db = Database.forConfig("h2")
   SongBase.createTable()
 
+  val (playerSink, playerSource) = Player.createSinkAndSource()
   val (songbaseSink, songbaseSource) = SongBase.createSinkAndSource()
 
   val route = get {

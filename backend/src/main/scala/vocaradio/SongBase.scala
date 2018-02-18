@@ -36,7 +36,7 @@ object SongBase extends LazyLogging {
       .filter(_.userIdOpt.map(_ == adminId).getOrElse(false))
       .mapAsync(1) {
         case IncomingMessage(AddSong(query, idOpt), socketId, _) =>
-          db.run(songs += Song(query, idOpt, true)).map { _ =>
+          db.run(songs.insertOrUpdate(Song(query, idOpt, true))).map { _ =>
             List(OutgoingMessage(SongAdded(query), Some(socketId)))
           }
         case _ =>

@@ -32,10 +32,14 @@ object Main {
       href := "/login", "登入"
     ).render
 
+    var uploadedCount = 0
+
     val uploadBtn = input(
       `type` := "file",
       display := "none",
       onchange := { (e: js.Dynamic) =>
+        uploadedCount = 0
+        println("upload started")
         val f = e.target.files.asInstanceOf[FileList](0)
         val reader = new FileReader()
         reader.readAsText(f)
@@ -49,14 +53,19 @@ object Main {
       }
     ).render
 
+    val uploadMessage = span().render
+
     val playerControl = div(
       CSS.playerControl,
       label(
         CSS.btn,
+        CSS.uploadLabel,
         uploadBtn,
         "Upload Songs"
-      )
+      ),
+      uploadMessage
     ).render
+    playerControl.hide()
 
     val root = div(
       div(CSS.leftPanel),
@@ -90,11 +99,12 @@ object Main {
           portalName.show()
           portalBtn.setAttribute("href", "/logout")
           portalBtn.textContent = "登出"
-          if (isAdmin) playerControl.style.display = "block"
+          if (isAdmin) playerControl.show()
         } else {
         }
-      case sa: SongAdded =>
-        println(sa)
+      case SongAdded(query) =>
+        uploadedCount += 1
+        uploadMessage.textContent = s"$uploadedCount songs added."
       case _ => //TODO
     }
   }
