@@ -1,5 +1,7 @@
 package vocaradio
 
+import io.circe.parser._
+import io.circe.generic.auto._
 import org.scalajs.dom._
 import org.scalajs.dom.raw._
 import scala.language.implicitConversions
@@ -30,23 +32,31 @@ object Main {
       href := "/login", "登入"
     ).render
 
-    val playerControl = {
-      div(
-        display := "none",
-        paddingTop := "50px",
-        paddingBottom := "50px",
-        input(),
-        div(
-          button(
-            CSS.btn,
-            onclick := { () =>
+    val uploadBtn = input(
+      `type` := "file",
+      display := "none",
+      onchange := { (e: js.Dynamic) =>
+        val f = e.target.files.asInstanceOf[FileList](0)
+        val reader = new FileReader()
+        reader.readAsText(f)
+        reader.onloadend = { (e: ProgressEvent) =>
+          reader.result
+            .asInstanceOf[String]
+            .split("\n")
+            .flatMap(str => decode[AddSong](str).toOption)
+            .foreach(WS.send)
+        }
+      }
+    ).render
 
-            },
-            "送出"
-          )
-        )
-      ).render
-    }
+    val playerControl = div(
+      CSS.playerControl,
+      label(
+        CSS.btn,
+        uploadBtn,
+        "Upload Songs"
+      )
+    ).render
 
     val root = div(
       div(CSS.leftPanel),
@@ -83,6 +93,8 @@ object Main {
           if (isAdmin) playerControl.style.display = "block"
         } else {
         }
+      case sa: SongAdded =>
+        println(sa)
       case _ => //TODO
     }
   }

@@ -23,6 +23,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
+import slick.jdbc.H2Profile.api._
 
 object WebServer extends App with LazyLogging {
   val conf = ConfigFactory.load()
@@ -46,18 +47,11 @@ object WebServer extends App with LazyLogging {
   val goHome = redirect("/", TemporaryRedirect)
 
   val (playerSink, playerSource) = Player.createSinkAndSource()
-  // val songbaseSink = Flow[WrappedMsgIn]
-  //   .takeWhile(_.userIdOpt.map(_ == adminId).getOrElse(false))
-  //   .map(_.msg)
-  //   .to {
-  //     Sink.foreach {
-  //       case add: AddSong =>
-  //         H2.addSong(add)
-  //       case _ => //do nothing
-  //     }
-  //   }
 
-  H2.init()
+  implicit val db = Database.forConfig("h2")
+  SongBase.createTable()
+
+  val (songbaseSink, songbaseSource) = SongBase.createSinkAndSource()
 
   val route = get {
     pathSingleSlash {
@@ -107,34 +101,36 @@ object WebServer extends App with LazyLogging {
     } ~ (path("connect") & optionalUserId) { userIdOpt =>
       val uuid = UUID.randomUUID.toString
       handleWebSocketMessages {
-        Flow[Message]
-          .mapAsync(1) {
-            case tm: TextMessage =>
-              tm.textStream.runReduce(_ + _).map { str =>
-                decode[VocaMessage](str).toOption
-              }
-            case bm: BinaryMessage =>
-              bm.dataStream.runWith(Sink.ignore).map(_ => None)
-          }
-          .mapConcat(_.toList)
-          .map(msg => IncomingMessage(msg, uuid, userIdOpt))
-          .alsoTo(playerSink)
-          .mapConcat {
-            case _ => List.empty[OutgoingMessage]
-          }
-          .merge(playerSource)
-          .filter(_.socketIdOpt.map(_ == uuid).getOrElse(true))
-          .map(_.msg)
-          .prepend(
-            Source.single(
-              UserStatus(
-                userIdOpt.isDefined,
-                userIdOpt.map(_ == adminId).getOrElse(false)
+        Flow.fromSinkAndSource(
+          Flow[Message]
+            .mapAsync(1) {
+              case tm: TextMessage =>
+                tm.textStream.runReduce(_ + _).map { str =>
+                  decode[VocaMessage](str).toOption
+                }
+              case bm: BinaryMessage =>
+                bm.dataStream.runWith(Sink.ignore).map(_ => None)
+            }
+            .mapConcat(_.toList)
+            .++(Source.single(Leave))
+            .map(msg => IncomingMessage(msg, uuid, userIdOpt))
+            .alsoTo(songbaseSink)
+            .to(playerSink),
+          playerSource
+            .merge(songbaseSource)
+            .filter(_.socketIdOpt.map(_ == uuid).getOrElse(true))
+            .map(_.msg)
+            .prepend(
+              Source.single(
+                UserStatus(
+                  userIdOpt.isDefined,
+                  userIdOpt.map(_ == adminId).getOrElse(false)
+                )
               )
             )
-          )
-          .map(_.asJson.noSpaces)
-          .map(TextMessage.apply)
+            .map(_.asJson.noSpaces)
+            .map(TextMessage.apply)
+        )
       }
     }
   } ~ pathPrefix("assets") {

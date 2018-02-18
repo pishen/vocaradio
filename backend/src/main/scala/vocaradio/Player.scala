@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 object Player extends LazyLogging {
   case class PlayerState()
 
-  def createSinkAndSource()(implicit materializer: ActorMaterializer) =
+  def createSinkAndSource()(implicit materializer: ActorMaterializer) = {
     MergeHub
       .source[IncomingMessage]
       .scan(
@@ -28,4 +28,5 @@ object Player extends LazyLogging {
       .mapConcat(_._2)
       .toMat(BroadcastHub.sink)(Keep.both)
       .run
+  }
 }

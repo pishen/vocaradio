@@ -74,6 +74,10 @@ object CSS extends StyleSheet.Inline {
     flexGrow(1)
   )
 
+  val playerControl = style(
+    padding(1.rem, 0.5.rem)
+  )
+
   val textarea = style(
     color(c"#eaeaea"),
     backgroundColor(c"#2d2d2d"),
@@ -92,6 +96,7 @@ object CSS extends StyleSheet.Inline {
     textAlign.center,
     textDecoration := "none",
     fontSize(1.rem),
+    lineHeight(1.5.rem),
     color(c"#eaeaea"),
     backgroundColor(c"#2d2d2d"),
     cursor.pointer,

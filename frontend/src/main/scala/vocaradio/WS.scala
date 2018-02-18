@@ -28,8 +28,9 @@ object WS {
       send(Join)
     }
     underlying.onmessage = { e =>
-      val msg = decode[VocaMessage](e.data.toString).toTry.get
-      msgHandler(msg)
+      decode[VocaMessage](e.data.toString).foreach { msg =>
+        msgHandler(msg)
+      }
     }
     underlying.onclose = closeHandler(retrySeconds)
   }
