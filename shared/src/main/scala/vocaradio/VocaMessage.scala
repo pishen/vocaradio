@@ -16,3 +16,7 @@ case class AddSong(
 ) extends VocaMessage
 
 case class SongAdded(query: String) extends VocaMessage
+
+case object Resume extends VocaMessage
+case object Done extends VocaMessage
+case class Play(id: String, at: Long)

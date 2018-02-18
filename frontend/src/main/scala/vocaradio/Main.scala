@@ -6,10 +6,17 @@ import org.scalajs.dom._
 import org.scalajs.dom.raw._
 import scala.language.implicitConversions
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSGlobal
 import scalatags.JsDom.all._
 import scalatags.JsDom.TypedTag
 import scalacss.ScalatagsCss._
 import scalacss.DevDefaults._
+
+@js.native
+@JSGlobal("YT.Player")
+class Player(id: String, config: js.Object) extends js.Object {
+
+}
 
 object Main {
   implicit class RichHTMLElement(h: HTMLElement) {
@@ -75,9 +82,10 @@ object Main {
         div(
           CSS.fixRatioWrapper,
           iframe(
+            id := "player",
             CSS.fixRatioItem,
-            CSS.iframe,
-            src := "https://www.youtube.com/embed/xYVcxsuj0PI?rel=0"
+            border := "0",
+            src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
           )
         ),
         playerControl
@@ -93,6 +101,14 @@ object Main {
     document.getElementById("root")
       .appendChild(root)
 
+    val player = new Player("player", js.Dynamic.literal(
+      events = js.Dynamic.literal(
+        onReady = { (event: js.Any) =>
+          println("Player ready")
+        }
+      )
+    ))
+
     WS.init() {
       case UserStatus(isLoggedIn, isAdmin) =>
         if (isLoggedIn) {
@@ -100,7 +116,6 @@ object Main {
           portalBtn.setAttribute("href", "/logout")
           portalBtn.textContent = "登出"
           if (isAdmin) playerControl.show()
-        } else {
         }
       case SongAdded(query) =>
         uploadedCount += 1

@@ -56,10 +56,6 @@ object CSS extends StyleSheet.Inline {
     height(100.%%)
   )
 
-  val iframe = style(
-    border.`0`
-  )
-
   val portal = style(
     display.flex,
     padding(0.4.rem),

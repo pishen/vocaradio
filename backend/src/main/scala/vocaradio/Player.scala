@@ -5,13 +5,18 @@ import akka.stream.scaladsl._
 import com.typesafe.scalalogging.LazyLogging
 
 object Player extends LazyLogging {
-  case class PlayerState()
+  case class PlayingSong(id: String, startTime: Long, length: Long)
+
+  case class PlayerState(
+    playing: Option[PlayingSong],
+    queue: List[String]
+  )
 
   def createSinkAndSource()(implicit materializer: ActorMaterializer) = {
     MergeHub
       .source[IncomingMessage]
       .scan(
-        PlayerState() -> List.empty[OutgoingMessage]
+        PlayerState(None, List.empty) -> List.empty[OutgoingMessage]
       ) {
         case ((state, _), wrapped) =>
           wrapped.msg match {
