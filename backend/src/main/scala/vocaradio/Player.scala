@@ -13,6 +13,7 @@ import slick.jdbc.H2Profile.api._
 import Global._
 
 object Player extends LazyLogging {
+  case class SongErrorException(errorSong: SongBase.Song) extends Exception
   case class Playing(video: YouTube.Video, startTime: Instant) {
     def isEnd = startTime
       .plus(video.contentDetails.durationJ)
@@ -22,8 +23,9 @@ object Player extends LazyLogging {
       playing: Option[Playing],
       queue: List[String]
   ) {
+    //return (newState, Option[newSong to update])
     def shift() = {
-      val stateF = for {
+      val resF = for {
         filledQueue <- if (queue.size >= 100) {
           Future(queue)
         } else {
@@ -39,26 +41,26 @@ object Player extends LazyLogging {
             YouTube.search(query).flatMap(id => YouTube.getVideo(id))
           }
           .recover { case e: NoSuchElementException =>
-            logger.info(s"Set $query to error")
-            SongBase.updateSong(song.copy(error = true))
-            throw e
+            throw SongErrorException(song.copy(error = true))
           }
       } yield {
-        if (song.error) {
-          SongBase.updateSong(song.copy(error = false))
-        }
-        if (song.id.map(_ != video.id).getOrElse(true)) {
-          SongBase.updateSong(song.copy(id = Some(video.id)))
-        }
-        this.copy(
+        val newSong = song.copy(
+          id = Some(video.id),
+          error = false
+        )
+        val newState = this.copy(
           Some(Playing(video, Instant.now)),
           filledQueue.drop(1)
         )
+        (newState, if (newSong == song) None else Some(newSong))
       }
-      stateF.recover {
+      resF.recover {
+        case SongErrorException(errorSong) =>
+          logger.error(s"Error on getting video of ${errorSong.query}")
+          (PlayerState(None, queue.drop(1)), Some(errorSong))
         case e: Exception =>
           logger.error("Error on shifting", e)
-          PlayerState(None, queue.drop(1))
+          (PlayerState(None, queue.drop(1)), None)
       }
     }
   }
