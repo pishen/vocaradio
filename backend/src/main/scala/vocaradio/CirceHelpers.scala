@@ -1,18 +1,17 @@
 package vocaradio
 
 import scala.concurrent.Future
-import scala.language.higherKinds
 
-import cats._
-import cats.data.EitherT
 import io.circe._
+import Global._
 
 object CirceHelpers {
-  implicit class RichFutureResult[T](result: Future[Either[Error, T]]) {
-    def asEitherT = EitherT(result)
+  implicit class RichJson(json: Json) {
+    def \(key: String) = json.hcursor.downField(key)
+    def asF[T: Decoder] = Future(json.as[T].toTry.get)
   }
-
-  implicit class RichResult[T](result: Either[Error, T]) {
-    def asEitherT[F[_]: Applicative] = EitherT.fromEither[F](result)
+  implicit class RichACursor(cursor: ACursor) {
+    def \(key: String) = cursor.downField(key)
+    def asF[T: Decoder] = Future(cursor.as[T].toTry.get)
   }
 }

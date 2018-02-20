@@ -6,48 +6,32 @@ import scala.concurrent.{Future, Promise}
 
 import CirceHelpers._
 import HttpHelpers._
-import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
-import cats.implicits._
 import com.softwaremill.session._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
 import slick.jdbc.H2Profile.api._
+import Global._
 
 object WebServer extends App with LazyLogging {
-  val conf = ConfigFactory.load()
-  implicit val system = ActorSystem("vocaradio")
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
-  implicit val sessionManager =
-    new SessionManager[String](SessionConfig.fromConfig())
-
+  implicit val sessionManager = new SessionManager[String](
+    SessionConfig.fromConfig()
+  )
   def setUserId(userId: String) = setSession(oneOff, usingCookies, userId)
   val requireUserId = requiredSession(oneOff, usingCookies)
   val optionalUserId = optionalSession(oneOff, usingCookies)
   val clearUserId = invalidateSession(oneOff, usingCookies)
 
-  val adminId = conf.getString("admin-id")
-
-  val fbAppId = conf.getString("facebook.app-id")
-  val fbRedirectUri = conf.getString("facebook.redirect-uri")
-  val fbAppSecret = conf.getString("facebook.app-secret")
-
   val goHome = redirect("/", TemporaryRedirect)
-
-  implicit val db = Database.forConfig("h2")
-  SongBase.createTable()
 
   val (playerSink, playerSource) = Player.createSinkAndSource()
   val (songbaseSink, songbaseSource) = SongBase.createSinkAndSource()
@@ -66,33 +50,25 @@ object WebServer extends App with LazyLogging {
     } ~ path("callback") {
       parameters("code") { code =>
         onSuccess {
-          val res = for {
-            accessTokenJson <- Uri
-              .apply("https://graph.facebook.com/v2.11/oauth/access_token")
-              .withQuery(
-                "client_id" -> fbAppId,
-                "redirect_uri" -> fbRedirectUri,
-                "client_secret" -> fbAppSecret,
-                "code" -> code
-              )
-              .getJson()
-              .asEitherT
-            accessToken <- accessTokenJson
-              .hcursor
-              .downField("access_token")
-              .as[String]
-              .asEitherT[Future]
-            meJson <- Uri("https://graph.facebook.com/v2.11/me")
-              .withQuery("access_token" -> accessToken)
-              .getJson()
-              .asEitherT
-            id <- meJson
-              .hcursor
-              .downField("id")
-              .as[String]
-              .asEitherT[Future]
-          } yield id
-          res.value.map(_.toTry.get)
+          Uri("https://graph.facebook.com/v2.11/oauth/access_token")
+            .withQuery(
+              "client_id" -> fbAppId,
+              "redirect_uri" -> fbRedirectUri,
+              "client_secret" -> fbAppSecret,
+              "code" -> code
+            )
+            .getJson()
+            .flatMap { json =>
+              (json \ "access_token").asF[String]
+            }
+            .flatMap { accessToken =>
+              Uri("https://graph.facebook.com/v2.11/me")
+                .withQuery("access_token" -> accessToken)
+                .getJson()
+            }
+            .flatMap { json =>
+              (json \ "id").asF[String]
+            }
         }(id => setUserId(id)(goHome))
       } ~ goHome
     } ~ path("logout") {
