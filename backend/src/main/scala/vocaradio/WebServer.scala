@@ -87,6 +87,7 @@ object WebServer extends App with LazyLogging {
                 bm.dataStream.runWith(Sink.ignore).map(_ => None)
             }
             .mapConcat(_.toList)
+            .prepend(Source.single(Join))
             .++(Source.single(Leave))
             .map(msg => IncomingMessage(msg, uuid, userIdOpt))
             .alsoTo(songbaseSink)

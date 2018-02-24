@@ -13,7 +13,7 @@ import slick.jdbc.H2Profile.api._
 import Global._
 
 object Player extends LazyLogging {
-  case class SongErrorException(errorSong: SongBase.Song) extends Exception
+  case class SongNotFoundException(errorSong: SongBase.Song) extends Exception
   case class Playing(video: YouTube.Video, startTime: Instant) {
     def isEnd = startTime
       .plus(video.contentDetails.durationJ)
@@ -23,8 +23,7 @@ object Player extends LazyLogging {
       playing: Option[Playing],
       queue: List[String]
   ) {
-    //return (newState, Option[newSong to update])
-    def shift() = {
+    def shiftIfEnd() = if (playing.map(_.isEnd).getOrElse(true)) {
       val resF = for {
         filledQueue <- if (queue.size >= 100) {
           Future(queue)
@@ -37,11 +36,11 @@ object Player extends LazyLogging {
         song <- SongBase.getSong(query)
         video <- Future(song.id.get)
           .flatMap(id => YouTube.getVideo(id))
-          .recoverWith { case _: NoSuchElementException =>
+          .recoverWith { case _: YouTube.EmptyItemsException =>
             YouTube.search(query).flatMap(id => YouTube.getVideo(id))
           }
-          .recover { case e: NoSuchElementException =>
-            throw SongErrorException(song.copy(error = true))
+          .recover { case e: YouTube.EmptyItemsException =>
+            throw SongNotFoundException(song.copy(error = true))
           }
       } yield {
         val newSong = song.copy(
@@ -52,35 +51,68 @@ object Player extends LazyLogging {
           Some(Playing(video, Instant.now)),
           filledQueue.drop(1)
         )
-        (newState, if (newSong == song) None else Some(newSong))
+        // side effect
+        if (newSong != song) {
+          logger.info("Update " + newSong)
+          SongBase.updateSong(newSong)
+        }
+        // // //
+        newState
       }
       resF.recover {
-        case SongErrorException(errorSong) =>
+        case SongNotFoundException(errorSong) =>
           logger.error(s"Error on getting video of ${errorSong.query}")
-          (PlayerState(None, queue.drop(1)), Some(errorSong))
+          // side effect
+          SongBase.updateSong(errorSong)
+          // // //
+          PlayerState(None, queue.drop(1))
         case e: Exception =>
           logger.error("Error on shifting", e)
-          (PlayerState(None, queue.drop(1)), None)
+          PlayerState(None, queue.drop(1))
       }
+    } else {
+      Future(this)
     }
   }
 
   def createSinkAndSource() = {
     MergeHub
       .source[IncomingMessage]
-      .scan(
+      .scanAsync(
         PlayerState(None, List.empty) -> List.empty[OutgoingMessage]
       ) {
-        case ((state, _), wrapped) =>
-          wrapped.msg match {
-            case Join =>
-              logger.info(wrapped.toString)
-              state -> List.empty[OutgoingMessage]
-            case Leave =>
-              logger.info(wrapped.toString)
-              state -> List.empty[OutgoingMessage]
+        case ((state, _), incoming) =>
+          logger.info(incoming.toString)
+          incoming.msg match {
+            case Ready =>
+              state.shiftIfEnd().map { newState =>
+                newState -> newState.playing.map { p =>
+                  OutgoingMessage(Load(p.video.id), Some(incoming.socketId))
+                }.toList
+              }
+            case Resume =>
+              state.shiftIfEnd().map { newState =>
+                newState -> newState.playing.map { p =>
+                  OutgoingMessage(
+                    Play(
+                      p.video.id,
+                      Duration.between(
+                        p.startTime,
+                        Instant.now
+                      ).getSeconds.toInt
+                    ),
+                    Some(incoming.socketId)
+                  )
+                }.toList
+              }
+            case Ended =>
+              state.shiftIfEnd().map { newState =>
+                newState -> newState.playing.map { p =>
+                  OutgoingMessage(Play(p.video.id, 0), Some(incoming.socketId))
+                }.toList
+              }
             case _ =>
-              state -> List.empty[OutgoingMessage]
+              Future(state -> List.empty[OutgoingMessage])
           }
       }
       .mapConcat(_._2)

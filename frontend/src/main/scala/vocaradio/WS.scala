@@ -25,7 +25,6 @@ object WS {
     underlying.onopen = { e =>
       println("WebSocket connected.")
       underlying.onclose = closeHandler(1.second)
-      send(Join)
     }
     underlying.onmessage = { e =>
       decode[VocaMessage](e.data.toString).foreach { msg =>

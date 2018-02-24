@@ -15,7 +15,15 @@ import scalacss.DevDefaults._
 @js.native
 @JSGlobal("YT.Player")
 class Player(id: String, config: js.Object) extends js.Object {
+  def cueVideoById(videoId: String): Unit = js.native
+  def loadVideoById(videoId: String, startSeconds: Int): Unit = js.native
+}
 
+@js.native
+@JSGlobal("YT.PlayerState")
+object PlayerState extends js.Any {
+  val ENDED: Int = js.native
+  val PLAYING: Int = js.native
 }
 
 object Main {
@@ -101,10 +109,29 @@ object Main {
     document.getElementById("root")
       .appendChild(root)
 
+    var sendResume = true
     val player = new Player("player", js.Dynamic.literal(
       events = js.Dynamic.literal(
         onReady = { (event: js.Any) =>
           println("Player ready")
+          WS.send(Ready)
+        },
+        onStateChange = { (event: js.Dynamic) =>
+          event.data.asInstanceOf[Int] match {
+            case PlayerState.PLAYING =>
+              if (sendResume) {
+                println("PLAYING (sent)")
+                WS.send(Resume)
+              } else {
+                println("PLAYING (not sent)")
+                sendResume = true
+              }
+            case PlayerState.ENDED =>
+              println("ENDED")
+              WS.send(Ended)
+            case _ =>
+              // unused
+          }
         }
       )
     ))
@@ -120,6 +147,13 @@ object Main {
       case SongAdded(query) =>
         uploadedCount += 1
         uploadMessage.textContent = s"$uploadedCount songs added."
+      case Load(id) =>
+        println("Load")
+        player.cueVideoById(id)
+      case Play(id, at) =>
+        println("Play")
+        sendResume = false
+        player.loadVideoById(id, at)
       case _ => //TODO
     }
   }
