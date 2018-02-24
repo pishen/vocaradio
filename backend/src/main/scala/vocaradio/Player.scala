@@ -36,8 +36,9 @@ object Player extends LazyLogging {
         song <- SongBase.getSong(query)
         video <- Future(song.id.get)
           .flatMap(id => YouTube.getVideo(id))
-          .recoverWith { case _: YouTube.EmptyItemsException =>
-            YouTube.search(query).flatMap(id => YouTube.getVideo(id))
+          .recoverWith {
+            case _: YouTube.EmptyItemsException | _: NoSuchElementException =>
+              YouTube.search(query).flatMap(id => YouTube.getVideo(id))
           }
           .recover { case e: YouTube.EmptyItemsException =>
             throw SongNotFoundException(song.copy(error = true))
