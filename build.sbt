@@ -28,9 +28,7 @@ lazy val backend = (project in file("backend"))
       "io.circe" %% "circe-core" % "0.8.0",
       "io.circe" %% "circe-generic" % "0.8.0",
       "io.circe" %% "circe-parser" % "0.8.0",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.18.0",
-      //cats
-      "org.typelevel" %% "cats-core" % "0.9.0"
+      "de.heikoseeberger" %% "akka-http-circe" % "1.18.0"
     ),
     resourceGenerators in Compile += Def.task {
       Seq(

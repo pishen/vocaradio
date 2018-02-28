@@ -13,15 +13,13 @@ object SongBase extends LazyLogging {
   case class Song(
       query: String,
       id: Option[String],
-      active: Boolean,
-      error: Boolean
+      active: Boolean
   )
   class Songs(tag: Tag) extends Table[Song](tag, "songs") {
     def query = column[String]("query", O.PrimaryKey)
     def id = column[Option[String]]("id")
     def active = column[Boolean]("active")
-    def error = column[Boolean]("error")
-    def * = (query, id, active, error) <> (Song.tupled, Song.unapply)
+    def * = (query, id, active) <> (Song.tupled, Song.unapply)
   }
   val songs = TableQuery[Songs]
 
@@ -35,7 +33,7 @@ object SongBase extends LazyLogging {
       .filter(_.userIdOpt.map(_ == adminId).getOrElse(false))
       .mapAsync(1) {
         case IncomingMessage(AddSong(query, idOpt), socketId, _) =>
-          db.run(songs.insertOrUpdate(Song(query, idOpt, true, false))).map { _ =>
+          db.run(songs.insertOrUpdate(Song(query, idOpt, true))).map { _ =>
             List(OutgoingMessage(SongAdded(query), Some(socketId)))
           }
         case _ =>
@@ -51,10 +49,11 @@ object SongBase extends LazyLogging {
   }
 
   def getSong(query: String) = db.run {
-    songs.filter(_.query === query).result.head
+    songs.filter(_.query === query).result.headOption
   }
 
   def updateSong(song: Song) = db.run {
+    logger.info("UPDATE: " + song)
     songs.filter(_.query === song.query).update(song)
   }
 }

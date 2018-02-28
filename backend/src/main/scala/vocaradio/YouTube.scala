@@ -41,13 +41,14 @@ object YouTube extends LazyLogging {
         "videoEmbeddable" -> "true"
       )
       .getJson()
-      .flatMap(_.asF[SearchResult])
-      .map {
-        _.items
-          .headOption
-          .map(_.id.videoId)
-          .getOrElse(throw EmptyItemsException())
+      .flatMap { json =>
+        json.asF[SearchResult].recover {
+          case e: Exception =>
+            logger.error("Error on parsing json of search", json.noSpaces)
+            throw e
+        }
       }
+      .map(_.items.headOption.map(_.id.videoId))
   }
 
   def getVideo(id: String) = {
@@ -59,7 +60,13 @@ object YouTube extends LazyLogging {
         "part" -> "snippet,contentDetails"
       )
       .getJson()
-      .flatMap(_.asF[VideoResult])
-      .map(_.items.headOption.getOrElse(throw EmptyItemsException()))
+      .flatMap { json =>
+        json.asF[VideoResult].recover {
+          case e: Exception =>
+            logger.error("Error on parsing json of videos", json.noSpaces)
+            throw e
+        }
+      }
+      .map(_.items.headOption)
   }
 }
