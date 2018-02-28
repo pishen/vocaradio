@@ -29,15 +29,15 @@ object SongBase extends LazyLogging {
 
   def createSinkAndSource() = {
     MergeHub
-      .source[IncomingMessage]
+      .source[Incoming]
       .filter(_.userIdOpt.map(_ == adminId).getOrElse(false))
       .mapAsync(1) {
-        case IncomingMessage(AddSong(query, idOpt), socketId, _) =>
+        case Incoming(AddSong(query, idOpt), socketId, _) =>
           db.run(songs.insertOrUpdate(Song(query, idOpt, true))).map { _ =>
-            List(OutgoingMessage(SongAdded(query), Some(socketId)))
+            List(Outgoing(SongAdded(query), Some(socketId)))
           }
         case _ =>
-          Future.successful(List.empty[OutgoingMessage])
+          Future.successful(List.empty[Outgoing])
       }
       .mapConcat(_.toList)
       .toMat(BroadcastHub.sink)(Keep.both)

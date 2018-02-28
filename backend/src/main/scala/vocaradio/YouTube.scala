@@ -19,15 +19,9 @@ object YouTube extends LazyLogging {
   case class SearchItem(id: SearchItemId)
   case class SearchResult(items: Seq[SearchItem])
 
-  case class Snippet(title: String)
-  case class ContentDetails(duration: String) {
-    val durationJ = Duration.parse(duration)
+  implicit class RichContentDetails(cd: ContentDetails) {
+    def durationJ = Duration.parse(cd.duration)
   }
-  case class Video(
-    id: String,
-    snippet: Snippet,
-    contentDetails: ContentDetails
-  )
   case class VideoResult(items: Seq[Video])
 
   def search(q: String) = {

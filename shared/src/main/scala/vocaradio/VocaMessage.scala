@@ -18,8 +18,9 @@ case class AddSong(
 case class SongAdded(query: String) extends VocaMessage
 
 case object Ready extends VocaMessage
-case object Resume extends VocaMessage
+case class Resume(id: String, at: Int) extends VocaMessage
 case object Ended extends VocaMessage
 
 case class Load(id: String) extends VocaMessage
 case class Play(id: String, at: Int) extends VocaMessage
+case class UpdatePlaylist(videos: Seq[Video]) extends VocaMessage

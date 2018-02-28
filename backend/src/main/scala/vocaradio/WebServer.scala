@@ -89,7 +89,7 @@ object WebServer extends App with LazyLogging {
             .mapConcat(_.toList)
             .prepend(Source.single(Join))
             .++(Source.single(Leave))
-            .map(msg => IncomingMessage(msg, uuid, userIdOpt))
+            .map(msg => Incoming(msg, uuid, userIdOpt))
             .alsoTo(songbaseSink)
             .to(playerSink),
           playerSource

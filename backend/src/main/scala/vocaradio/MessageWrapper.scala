@@ -2,13 +2,13 @@ package vocaradio
 
 sealed trait MessageWrapper
 
-case class IncomingMessage(
+case class Incoming(
   msg: VocaMessage,
   socketId: String,
   userIdOpt: Option[String]
 ) extends MessageWrapper
 
-case class OutgoingMessage(
+case class Outgoing(
   msg: VocaMessage,
   socketIdOpt: Option[String]
 ) extends MessageWrapper

@@ -17,6 +17,14 @@ import scalacss.DevDefaults._
 class Player(id: String, config: js.Object) extends js.Object {
   def cueVideoById(videoId: String): Unit = js.native
   def loadVideoById(videoId: String, startSeconds: Int): Unit = js.native
+  def getVideoData(): VideoData = js.native
+  def getCurrentTime(): Double = js.native
+  def seekTo(seconds: Int, allowSeekAhead: Boolean): Unit = js.native
+}
+
+@js.native
+trait VideoData extends js.Object {
+  val video_id: String = js.native
 }
 
 @js.native
@@ -109,7 +117,6 @@ object Main {
     document.getElementById("root")
       .appendChild(root)
 
-    var sendResume = true
     val player = new Player("player", js.Dynamic.literal(
       events = js.Dynamic.literal(
         onReady = { (event: js.Any) =>
@@ -117,20 +124,21 @@ object Main {
           WS.send(Ready)
         },
         onStateChange = { (event: js.Dynamic) =>
+          val player = event.target.asInstanceOf[Player]
           event.data.asInstanceOf[Int] match {
             case PlayerState.PLAYING =>
-              if (sendResume) {
-                println("PLAYING (sent)")
-                WS.send(Resume)
-              } else {
-                println("PLAYING (not sent)")
-                sendResume = true
-              }
+              println("PLAYING")
+              WS.send(
+                Resume(
+                  player.getVideoData().video_id,
+                  player.getCurrentTime().toInt
+                )
+              )
             case PlayerState.ENDED =>
               println("ENDED")
               WS.send(Ended)
             case _ =>
-              // unused
+              //println(event.data)
           }
         }
       )
@@ -152,8 +160,13 @@ object Main {
         player.cueVideoById(id)
       case Play(id, at) =>
         println("Play")
-        sendResume = false
-        player.loadVideoById(id, at)
+        if (player.getVideoData().video_id == id) {
+          player.seekTo(at, true)
+        } else {
+          player.loadVideoById(id, at)
+        }
+      case UpdatePlaylist(videos) =>
+        println("UpdatePlaylist")
       case _ => //TODO
     }
   }

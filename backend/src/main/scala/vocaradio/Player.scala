@@ -14,26 +14,34 @@ import scala.util.Random
 import slick.jdbc.H2Profile.api._
 import Global._
 import SongBase.Song
-import YouTube.Video
+import YouTube.RichContentDetails
 
 object Player extends LazyLogging {
   case class Playing(video: Video, startTime: Instant) {
+    def at = Duration.between(
+      startTime,
+      Instant.now
+    ).getSeconds.toInt
+
     def isEnd = startTime
       .plus(video.contentDetails.durationJ)
-      .isBefore(Instant.now())
+      // plus 1s to avoid some inaccurate durations
+      .isBefore(Instant.now().plusSeconds(1))
   }
   case class PlayerState(
-      playing: Option[Playing],
-      queue: Seq[Video],
-      pool: Seq[String]
+      playing: Option[Playing] = None,
+      queue: Seq[Video] = Seq.empty,
+      pool: Seq[String] = Seq.empty
   ) {
     def shiftIfEnd() = if (playing.map(_.isEnd).getOrElse(true)) {
       fill(shift = true)
     } else {
-      Future((this, List.empty[Song]))
+      Future((this, Seq.empty, None))
     }
 
-    def fill(shift: Boolean) = {
+    def fill(
+      shift: Boolean
+    ): Future[(PlayerState, Seq[Song], Option[Outgoing])] = {
       val maxQueueSize = if (shift) 26 else 25
       val resF = for {
         filledPool <- if (pool.size >= 100) {
@@ -80,66 +88,68 @@ object Player extends LazyLogging {
           if (shift) filledQueue.drop(1) else filledQueue,
           filledPool.drop(maxQueueSize - queue.size)
         )
-        (newState, songsToUpdate)
+        val outgoingOpt = if (newState.queue != queue) {
+          Some(Outgoing(UpdatePlaylist(newState.queue), None))
+        } else None
+
+        (newState, songsToUpdate, outgoingOpt)
       }
       resF.recover {
         case e: Exception =>
           logger.error("Error on shifting", e)
-          (PlayerState(None, List.empty, List.empty), List.empty[Song])
+          (PlayerState(), Seq.empty, None)
       }
     }
   }
 
   def createSinkAndSource() = {
     MergeHub
-      .source[IncomingMessage]
+      .source[Incoming]
       .scanAsync(
-        PlayerState(None, List.empty, List.empty) -> List.empty[OutgoingMessage]
+        PlayerState() -> Iterable.empty[Outgoing]
       ) {
         case ((state, _), incoming) =>
           logger.info(incoming.toString)
           incoming.msg match {
             case Ready =>
-              state.shiftIfEnd().map { case (newState, songsToUpdate) =>
-                // UPDATE songs
-                songsToUpdate.foreach(SongBase.updateSong(song))
-                //TODO: send the queue info to client
-                newState -> newState.playing.map { p =>
-                  OutgoingMessage(Load(p.video.id), Some(incoming.socketId))
-                }.toList
+              state.shiftIfEnd().map {
+                case (newState, songsToUpdate, outgoingOpt) =>
+                  songsToUpdate.foreach(SongBase.updateSong)
+                  val outgoings = outgoingOpt ++ newState.playing.map { p =>
+                    Outgoing(Load(p.video.id), Some(incoming.socketId))
+                  }
+                  newState -> outgoings
               }
-            case Resume =>
-              state.shiftIfEnd().map { case (newState, songsToUpdate) =>
-                // UPDATE songs
-                songsToUpdate.foreach(SongBase.updateSong(song))
-                //TODO: send the queue info to client
-                newState -> newState.playing.map { p =>
-                  OutgoingMessage(
-                    Play(
-                      p.video.id,
-                      Duration.between(
-                        p.startTime,
-                        Instant.now
-                      ).getSeconds.toInt
-                    ),
-                    Some(incoming.socketId)
-                  )
-                }.toList
+            case Resume(id, at) =>
+              state.shiftIfEnd().map {
+                case (newState, songsToUpdate, outgoingOpt) =>
+                  songsToUpdate.foreach(SongBase.updateSong)
+                  val outgoings = outgoingOpt ++ newState.playing
+                    .filter { p =>
+                      p.video.id != id || at < (p.at - 30) || at > p.at
+                    }
+                    .map { p =>
+                      Outgoing(
+                        Play(p.video.id, p.at),
+                        Some(incoming.socketId)
+                      )
+                    }
+                  newState -> outgoings
               }
             case Ended =>
-              state.shiftIfEnd().map { case (newState, songsToUpdate) =>
-                // UPDATE songs
-                songsToUpdate.foreach(SongBase.updateSong(song))
-                //TODO: send the queue info to client
-                newState -> newState.playing.map { p =>
-                  OutgoingMessage(Play(p.video.id, 0), Some(incoming.socketId))
-                }.toList
+              state.shiftIfEnd().map {
+                case (newState, songsToUpdate, outgoingOpt) =>
+                  songsToUpdate.foreach(SongBase.updateSong)
+                  val outgoings = outgoingOpt ++ newState.playing.map { p =>
+                    Outgoing(Play(p.video.id, 0), Some(incoming.socketId))
+                  }
+                  newState -> outgoings
               }
             case _ =>
-              Future(state -> List.empty[OutgoingMessage])
+              Future(state -> List.empty[Outgoing])
           }
       }
-      .mapConcat(_._2)
+      .mapConcat(_._2.toList)
       .toMat(BroadcastHub.sink)(Keep.both)
       .run
   }
