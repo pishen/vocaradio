@@ -13,31 +13,48 @@ object CSS extends StyleSheet.Inline {
     height(100.vh),
     backgroundImage := "url('/assets/img/sur_les_nuages.jpg')",
     backgroundPosition := "center",
-    backgroundSize := "cover"
+    backgroundSize := "cover",
+    media.maxWidth(700.px)(
+      display.none
+    )
   )
 
   val middlePanel = style(
     position.relative,
-    left(23.%%),
+    marginLeft(23.%%),
     width(54.%%),
     minHeight(100.vh),
     backgroundColor(c"#3d3d3d"),
     boxShadow := "0px 0px 10px black",
+    media.maxWidth(700.px)(
+      zIndex(1),
+      marginLeft.`0`,
+      width(100.%%)
+    )
   )
 
   val rightPanel = style(
+    boxSizing.borderBox,
     position.fixed,
     top.`0`,
     right.`0`,
     width(23.%%),
     height(100.vh),
-    backgroundColor(c"#1e1e1e")
+    backgroundColor(c"#1e1e1e"),
+    media.maxWidth(700.px)(
+      zIndex(0),
+      paddingLeft(15.px),
+      width(100.%%)
+    )
   )
 
   val logo = style(
     fontFamily :=! "'Oswald', sans-serif",
     fontSize(4.3.rem),
-    textAlign.center
+    textAlign.center,
+    media.maxWidth(700.px)(
+      fontSize(3.rem)
+    )
   )
 
   val fixRatioWrapper = style(

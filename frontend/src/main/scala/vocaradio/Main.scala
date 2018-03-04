@@ -90,26 +90,55 @@ object Main {
     ).render
     playerControl.hide()
 
+    val middlePanel = div(
+      CSS.middlePanel,
+      div(CSS.logo, "VocaRadio"),
+      div(
+        CSS.fixRatioWrapper,
+        iframe(
+          id := "player",
+          CSS.fixRatioItem,
+          border := "0",
+          src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
+        )
+      ),
+      playerControl
+    ).render
+
+    var touchX: Int = 0
+    var opening: Boolean = false
+
+    middlePanel.addEventListener("touchstart", { e: TouchEvent =>
+      middlePanel.style.transition = "none"
+      touchX = e.touches(0).clientX.toInt
+    })
+
+    middlePanel.addEventListener("touchmove", { e: TouchEvent =>
+      val clientX = e.touches(0).clientX.toInt
+      val offset = clientX - touchX
+      touchX = clientX
+      opening = offset < 0
+      val leftLimit = -middlePanel.clientWidth + 15
+      val updatedOffset = middlePanel.offsetLeft + offset
+      middlePanel.style.left = (updatedOffset max leftLimit min 0) + "px"
+    })
+
+    middlePanel.addEventListener("touchend", { e: TouchEvent =>
+      middlePanel.style.transition = "left 0.5s"
+      middlePanel.style.left = if (opening) {
+        (-middlePanel.clientWidth + 15) + "px"
+      } else "0px"
+    })
+
+    val rightPanel = div(
+      CSS.rightPanel,
+      div(CSS.portal, portalName, portalBtn)
+    ).render
+
     val root = div(
       div(CSS.leftPanel),
-      div(
-        CSS.middlePanel,
-        div(CSS.logo, "VocaRadio"),
-        div(
-          CSS.fixRatioWrapper,
-          iframe(
-            id := "player",
-            CSS.fixRatioItem,
-            border := "0",
-            src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
-          )
-        ),
-        playerControl
-      ),
-      div(
-        CSS.rightPanel,
-        div(CSS.portal, portalName, portalBtn)
-      )
+      middlePanel,
+      rightPanel
     ).render
 
     document.querySelector("head")
