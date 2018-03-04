@@ -73,6 +73,36 @@ object CSS extends StyleSheet.Inline {
     height(100.%%)
   )
 
+  val queue = style(
+    display.flex,
+    flexWrap.wrap,
+    overflow.hidden,
+    padding(3.px)
+  )
+
+  val queueItemWrapper = style(
+    position.relative,
+    height.`0`,
+    width(25.%%),
+    paddingTop(18.75.%%)
+  )
+
+  val queueItem = style(
+    position.absolute,
+    top(3.px),
+    left(3.px),
+    width :=! "calc(100% - 6px)",
+    height :=! "calc(100% - 6px)"
+  )
+
+  val playerControl = style(
+    padding(1.rem, 0.5.rem)
+  )
+
+  val uploadLabel = style(
+    marginRight(0.5.rem)
+  )
+
   val portal = style(
     display.flex,
     padding(0.4.rem),
@@ -85,14 +115,6 @@ object CSS extends StyleSheet.Inline {
 
   val portalBtn = style(
     flexGrow(1)
-  )
-
-  val playerControl = style(
-    padding(1.rem, 0.5.rem)
-  )
-
-  val uploadLabel = style(
-    marginRight(0.5.rem)
   )
 
   val textarea = style(

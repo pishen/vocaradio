@@ -43,6 +43,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     println("Welcome to VocaRadio!")
 
+    // portal
     val portalName = input(
       CSS.portalName,
       CSS.textarea
@@ -55,6 +56,7 @@ object Main {
       href := "/login", "登入"
     ).render
 
+    // upload songs
     var uploadedCount = 0
 
     val uploadBtn = input(
@@ -77,6 +79,7 @@ object Main {
     ).render
 
     val uploadMessage = span().render
+    // // // // //
 
     val playerControl = div(
       CSS.playerControl,
@@ -102,9 +105,23 @@ object Main {
           src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
         )
       ),
+      div(
+        CSS.queue,
+        (1 to 24).map { i =>
+          div(
+            CSS.queueItemWrapper,
+            div(
+              CSS.queueItem,
+              backgroundImage := "url('https://i.ytimg.com/vi/XtF0Jwf5vqQ/mqdefault.jpg')",
+              backgroundSize := "cover"
+            )
+          )
+        }
+      ),
       playerControl
     ).render
 
+    // touch detection on mobile
     var touchX: Int = 0
     var opening: Boolean = false
 
@@ -129,6 +146,7 @@ object Main {
         (-middlePanel.clientWidth + 15) + "px"
       } else "0px"
     })
+    // // // // //
 
     val rightPanel = div(
       CSS.rightPanel,
