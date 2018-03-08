@@ -4,6 +4,7 @@ import io.circe.parser._
 import io.circe.generic.auto._
 import org.scalajs.dom._
 import org.scalajs.dom.raw._
+import scala.concurrent.Future
 import scala.language.implicitConversions
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
@@ -56,6 +57,11 @@ object Main {
       href := "/login", "登入"
     ).render
 
+    // queue
+    val queue = Seq.fill(24)(div(CSS.videoWrapper).render)
+
+    var queueOp = Future.successful("DONE")
+
     // upload songs
     var uploadedCount = 0
 
@@ -105,19 +111,7 @@ object Main {
           src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
         )
       ),
-      div(
-        CSS.queue,
-        (1 to 24).map { i =>
-          div(
-            CSS.queueItemWrapper,
-            div(
-              CSS.queueItem,
-              backgroundImage := "url('https://i.ytimg.com/vi/XtF0Jwf5vqQ/mqdefault.jpg')",
-              backgroundSize := "cover"
-            )
-          )
-        }
-      ),
+      div(CSS.queue, queue),
       playerControl
     ).render
 
@@ -214,6 +208,9 @@ object Main {
         }
       case UpdatePlaylist(videos) =>
         println("UpdatePlaylist")
+        queue.zip(videos).map { case (wrapper, video) =>
+
+        }
       case _ => //TODO
     }
   }

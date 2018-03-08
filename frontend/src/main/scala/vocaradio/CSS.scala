@@ -76,23 +76,44 @@ object CSS extends StyleSheet.Inline {
   val queue = style(
     display.flex,
     flexWrap.wrap,
-    overflow.hidden,
-    padding(3.px)
+    padding(2.px)
   )
 
-  val queueItemWrapper = style(
+  val videoWrapper = style(
     position.relative,
     height.`0`,
     width(25.%%),
-    paddingTop(18.75.%%)
+    paddingTop(17.%%),
+    overflow.hidden
   )
 
-  val queueItem = style(
+  val videoWrapperClipLeft = style(
+    clipPath := "inset(0px 0px 0px 2px)"
+  )
+
+  val videoWrapperClipRight = style(
+    clipPath := "inset(0px 2px 0px 0px)"
+  )
+
+  val video = style(
     position.absolute,
-    top(3.px),
-    left(3.px),
-    width :=! "calc(100% - 6px)",
-    height :=! "calc(100% - 6px)"
+    top(2.px),
+    width :=! "calc(100% - 4px)",
+    height :=! "calc(100% - 4px)",
+    transition := "left .5s",
+    backgroundSize := "cover"
+  )
+
+  val videoCenter = style(
+    left(2.px)
+  )
+
+  val videoLeft = style(
+    left :=! "calc(2px - 100%)"
+  )
+
+  val videoRight = style(
+    left :=! "calc(2px + 100%)"
   )
 
   val playerControl = style(
