@@ -1,5 +1,6 @@
 package vocaradio
 
+import scala.concurrent.duration._
 import scalacss.DevDefaults._
 
 object CSS extends StyleSheet.Inline {
@@ -76,44 +77,59 @@ object CSS extends StyleSheet.Inline {
   val queue = style(
     display.flex,
     flexWrap.wrap,
-    padding(2.px)
+    justifyContent.spaceBetween,
+    marginTop(30.px)
   )
 
   val videoWrapper = style(
     position.relative,
     height.`0`,
-    width(25.%%),
+    width :=! "calc(25% - 3px)",
     paddingTop(17.%%),
+    marginBottom(4.px),
     overflow.hidden
-  )
-
-  val videoWrapperClipLeft = style(
-    clipPath := "inset(0px 0px 0px 2px)"
-  )
-
-  val videoWrapperClipRight = style(
-    clipPath := "inset(0px 2px 0px 0px)"
   )
 
   val video = style(
     position.absolute,
-    top(2.px),
-    width :=! "calc(100% - 4px)",
-    height :=! "calc(100% - 4px)",
-    transition := "left .5s",
-    backgroundSize := "cover"
+    top(0.px),
+    left(0.px),
+    width(100.%%),
+    height(100.%%),
+    backgroundSize := "cover",
+    backgroundPosition := "center"
   )
 
-  val videoCenter = style(
-    left(2.px)
+  val toLeft = style(
+    animationName(keyframes(100.%% -> keyframe(left(-100.%%)))),
+    animationDuration(1.second),
+    animationFillMode.forwards
   )
 
-  val videoLeft = style(
-    left :=! "calc(2px - 100%)"
+  val toRight = style(
+    animationName(keyframes(100.%% -> keyframe(left(100.%%)))),
+    animationDuration(1.second),
+    animationFillMode.forwards
   )
 
-  val videoRight = style(
-    left :=! "calc(2px + 100%)"
+  val fromLeft = style(
+    animationName(
+      keyframes(
+        0.%% -> keyframe(left(-100.%%)),
+        100.%% -> keyframe(left(0.px))
+      )
+    ),
+    animationDuration(1.second)
+  )
+
+  val fromRight = style(
+    animationName(
+      keyframes(
+        0.%% -> keyframe(left(100.%%)),
+        100.%% -> keyframe(left(0.px))
+      )
+    ),
+    animationDuration(1.second)
   )
 
   val playerControl = style(

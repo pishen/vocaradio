@@ -39,6 +39,11 @@ object Main {
   implicit class RichHTMLElement(h: HTMLElement) {
     def hide() = h.asInstanceOf[js.Dynamic].hidden = true
     def show() = h.asInstanceOf[js.Dynamic].hidden = false
+    def childrenSeq = js.Array
+      .asInstanceOf[js.Dynamic]
+      .from(h.children)
+      .asInstanceOf[js.Array[HTMLElement]]
+      .toSeq
   }
 
   def main(args: Array[String]): Unit = {
@@ -59,8 +64,6 @@ object Main {
 
     // queue
     val queue = Seq.fill(24)(div(CSS.videoWrapper).render)
-
-    var queueOp = Future.successful("DONE")
 
     // upload songs
     var uploadedCount = 0
@@ -206,11 +209,52 @@ object Main {
         } else {
           player.loadVideoById(id, at)
         }
-      case UpdatePlaylist(videos) =>
+      case UpdatePlaylist(pickerVideos) =>
         println("UpdatePlaylist")
-        queue.zip(videos).map { case (wrapper, video) =>
 
-        }
+        queue.drop(pickerVideos.size).foreach(_.innerHTML = "")
+
+        val oldIds = queue
+          .flatMap(_.childrenSeq.lastOption)
+          .map(_.getAttribute("data-video-id"))
+          .toSet
+        val shiftRight = oldIds == pickerVideos.map(_._1.id).toSet
+
+        queue.zip(pickerVideos)
+          .foreach { case (videoWrapper, (video, pickerOpt)) =>
+            val needShift = videoWrapper.childrenSeq
+              .lastOption
+              .map(_.getAttribute("data-video-id") != video.id)
+              .getOrElse(true)
+            if (needShift) {
+              // remove old one
+              videoWrapper.childrenSeq.lastOption.foreach { elem =>
+                elem.classList.remove(CSS.fromRight.htmlClass)
+                elem.classList.remove(CSS.fromLeft.htmlClass)
+                elem.classList.add {
+                  if (shiftRight) {
+                    CSS.toRight.htmlClass
+                  } else {
+                    CSS.toLeft.htmlClass
+                  }
+                }
+                elem.addEventListener("animationend", { e: Event =>
+                  videoWrapper.removeChild(elem)
+                })
+              }
+              // add new one
+              videoWrapper.appendChild {
+                div(
+                  CSS.video,
+                  if (shiftRight) CSS.fromLeft else CSS.fromRight,
+                  data.video.id := video.id,
+                  backgroundImage := {
+                    s"url('https://i.ytimg.com/vi/${video.id}/mqdefault.jpg')"
+                  }
+                ).render
+              }
+            }
+          }
       case _ => //TODO
     }
   }

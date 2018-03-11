@@ -28,21 +28,25 @@ object Player extends LazyLogging {
       // plus 1s to avoid some inaccurate durations
       .isBefore(Instant.now().plusSeconds(1))
   }
+  case class InternalPicker(name: String, id: String) {
+    def toPicker = Picker(name)
+  }
   case class PlayerState(
       playing: Option[Playing] = None,
-      queue: Seq[Video] = Seq.empty,
+      queue: Seq[(Video, Option[InternalPicker])] = Seq.empty,
       pool: Seq[String] = Seq.empty
   ) {
     def shiftIfEnd() = if (playing.map(_.isEnd).getOrElse(true)) {
       fill(shift = true)
     } else {
-      Future((this, Seq.empty, None))
+      Future((this, Seq.empty))
     }
 
+    // return Future[(newState, songsToUpdate)]
     def fill(
       shift: Boolean
-    ): Future[(PlayerState, Seq[Song], Option[Outgoing])] = {
-      val maxQueueSize = if (shift) 26 else 25
+    ): Future[(PlayerState, Seq[Song])] = {
+      val maxQueueSize = if (shift) 25 else 24
       val resF = for {
         filledPool <- if (pool.size >= 100) {
           Future(pool)
@@ -69,7 +73,7 @@ object Player extends LazyLogging {
                 .map(song -> _)
             }
           }.map { (seq: Seq[(Song, Option[Video])]) =>
-            val filledQueue = seq.flatMap(_._2)
+            val filledQueue = queue ++ seq.flatMap(_._2).map(_ -> None)
             val songsToUpdate = seq.flatMap { case (song, videoOpt) =>
               if (song.id.isEmpty != videoOpt.isEmpty) {
                 Some(song.copy(id = videoOpt.map(_.id)))
@@ -81,24 +85,30 @@ object Player extends LazyLogging {
       } yield {
         val newState = this.copy(
           if (shift) {
-            filledQueue.headOption.map(video => Playing(video, Instant.now))
+            filledQueue.headOption.map { case (video, pickerOpt) =>
+              Playing(video, Instant.now)
+            }
           } else {
             playing
           },
           if (shift) filledQueue.drop(1) else filledQueue,
           filledPool.drop(maxQueueSize - queue.size)
         )
-        val outgoingOpt = if (newState.queue != queue) {
-          Some(Outgoing(UpdatePlaylist(newState.queue), None))
-        } else None
-
-        (newState, songsToUpdate, outgoingOpt)
+        (newState, songsToUpdate)
       }
       resF.recover {
         case e: Exception =>
           logger.error("Error on shifting", e)
-          (PlayerState(), Seq.empty, None)
+          (PlayerState(), Seq.empty)
       }
+    }
+
+    def getUpdatePlaylist() = {
+      UpdatePlaylist(
+        queue.map { case (video, internalPickerOpt) =>
+          video -> internalPickerOpt.map(_.toPicker)
+        }
+      )
     }
   }
 
@@ -113,18 +123,23 @@ object Player extends LazyLogging {
           incoming.msg match {
             case Ready =>
               state.shiftIfEnd().map {
-                case (newState, songsToUpdate, outgoingOpt) =>
+                case (newState, songsToUpdate) =>
                   songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = outgoingOpt ++ newState.playing.map { p =>
+                  val outgoings = newState.playing.map { p =>
                     Outgoing(Load(p.video.id), Some(incoming.socketId))
-                  }
+                  }.toSeq :+ Outgoing(
+                    newState.getUpdatePlaylist(),
+                    if (newState.queue == state.queue) {
+                      Some(incoming.socketId)
+                    } else None
+                  )
                   newState -> outgoings
               }
             case Resume(id, at) =>
               state.shiftIfEnd().map {
-                case (newState, songsToUpdate, outgoingOpt) =>
+                case (newState, songsToUpdate) =>
                   songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = outgoingOpt ++ newState.playing
+                  val outgoings = newState.playing
                     .filter { p =>
                       p.video.id != id || at < (p.at - 30) || at > p.at
                     }
@@ -134,14 +149,23 @@ object Player extends LazyLogging {
                         Some(incoming.socketId)
                       )
                     }
+                    .++ {
+                      if (newState.queue != state.queue) {
+                        Some(Outgoing(newState.getUpdatePlaylist(), None))
+                      } else None
+                    }
                   newState -> outgoings
               }
             case Ended =>
               state.shiftIfEnd().map {
-                case (newState, songsToUpdate, outgoingOpt) =>
+                case (newState, songsToUpdate) =>
                   songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = outgoingOpt ++ newState.playing.map { p =>
+                  val outgoings = newState.playing.map { p =>
                     Outgoing(Play(p.video.id, 0), Some(incoming.socketId))
+                  } ++ {
+                    if (newState.queue != state.queue) {
+                      Some(Outgoing(newState.getUpdatePlaylist(), None))
+                    } else None
                   }
                   newState -> outgoings
               }
