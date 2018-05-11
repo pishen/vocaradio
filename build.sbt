@@ -1,7 +1,9 @@
 val commonSettings = Seq(
   name := "vocaradio",
   version := "2.0.0-SNAPSHOT",
-  scalaVersion := "2.12.4"
+  scalaVersion := "2.12.4",
+  scalacOptions += "-Ypartial-unification",
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
 )
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
@@ -48,6 +50,7 @@ lazy val frontend = (project in file("frontend"))
   .settings(
     commonSettings,
     scalaJSUseMainModuleInitializer := true,
+    emitSourceMaps := false,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "com.lihaoyi" %%% "scalatags" % "0.6.5",

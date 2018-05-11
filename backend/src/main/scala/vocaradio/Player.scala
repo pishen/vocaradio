@@ -5,172 +5,192 @@ import java.util.NoSuchElementException
 
 import akka.stream.Materializer
 import akka.stream.scaladsl._
-import cats.data.OptionT
+import cats.data._
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Error
 import scala.concurrent.Future
 import scala.util.Random
 import slick.jdbc.H2Profile.api._
-import Global._
 import SongBase.Song
-import YouTube.RichContentDetails
 
 object Player extends LazyLogging {
-  case class Playing(video: Video, startTime: Instant) {
-    def at = Duration.between(
-      startTime,
-      Instant.now
-    ).getSeconds.toInt
-
-    def isEnd = startTime
-      .plus(video.contentDetails.durationJ)
-      // plus 1s to avoid some inaccurate durations
-      .isBefore(Instant.now().plusSeconds(1))
-  }
-  case class InternalPicker(name: String, id: String) {
-    def toPicker = Picker(name)
-  }
-  case class PlayerState(
-      playing: Option[Playing] = None,
-      queue: Seq[(Video, Option[InternalPicker])] = Seq.empty,
-      pool: Seq[String] = Seq.empty
-  ) {
-    def shiftIfEnd() = if (playing.map(_.isEnd).getOrElse(true)) {
-      fill(shift = true)
-    } else {
-      Future((this, Seq.empty))
+  case class OnAir(video: Video, startTimeOpt: Option[Instant]) {
+    def startIfNot = {
+      this.copy(startTimeOpt = startTimeOpt.orElse(Some(Instant.now)))
     }
 
-    // return Future[(newState, songsToUpdate)]
-    def fill(
-      shift: Boolean
-    ): Future[(PlayerState, Seq[Song])] = {
-      val maxQueueSize = if (shift) 25 else 24
-      val resF = for {
-        filledPool <- if (pool.size >= 100) {
+    def position = {
+      startTimeOpt
+        .map(Duration.between(_, Instant.now).getSeconds.toInt)
+        .getOrElse(0)
+    }
+
+    def isEnd = {
+      startTimeOpt
+        .map(
+          _.plus(Duration.parse(video.contentDetails.duration)).isBefore(
+            // plus 1s to avoid some inaccurate durations
+            Instant.now().plusSeconds(1)
+          )
+        )
+        .getOrElse(false)
+    }
+  }
+
+  case class State(
+      onAirOpt: Option[OnAir],
+      pickables: Seq[Pickable],
+      pool: Seq[String]
+  ) {
+    def fill(): Future[State] = {
+      def getFilledPool(): Future[Seq[String]] = {
+        if (pool.size >= 100) {
           Future(pool)
         } else {
           SongBase.getQueries().map { queries =>
             pool ++ Random.shuffle(queries.diff(pool))
           }
         }
-        songs <- {
-          Future.sequence {
-            filledPool.take(maxQueueSize - queue.size).map(SongBase.getSong)
-          }.map(_.flatten)
-        }
-        (filledQueue, songsToUpdate) <- {
-          Future.sequence {
-            songs.map { song =>
-              OptionT.fromOption[Future](song.id)
-                .flatMapF(id => YouTube.getVideo(id))
-                .orElse {
-                  OptionT(YouTube.search(song.query))
-                    .flatMapF(id => YouTube.getVideo(id))
+      }
+
+      def getAndUpdateVideo(query: String) = {
+        SongBase
+          .getSong(query)
+          .toDeepOption
+          .flatMap { song =>
+            val videoOpt = song.idOpt.toDeepOption
+              .flatMap { id =>
+                YouTube.getVideo(id).asDeepOption
+              }
+              .orElse {
+                YouTube.search(query).asDeepOption.flatMap { id =>
+                  YouTube.getVideo(id).asDeepOption
                 }
-                .value
-                .map(song -> _)
+              }
+            // UPDATE
+            videoOpt.map(_.id).value.map { idOpt =>
+              if (idOpt != song.idOpt) {
+                logger.info(s"Update $query from ${song.idOpt} to $idOpt")
+                SongBase.updateSong(song.copy(idOpt = idOpt))
+              }
             }
-          }.map { (seq: Seq[(Song, Option[Video])]) =>
-            val filledQueue = queue ++ seq.flatMap(_._2).map(_ -> None)
-            val songsToUpdate = seq.flatMap { case (song, videoOpt) =>
-              if (song.id.isEmpty != videoOpt.isEmpty) {
-                Some(song.copy(id = videoOpt.map(_.id)))
-              } else None
-            }
-            (filledQueue, songsToUpdate)
+            videoOpt
           }
-        }
-      } yield {
-        val newState = this.copy(
-          if (shift) {
-            filledQueue.headOption.map { case (video, pickerOpt) =>
-              Playing(video, Instant.now)
+      }
+
+      def getFilledPickables(filledPool: Seq[String]) = {
+        filledPool
+          .take(30 - pickables.size)
+          .map { query =>
+            getAndUpdateVideo(query)
+              .map(video => Pickable(video, None))
+              .value
+              .value
+          }
+          .toList
+          .sequence
+          .map { eithers =>
+            eithers.flatMap(_.left.toOption).foreach { error =>
+              logger.error(error.toString)
             }
-          } else {
-            playing
+            pickables ++ eithers.flatMap(_.toOption).flatten
+          }
+      }
+
+      val resF = for {
+        filledPool <- getFilledPool()
+        filledPickables <- getFilledPickables(filledPool)
+      } yield {
+        this.copy(
+          onAirOpt.orElse {
+            filledPickables.headOption.map { pickable =>
+              OnAir(pickable.video, None)
+            }
           },
-          if (shift) filledQueue.drop(1) else filledQueue,
-          filledPool.drop(maxQueueSize - queue.size)
+          filledPickables.drop(onAirOpt.map(_ => 0).getOrElse(1)),
+          filledPool.drop(30 - pickables.size)
         )
-        (newState, songsToUpdate)
       }
       resF.recover {
-        case e: Exception =>
-          logger.error("Error on shifting", e)
-          (PlayerState(), Seq.empty)
+        case t: Throwable =>
+          logger.error("Error on filling", t)
+          this
       }
     }
 
-    def getUpdatePlaylist() = {
-      UpdatePlaylist(
-        queue.map { case (video, internalPickerOpt) =>
-          video -> internalPickerOpt.map(_.toPicker)
-        }
-      )
-    }
+    def dropIfEnd() = this.copy(onAirOpt = onAirOpt.filterNot(_.isEnd))
+    def drop() = this.copy(onAirOpt = None)
+    def startIfNot() = this.copy(onAirOpt = onAirOpt.map(_.startIfNot))
   }
 
   def createSinkAndSource() = {
     MergeHub
-      .source[Incoming]
+      .source[Pipe.In]
       .scanAsync(
-        PlayerState() -> Iterable.empty[Outgoing]
+        State(None, Seq.empty, Seq.empty) -> Seq.empty[Pipe.Out]
       ) {
-        case ((state, _), incoming) =>
-          logger.info(incoming.toString)
-          incoming.msg match {
-            case Ready =>
-              state.shiftIfEnd().map {
-                case (newState, songsToUpdate) =>
-                  songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = newState.playing.map { p =>
-                    Outgoing(Load(p.video.id), Some(incoming.socketId))
-                  }.toSeq :+ Outgoing(
-                    newState.getUpdatePlaylist(),
-                    if (newState.queue == state.queue) {
-                      Some(incoming.socketId)
-                    } else None
-                  )
-                  newState -> outgoings
-              }
-            case Resume(id, at) =>
-              state.shiftIfEnd().map {
-                case (newState, songsToUpdate) =>
-                  songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = newState.playing
-                    .filter { p =>
-                      p.video.id != id || at < (p.at - 30) || at > p.at
-                    }
-                    .map { p =>
-                      Outgoing(
-                        Play(p.video.id, p.at),
-                        Some(incoming.socketId)
-                      )
-                    }
-                    .++ {
-                      if (newState.queue != state.queue) {
-                        Some(Outgoing(newState.getUpdatePlaylist(), None))
-                      } else None
-                    }
-                  newState -> outgoings
-              }
-            case Ended =>
-              state.shiftIfEnd().map {
-                case (newState, songsToUpdate) =>
-                  songsToUpdate.foreach(SongBase.updateSong)
-                  val outgoings = newState.playing.map { p =>
-                    Outgoing(Play(p.video.id, 0), Some(incoming.socketId))
-                  } ++ {
-                    if (newState.queue != state.queue) {
-                      Some(Outgoing(newState.getUpdatePlaylist(), None))
-                    } else None
+        case ((state, _), in) =>
+          logger.info(in.toString)
+
+          def buildUpdatePlaylist(newState: State) = {
+            UpdatePlaylist(newState.pickables.map(_.cleanUserId()))
+          }
+
+          in.msg match {
+            case Right(Ready) =>
+              state.dropIfEnd().fill().map { newState =>
+                val loadOpt = newState.onAirOpt.map { onAir =>
+                  Pipe.Out(Load(onAir.video.id), Some(in.socketId))
+                }
+                val updatePlaylist = Pipe.Out(
+                  buildUpdatePlaylist(newState),
+                  if (newState.pickables == state.pickables) {
+                    Some(in.socketId)
+                  } else {
+                    None
                   }
-                  newState -> outgoings
+                )
+                newState -> (loadOpt.toSeq :+ updatePlaylist)
+              }
+            case Right(Resume(id, position)) =>
+              state.dropIfEnd().fill().map(_.startIfNot()).map { newState =>
+                val playOpt = newState.onAirOpt
+                  .filter { onAir =>
+                    // only send Play in these conditions
+                    onAir.video.id != id ||
+                    position < (onAir.position - 30) ||
+                    position > onAir.position
+                  }
+                  .map { onAir =>
+                    Pipe.Out(
+                      Play(onAir.video.id, onAir.position),
+                      Some(in.socketId)
+                    )
+                  }
+                val updatePlaylistOpt =
+                  if (newState.pickables != state.pickables) {
+                    Some(Pipe.Out(buildUpdatePlaylist(newState), None))
+                  } else {
+                    None
+                  }
+                newState -> (playOpt.toSeq ++ updatePlaylistOpt)
+              }
+            case Right(Ended) =>
+              state.dropIfEnd().fill().map(_.startIfNot()).map { newState =>
+                val playOpt = newState.onAirOpt.map { onAir =>
+                  Pipe.Out(Play(onAir.video.id, 0), Some(in.socketId))
+                }
+                val updatePlaylistOpt =
+                  if (newState.pickables != state.pickables) {
+                    Some(Pipe.Out(buildUpdatePlaylist(newState), None))
+                  } else {
+                    None
+                  }
+                newState -> (playOpt.toSeq ++ updatePlaylistOpt)
               }
             case _ =>
-              Future(state -> List.empty[Outgoing])
+              Future(state -> List.empty[Pipe.Out])
           }
       }
       .mapConcat(_._2.toList)

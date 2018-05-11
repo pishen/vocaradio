@@ -202,26 +202,28 @@ object Main {
       case Load(id) =>
         println("Load")
         player.cueVideoById(id)
-      case Play(id, at) =>
+      case Play(id, position) =>
         println("Play")
         if (player.getVideoData().video_id == id) {
-          player.seekTo(at, true)
+          player.seekTo(position, true)
         } else {
-          player.loadVideoById(id, at)
+          player.loadVideoById(id, position)
         }
-      case UpdatePlaylist(pickerVideos) =>
+      case UpdatePlaylist(pickables) =>
         println("UpdatePlaylist")
 
-        queue.drop(pickerVideos.size).foreach(_.innerHTML = "")
+        // clean the trailing pickables if pickables is too short
+        queue.drop(pickables.size).foreach(_.innerHTML = "")
 
         val oldIds = queue
           .flatMap(_.childrenSeq.lastOption)
           .map(_.getAttribute("data-video-id"))
           .toSet
-        val shiftRight = oldIds == pickerVideos.map(_._1.id).toSet
+        // if there's no new songs, the direction must be right
+        val shiftRight = oldIds == pickables.map(_.video.id).toSet
 
-        queue.zip(pickerVideos)
-          .foreach { case (videoWrapper, (video, pickerOpt)) =>
+        queue.zip(pickables)
+          .foreach { case (videoWrapper, Pickable(video, pickerOpt)) =>
             val needShift = videoWrapper.childrenSeq
               .lastOption
               .map(_.getAttribute("data-video-id") != video.id)
