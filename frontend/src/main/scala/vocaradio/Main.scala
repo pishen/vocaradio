@@ -50,11 +50,14 @@ object Main {
     println("Welcome to VocaRadio!")
 
     // portal
-    val portalName = input(
+    val portalNameInput = input(CSS.textarea).render
+
+    val portalNameDiv = div(
       CSS.portalName,
-      CSS.textarea
+      portalNameInput,
+      div(CSS.tooltip, div(CSS.tooltipArrow), "請輸入暱稱")
     ).render
-    portalName.hide()
+    portalNameDiv.hide()
 
     val portalBtn = a(
       CSS.btn,
@@ -147,7 +150,7 @@ object Main {
 
     val rightPanel = div(
       CSS.rightPanel,
-      div(CSS.portal, portalName, portalBtn)
+      div(CSS.portal, portalNameDiv, portalBtn)
     ).render
 
     val root = div(
@@ -191,7 +194,7 @@ object Main {
     WS.init() {
       case UserStatus(isLoggedIn, isAdmin) =>
         if (isLoggedIn) {
-          portalName.show()
+          portalNameDiv.show()
           portalBtn.setAttribute("href", "/logout")
           portalBtn.textContent = "登出"
           if (isAdmin) playerControl.show()

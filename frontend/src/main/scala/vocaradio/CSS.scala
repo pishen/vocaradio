@@ -146,6 +146,7 @@ object CSS extends StyleSheet.Inline {
   )
 
   val portalName = style(
+    position.relative,
     flexGrow(3),
     marginRight(0.4.rem),
   )
@@ -155,11 +156,13 @@ object CSS extends StyleSheet.Inline {
   )
 
   val textarea = style(
+    width(100.%%),
     color(c"#eaeaea"),
     backgroundColor(c"#2d2d2d"),
     border.none,
+    padding(0.375.rem, 0.75.rem, 0.375.rem, 0.75.rem),
     fontSize(1.rem),
-    padding(0.5.rem),
+    lineHeight(1.5.rem),
     outline.none,
     boxSizing.borderBox,
     resize.none,
@@ -187,5 +190,27 @@ object CSS extends StyleSheet.Inline {
     &.active(
       backgroundColor(c"#c9302c")
     )
+  )
+
+  val tooltip = style(
+    position.absolute,
+    zIndex(1),
+    width(120.px),
+    top :=! "calc(100% + 5px)",
+    left :=! "calc(50% - 60px)",
+    backgroundColor(c"#ffcc00"),
+    color.black,
+    textAlign.center,
+    padding(5.px),
+    borderRadius(6.px)
+  )
+
+  val tooltipArrow = style(
+    position.absolute,
+    bottom(100.%%),
+    left :=! "calc(50% - 5px)",
+    borderWidth(5.px),
+    borderStyle.solid,
+    borderColor(transparent, transparent, c"#ffcc00", transparent)
   )
 }
