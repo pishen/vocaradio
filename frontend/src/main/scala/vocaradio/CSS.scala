@@ -74,11 +74,28 @@ object CSS extends StyleSheet.Inline {
     height(100.%%)
   )
 
+  val separator = style(
+    border.none,
+    borderTop(1.px, solid, c"#eaeaea"),
+    textAlign.center,
+    lineHeight(1.rem),
+    marginTop(1.5.rem),
+    marginBottom(0.5.rem),
+    overflow.visible,
+    &.after(
+      content := "attr(data-content)",
+      display.inlineBlock,
+      position.relative,
+      top(-0.5.rem),
+      padding(0.px, 5.px),
+      backgroundColor(c"#3d3d3d")
+    )
+  )
+
   val queue = style(
     display.flex,
     flexWrap.wrap,
-    justifyContent.spaceBetween,
-    marginTop(30.px)
+    justifyContent.spaceBetween
   )
 
   val videoWrapper = style(

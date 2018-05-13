@@ -142,6 +142,7 @@ object Main {
           src := "https://www.youtube.com/embed/init?rel=0&enablejsapi=1"
         )
       ),
+      hr(CSS.separator, data.content := "即將播放"),
       div(CSS.queue, queue),
       playerControl
     ).render
