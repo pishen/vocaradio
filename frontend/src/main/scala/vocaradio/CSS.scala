@@ -100,6 +100,28 @@ object CSS extends StyleSheet.Inline {
     backgroundPosition := "center"
   )
 
+  val videoCover = style(
+    width(100.%%),
+    height(100.%%),
+    backgroundColor(rgba(0, 0, 0, 0.8)),
+    transition := "all .2s",
+    opacity(0),
+    fontSize(0.8.rem),
+    &.hover(
+      opacity(1)
+    )
+  )
+
+  val videoLink = style(
+    display.block,
+    padding(5.px),
+    // TODO: why can't we use a Seq here?
+    &.link(color(c"#eaeaea")),
+    &.visited(color(c"#eaeaea")),
+    &.hover(color(c"#eaeaea")),
+    &.active(color(c"#eaeaea"))
+  )
+
   val toLeft = style(
     animationName(keyframes(100.%% -> keyframe(left(-100.%%)))),
     animationDuration(1.second),

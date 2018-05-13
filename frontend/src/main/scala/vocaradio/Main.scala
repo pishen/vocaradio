@@ -279,8 +279,17 @@ object Main {
                   if (shiftRight) CSS.fromLeft else CSS.fromRight,
                   data.video.id := video.id,
                   backgroundImage := {
-                    s"url('https://i.ytimg.com/vi/${video.id}/mqdefault.jpg')"
-                  }
+                    s"url('${video.snippet.thumbnails.medium.url}')"
+                  },
+                  div(
+                    CSS.videoCover,
+                    a(
+                      CSS.videoLink,
+                      href := s"https://www.youtube.com/watch?v=${video.id}",
+                      target := "_blank",
+                      video.snippet.title
+                    )
+                  )
                 ).render
               }
             }
