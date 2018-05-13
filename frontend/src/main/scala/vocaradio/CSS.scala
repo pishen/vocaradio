@@ -80,7 +80,7 @@ object CSS extends StyleSheet.Inline {
   )
 
   val separator = style(
-    border(0.px),
+    border.none,
     borderTop(1.px, solid, c"#eaeaea"),
     textAlign.center,
     lineHeight(1.rem),
