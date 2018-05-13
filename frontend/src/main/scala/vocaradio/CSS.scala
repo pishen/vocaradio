@@ -1,10 +1,15 @@
 package vocaradio
 
+import scala.util.Random
 import scala.concurrent.duration._
 import scalacss.DevDefaults._
 
 object CSS extends StyleSheet.Inline {
   import dsl._
+
+  val randomBackground = Random.shuffle(
+    Seq("sur_les_nuages", "neige", "AELIA_MARITIMA")
+  ).head
 
   val leftPanel = style(
     position.fixed,
@@ -12,7 +17,7 @@ object CSS extends StyleSheet.Inline {
     left.`0`,
     width(23.%%),
     height(100.vh),
-    backgroundImage := "url('/assets/img/sur_les_nuages.jpg')",
+    backgroundImage := s"url('/assets/img/${randomBackground}.jpg')",
     backgroundPosition := "center",
     backgroundSize := "cover",
     media.maxWidth(700.px)(
@@ -75,7 +80,7 @@ object CSS extends StyleSheet.Inline {
   )
 
   val separator = style(
-    border.none,
+    border(0.px),
     borderTop(1.px, solid, c"#eaeaea"),
     textAlign.center,
     lineHeight(1.rem),
