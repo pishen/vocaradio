@@ -22,10 +22,6 @@ object SongBase extends LazyLogging {
   }
   val songs = TableQuery[Songs]
 
-  db.run(songs.schema.create)
-    .failed
-    .foreach(t => logger.error("Failed on creating songs table", t))
-
   def createSinkAndSource() = {
     MergeHub
       .source[Pipe.In]

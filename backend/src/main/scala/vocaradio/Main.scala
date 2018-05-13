@@ -18,8 +18,18 @@ import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.circe.syntax._
 import slick.jdbc.H2Profile.api._
+import slick.jdbc.meta.MTable
 
 object Main extends App with LazyLogging {
+  // database
+  db.run(MTable.getTables).foreach { tables =>
+    if (tables.isEmpty) {
+      db.run(SongBase.songs.schema.create)
+        .failed
+        .foreach(t => logger.error("Failed on creating songs table", t))
+    }
+  }
+
   // session management
   implicit val sessionManager = new SessionManager[String](
     SessionConfig.fromConfig()
