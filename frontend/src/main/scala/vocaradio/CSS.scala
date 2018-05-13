@@ -158,7 +158,7 @@ object CSS extends StyleSheet.Inline {
   val textarea = style(
     width(100.%%),
     color(c"#eaeaea"),
-    backgroundColor(c"#2d2d2d"),
+    backgroundColor(c"#3d3d3d"),
     border.none,
     padding(0.375.rem, 0.75.rem, 0.375.rem, 0.75.rem),
     fontSize(1.rem),
