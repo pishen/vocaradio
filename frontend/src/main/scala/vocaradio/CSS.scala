@@ -58,6 +58,9 @@ object CSS extends StyleSheet.Inline {
     fontFamily :=! "'Oswald', sans-serif",
     fontSize(4.3.rem),
     textAlign.center,
+    &.firstLetter(
+      color(c"#ff5050")
+    ),
     media.maxWidth(700.px)(
       fontSize(3.rem)
     )
