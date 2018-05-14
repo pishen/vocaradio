@@ -177,11 +177,11 @@ object CSS extends StyleSheet.Inline {
   )
 
   val playerControl = style(
-    padding(1.rem, 0.5.rem)
-  )
-
-  val uploadLabel = style(
-    marginRight(0.5.rem)
+    display.inlineBlock,
+    margin(1.rem, 0.8.rem, 1.rem, 0.rem),
+    &.firstChild(
+      marginLeft(1.rem)
+    )
   )
 
   val portal = style(

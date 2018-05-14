@@ -28,3 +28,6 @@ case class Pickable(video: Video, pickerOpt: Option[Picker]) {
   def cleanUserId() = this.copy(pickerOpt = pickerOpt.map(_.cleanUserId()))
 }
 case class UpdatePlaylist(pickables: Seq[Pickable]) extends VocaMessage
+
+case object Drop extends VocaMessage
+case class Skip(id: String) extends VocaMessage

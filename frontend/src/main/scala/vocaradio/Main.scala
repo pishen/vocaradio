@@ -93,7 +93,7 @@ object Main {
     // queue
     val queue = Seq.fill(24)(div(CSS.videoWrapper).render)
 
-    // upload songs
+    // admin controls
     var uploadedCount = 0
 
     val uploadBtn = input(
@@ -115,20 +115,27 @@ object Main {
       }
     ).render
 
-    val uploadMessage = span().render
-    // // // // //
+    val uploadMessage = span(CSS.playerControl).render
 
     val playerControl = div(
-      CSS.playerControl,
       label(
         CSS.btn,
-        CSS.uploadLabel,
+        CSS.playerControl,
         uploadBtn,
         "Upload Songs"
       ),
-      uploadMessage
+      uploadMessage,
+      button(
+        CSS.btn,
+        CSS.playerControl,
+        onclick := {
+          () => WS.send(Drop)
+        },
+        "Drop"
+      )
     ).render
     playerControl.hide()
+    // // // // //
 
     val middlePanel = div(
       CSS.middlePanel,

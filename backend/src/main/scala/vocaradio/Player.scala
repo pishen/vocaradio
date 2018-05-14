@@ -133,6 +133,8 @@ object Player extends LazyLogging {
         case ((state, _), in) =>
           logger.info(in.toString)
 
+          def isAdmin() = in.userIdOpt.map(_ == adminId).getOrElse(false)
+
           def buildUpdatePlaylist(newState: State) = {
             UpdatePlaylist(newState.pickables.map(_.cleanUserId()))
           }
@@ -188,6 +190,16 @@ object Player extends LazyLogging {
                     None
                   }
                 newState -> (playOpt.toSeq ++ updatePlaylistOpt)
+              }
+            case Right(Drop) if isAdmin() =>
+              state.drop().fill().map { newState =>
+                val loadOpt = newState.onAirOpt.map { onAir =>
+                  Pipe.Out(Load(onAir.video.id), None)
+                }
+                val updatePlaylist = Pipe.Out(
+                  buildUpdatePlaylist(newState), None
+                )
+                newState -> (loadOpt.toSeq :+ updatePlaylist)
               }
             case _ =>
               Future(state -> List.empty[Pipe.Out])
