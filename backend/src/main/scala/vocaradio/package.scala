@@ -17,6 +17,7 @@ package object vocaradio {
   implicit val executionContext = system.dispatcher
 
   val conf = ConfigFactory.load()
+  val httpPort = conf.getInt("http.port")
   val adminId = conf.getString("admin-id")
   val fbAppId = conf.getString("facebook.app-id")
   val fbRedirectUri = conf.getString("facebook.redirect-uri")

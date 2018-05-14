@@ -83,7 +83,7 @@ object Main extends App with LazyLogging {
   }
 
   for {
-    binding <- Http().bindAndHandle(route, "localhost", 8080)
+    binding <- Http().bindAndHandle(route, "localhost", httpPort)
     _ <- promise.future
     _ <- binding.unbind()
   } yield {
