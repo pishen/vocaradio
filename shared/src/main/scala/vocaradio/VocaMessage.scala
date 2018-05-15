@@ -31,3 +31,5 @@ case class UpdatePlaylist(pickables: Seq[Pickable]) extends VocaMessage
 
 case object Drop extends VocaMessage
 case class Skip(id: String) extends VocaMessage
+
+case class FindId(id: String) extends VocaMessage

@@ -27,6 +27,7 @@ object CSS extends StyleSheet.Inline {
 
   val middlePanel = style(
     position.relative,
+    overflow.auto,
     marginLeft(23.%%),
     width(54.%%),
     minHeight(100.vh),
@@ -179,12 +180,13 @@ object CSS extends StyleSheet.Inline {
     animationDuration(1.second)
   )
 
-  val playerControl = style(
+  val adminControl = style(
     display.inlineBlock,
-    margin(1.rem, 0.8.rem, 1.rem, 0.rem),
-    &.firstChild(
-      marginLeft(1.rem)
-    )
+    marginRight(0.8.rem)
+  )
+
+  val adminControlRow = style(
+    margin(1.rem, 0.2.rem, 1.rem, 1.rem)
   )
 
   val portal = style(
