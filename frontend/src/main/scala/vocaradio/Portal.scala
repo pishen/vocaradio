@@ -7,7 +7,7 @@ import scalacss.ScalatagsCss._
 
 object Portal {
   val portalNameInput = input(
-    CSS.textarea,
+    CSS.portalNameInput,
     value := Option(window.localStorage.getItem("username")).getOrElse("")
   ).render
 

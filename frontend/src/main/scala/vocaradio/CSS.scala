@@ -3,9 +3,15 @@ package vocaradio
 import scala.util.Random
 import scala.concurrent.duration._
 import scalacss.DevDefaults._
+import scalacss.internal.DslBase.ToStyle
 
 object CSS extends StyleSheet.Inline {
   import dsl._
+
+  // TODO: contribute to scalacss?
+  def placeholder(styles: ToStyle*) = {
+    Pseudo.Custom("::placeholder", PseudoType.Element)(styles:_*)
+  }
 
   val randomBackground = Random.shuffle(
     Seq("sur_les_nuages", "neige", "AELIA_MARITIMA")
@@ -104,7 +110,8 @@ object CSS extends StyleSheet.Inline {
   val queue = style(
     display.flex,
     flexWrap.wrap,
-    justifyContent.spaceBetween
+    justifyContent.spaceBetween,
+    marginBottom(1.rem)
   )
 
   val videoWrapper = style(
@@ -180,15 +187,6 @@ object CSS extends StyleSheet.Inline {
     animationDuration(1.second)
   )
 
-  val adminControl = style(
-    display.inlineBlock,
-    marginRight(0.8.rem)
-  )
-
-  val adminControlRow = style(
-    margin(1.rem, 0.2.rem, 1.rem, 1.rem)
-  )
-
   val portal = style(
     display.flex,
     padding(0.4.rem),
@@ -200,11 +198,7 @@ object CSS extends StyleSheet.Inline {
     marginRight(0.4.rem),
   )
 
-  val portalBtn = style(
-    flexGrow(1)
-  )
-
-  val textarea = style(
+  val portalNameInput = style(
     width(100.%%),
     color(c"#eaeaea"),
     backgroundColor(c"#3d3d3d"),
@@ -216,6 +210,38 @@ object CSS extends StyleSheet.Inline {
     boxSizing.borderBox,
     resize.none,
     borderRadius(0.25.rem)
+  )
+
+  val portalBtn = style(
+    flexGrow(1)
+  )
+
+  val adminControlRow = style(
+    margin(0.rem, 0.2.rem, 0.rem, 1.rem)
+  )
+
+  val adminControl = style(
+    display.inlineBlock,
+    margin(0.rem, 0.8.rem, 1.rem, 0.rem)
+  )
+
+  val adminControlInput = style(
+    color.white,
+    backgroundColor(c"#666666"),
+    border.none,
+    padding(0.375.rem, 0.75.rem, 0.375.rem, 0.75.rem),
+    fontSize(1.rem),
+    lineHeight(1.5.rem),
+    outline.none,
+    boxSizing.borderBox,
+    resize.none,
+    borderRadius(0.25.rem),
+    placeholder(
+      color(c"#b0b0b0")
+    ),
+    media.maxWidth(700.px)(
+      width(100.%%)
+    )
   )
 
   val btn = style(

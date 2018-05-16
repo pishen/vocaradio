@@ -31,6 +31,31 @@ object AdminControls {
 
   val uploadMessage = span(CSS.adminControl).render
 
+  case class SongForm(query: String, id: String) {
+    val queryInput = input(
+      CSS.adminControl,
+      CSS.adminControlInput,
+      placeholder := "query",
+      value := query
+    ).render
+    val idInput = input(
+      CSS.adminControl,
+      CSS.adminControlInput,
+      placeholder := "id",
+      value := id
+    )
+    val saveBtn = button(CSS.adminControl, CSS.btn, "Save").render
+    val deleteBtn = button(CSS.adminControl, CSS.btn, "Delete").render
+
+    val element = div(
+      CSS.adminControlRow,
+      queryInput,
+      idInput,
+      saveBtn,
+      deleteBtn
+    ).render
+  }
+
   val element = div(
     div(
       CSS.adminControlRow,
@@ -50,6 +75,9 @@ object AdminControls {
         onclick := { () => WS.send(Drop) },
         "Drop"
       )
+    ),
+    div(
+      SongForm("", "").element
     )
   ).render
   element.hide()
