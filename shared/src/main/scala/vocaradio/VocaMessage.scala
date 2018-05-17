@@ -7,12 +7,9 @@ case class UserStatus(
   isAdmin: Boolean
 ) extends VocaMessage
 
-case class AddSong(
-  query: String,
-  id: Option[String]
-) extends VocaMessage
+case class Save(song: Song) extends VocaMessage
 
-case class SongAdded(query: String) extends VocaMessage
+case class Saved(query: String) extends VocaMessage
 
 case object Ready extends VocaMessage
 case class Resume(id: String, position: Int) extends VocaMessage
@@ -32,4 +29,7 @@ case class UpdatePlaylist(pickables: Seq[Pickable]) extends VocaMessage
 case object Drop extends VocaMessage
 case class Skip(id: String) extends VocaMessage
 
-case class FindId(id: String) extends VocaMessage
+case class Id(value: String) extends VocaMessage
+case class Query(value: String) extends VocaMessage
+
+case class ShowSongs(songs: Seq[Song]) extends VocaMessage

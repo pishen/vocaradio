@@ -3,6 +3,7 @@ package vocaradio
 import io.circe.parser._
 import io.circe.generic.auto._
 import org.scalajs.dom._
+import org.scalajs.dom.raw.HTMLInputElement
 import scala.scalajs.js
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
@@ -23,13 +24,24 @@ object AdminControls {
         reader.result
           .asInstanceOf[String]
           .split("\n")
-          .flatMap(str => decode[AddSong](str).toOption)
-          .foreach(WS.send)
+          .flatMap(str => decode[Song](str).toOption)
+          .foreach(song => WS.send(Save(song)))
       }
     }
   ).render
 
   val uploadMessage = span(CSS.adminControl).render
+
+  def songSaved() = {
+    uploadedCount += 1
+    uploadMessage.textContent = s"$uploadedCount songs saved."
+  }
+
+  val idInput = input(
+    CSS.adminControl,
+    CSS.adminControlInput,
+    placeholder := "id"
+  ).render
 
   case class SongForm(query: String, id: String) {
     val queryInput = input(
@@ -43,7 +55,7 @@ object AdminControls {
       CSS.adminControlInput,
       placeholder := "id",
       value := id
-    )
+    ).render
     val saveBtn = button(CSS.adminControl, CSS.btn, "Save").render
     val deleteBtn = button(CSS.adminControl, CSS.btn, "Delete").render
 
@@ -56,7 +68,29 @@ object AdminControls {
     ).render
   }
 
+  val songForms = div(
+    SongForm("", "").element
+  ).render
+
+  def showSongs(songs: Seq[Song]) = {
+    songForms.innerHTML = ""
+    songs.foreach { song =>
+      songForms.appendChild(
+        SongForm(song.query, song.idOpt.getOrElse("")).element
+      )
+    }
+  }
+
   val element = div(
+    div(
+      CSS.adminControlRow,
+      button(
+        CSS.btn,
+        CSS.adminControl,
+        onclick := { () => WS.send(Drop) },
+        "Drop"
+      )
+    ),
     div(
       CSS.adminControlRow,
       label(
@@ -69,21 +103,17 @@ object AdminControls {
     ),
     div(
       CSS.adminControlRow,
+      idInput,
       button(
         CSS.btn,
         CSS.adminControl,
-        onclick := { () => WS.send(Drop) },
-        "Drop"
+        onclick := { () => WS.send(Id(idInput.value)) },
+        "List"
       )
     ),
-    div(
-      SongForm("", "").element
-    )
+    songForms
   ).render
   element.hide()
 
-  def songAdded() = {
-    uploadedCount += 1
-    uploadMessage.textContent = s"$uploadedCount songs added."
-  }
+
 }

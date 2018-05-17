@@ -9,11 +9,6 @@ import com.typesafe.scalalogging.LazyLogging
 import slick.jdbc.H2Profile.api._
 
 object SongBase extends LazyLogging {
-  case class Song(
-      query: String,
-      idOpt: Option[String],
-      active: Boolean
-  )
   class Songs(tag: Tag) extends Table[Song](tag, "songs") {
     def query = column[String]("query", O.PrimaryKey)
     def idOpt = column[Option[String]]("id")
@@ -27,9 +22,13 @@ object SongBase extends LazyLogging {
       .source[Pipe.In]
       .filter(_.userIdOpt.map(_ == adminId).getOrElse(false))
       .mapAsync(1) {
-        case Pipe.In(Right(AddSong(query, idOpt)), socketId, _) =>
-          db.run(songs.insertOrUpdate(Song(query, idOpt, true))).map { _ =>
-            List(Pipe.Out(SongAdded(query), Some(socketId)))
+        case Pipe.In(Right(Save(song)), socketId, _) =>
+          db.run(songs.insertOrUpdate(song)).map { _ =>
+            List(Pipe.Out(Saved(song.query), Some(socketId)))
+          }
+        case Pipe.In(Right(Id(id)), socketId, _) =>
+          db.run(songs.filter(_.idOpt === id).result).map { songs =>
+            List(Pipe.Out(ShowSongs(songs), Some(socketId)))
           }
         case _ =>
           Future.successful(List.empty[Pipe.Out])

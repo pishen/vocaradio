@@ -12,7 +12,6 @@ import io.circe.Error
 import scala.concurrent.Future
 import scala.util.Random
 import slick.jdbc.H2Profile.api._
-import SongBase.Song
 
 object Player extends LazyLogging {
   case class OnAir(video: Video, startTimeOpt: Option[Instant]) {

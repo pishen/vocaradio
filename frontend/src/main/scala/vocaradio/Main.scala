@@ -112,8 +112,10 @@ object Main {
           Portal.login()
           if (isAdmin) AdminControls.element.show()
         }
-      case SongAdded(query) =>
-        AdminControls.songAdded()
+      case Saved(query) =>
+        AdminControls.songSaved()
+      case ShowSongs(songs) =>
+        AdminControls.showSongs(songs)
       case Load(id) =>
         println("Load")
         player.cueVideoById(id)
