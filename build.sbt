@@ -16,10 +16,10 @@ lazy val backend = (project in file("backend"))
     commonSettings,
     libraryDependencies ++= Seq(
       //akka-http
-      "com.typesafe.akka" %% "akka-http" % "10.0.11",
-      "com.softwaremill.akka-http-session" %% "core" % "0.5.3",
+      "com.typesafe.akka" %% "akka-http" % "10.1.1",
+      "com.softwaremill.akka-http-session" %% "core" % "0.5.5",
       //logging
-      "com.typesafe.akka" %% "akka-slf4j" % "2.4.20",
+      "com.typesafe.akka" %% "akka-slf4j" % "2.5.12",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       //database
@@ -27,10 +27,10 @@ lazy val backend = (project in file("backend"))
       "com.typesafe.slick" %% "slick-hikaricp" % "3.2.1",
       "com.h2database" % "h2" % "1.4.196",
       //json
-      "io.circe" %% "circe-core" % "0.8.0",
-      "io.circe" %% "circe-generic" % "0.8.0",
-      "io.circe" %% "circe-parser" % "0.8.0",
-      "de.heikoseeberger" %% "akka-http-circe" % "1.18.0"
+      "io.circe" %% "circe-core" % "0.9.3",
+      "io.circe" %% "circe-generic" % "0.9.3",
+      "io.circe" %% "circe-parser" % "0.9.3",
+      "de.heikoseeberger" %% "akka-http-circe" % "1.20.1"
     ),
     resourceGenerators in Compile += Def.task {
       Seq(
@@ -56,9 +56,9 @@ lazy val frontend = (project in file("frontend"))
       "com.lihaoyi" %%% "scalatags" % "0.6.5",
       "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
       // json
-      "io.circe" %%% "circe-core" % "0.8.0",
-      "io.circe" %%% "circe-generic" % "0.8.0",
-      "io.circe" %%% "circe-parser" % "0.8.0"
+      "io.circe" %%% "circe-core" % "0.9.3",
+      "io.circe" %%% "circe-generic" % "0.9.3",
+      "io.circe" %%% "circe-parser" % "0.9.3"
     )
   )
   .dependsOn(sharedJs)
