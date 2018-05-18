@@ -62,6 +62,6 @@ object Pipe {
       .map(_.asJson.noSpaces)
       .map(TextMessage.apply)
 
-    Flow.fromSinkAndSource(sink, source)
+    Flow.fromSinkAndSourceCoupled(sink, source)
   }
 }
