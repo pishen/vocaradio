@@ -6,7 +6,7 @@ case class Snippet(
   title: String,
   thumbnails: Thumbnails
 )
-case class RegionRestriction(blocked: Option[List[String]])
+case class RegionRestriction(blocked: Seq[String])
 case class ContentDetails(
   duration: String,
   regionRestriction: Option[RegionRestriction]
