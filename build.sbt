@@ -1,13 +1,13 @@
 val commonSettings = Seq(
   name := "vocaradio",
   version := "2.0.0-SNAPSHOT",
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.5",
   scalacOptions += "-Ypartial-unification",
   addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
 )
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-  .settings(scalaVersion := "2.12.4")
+  .settings(scalaVersion := "2.12.5")
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
