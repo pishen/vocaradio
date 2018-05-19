@@ -111,22 +111,30 @@ object CSS extends StyleSheet.Inline {
     display.flex,
     flexWrap.wrap,
     justifyContent.spaceBetween,
-    marginBottom(1.rem)
+    marginBottom(1.rem),
+    overflow.hidden
   )
 
-  val videoWrapper = style(
+  val videoWidthWrapper = style(
+    position.relative,
+    width :=! "calc(25% - 3px)",
+    marginBottom(4.px),
+    media.maxWidth(700.px)(
+      width :=! "calc(50% - 2px)"
+    )
+  )
+
+  val videoHeightWrapper = style(
     position.relative,
     height.`0`,
-    width :=! "calc(25% - 3px)",
-    paddingTop(17.%%),
-    marginBottom(4.px),
-    overflow.hidden
+    width(100.%%),
+    paddingTop(65.%%)
   )
 
   val video = style(
     position.absolute,
-    top(0.px),
-    left(0.px),
+    top.`0`,
+    left.`0`,
     width(100.%%),
     height(100.%%),
     backgroundSize := "cover",
@@ -156,13 +164,21 @@ object CSS extends StyleSheet.Inline {
   )
 
   val toLeft = style(
-    animationName(keyframes(100.%% -> keyframe(left(-100.%%)))),
+    animationName(
+      keyframes(
+        100.%% -> keyframe(left :=! "calc(-100% - 4px)")
+      )
+    ),
     animationDuration(1.second),
     animationFillMode.forwards
   )
 
   val toRight = style(
-    animationName(keyframes(100.%% -> keyframe(left(100.%%)))),
+    animationName(
+      keyframes(
+        100.%% -> keyframe(left :=! "calc(100% + 4px)")
+      )
+    ),
     animationDuration(1.second),
     animationFillMode.forwards
   )
@@ -170,7 +186,7 @@ object CSS extends StyleSheet.Inline {
   val fromLeft = style(
     animationName(
       keyframes(
-        0.%% -> keyframe(left(-100.%%)),
+        0.%% -> keyframe(left :=! "calc(-100% - 4px)"),
         100.%% -> keyframe(left(0.px))
       )
     ),
@@ -180,7 +196,7 @@ object CSS extends StyleSheet.Inline {
   val fromRight = style(
     animationName(
       keyframes(
-        0.%% -> keyframe(left(100.%%)),
+        0.%% -> keyframe(left :=! "calc(100% + 4px)"),
         100.%% -> keyframe(left(0.px))
       )
     ),

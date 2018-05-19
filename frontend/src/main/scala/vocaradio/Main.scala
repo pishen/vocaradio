@@ -17,7 +17,7 @@ object Main {
     println("Welcome to VocaRadio!")
 
     // queue
-    val queue = Seq.fill(24)(div(CSS.videoWrapper).render)
+    val queue = Seq.fill(24)(div(CSS.videoHeightWrapper).render)
 
     val middlePanel = div(
       CSS.middlePanel,
@@ -32,7 +32,10 @@ object Main {
         )
       ),
       hr(CSS.separator, data.content := "即將播放"),
-      div(CSS.queue, queue),
+      div(
+        CSS.queue,
+        queue.map(heightWrapper => div(CSS.videoWidthWrapper, heightWrapper))
+      ),
       AdminControls.element
     ).render
 
@@ -140,14 +143,14 @@ object Main {
         val shiftRight = oldIds == pickables.map(_.video.id).toSet
 
         queue.zip(pickables)
-          .foreach { case (videoWrapper, Pickable(video, pickerOpt)) =>
-            val needShift = videoWrapper.childrenSeq
+          .foreach { case (heightWrapper, Pickable(video, pickerOpt)) =>
+            val needShift = heightWrapper.childrenSeq
               .lastOption
               .map(_.getAttribute("data-video-id") != video.id)
               .getOrElse(true)
             if (needShift) {
               // remove old one
-              videoWrapper.childrenSeq.lastOption.foreach { elem =>
+              heightWrapper.childrenSeq.lastOption.foreach { elem =>
                 elem.classList.remove(CSS.fromRight.htmlClass)
                 elem.classList.remove(CSS.fromLeft.htmlClass)
                 elem.classList.add {
@@ -158,11 +161,11 @@ object Main {
                   }
                 }
                 elem.addEventListener("animationend", { e: Event =>
-                  videoWrapper.removeChild(elem)
+                  heightWrapper.removeChild(elem)
                 })
               }
               // add new one
-              videoWrapper.appendChild {
+              heightWrapper.appendChild {
                 div(
                   CSS.video,
                   if (shiftRight) CSS.fromLeft else CSS.fromRight,
