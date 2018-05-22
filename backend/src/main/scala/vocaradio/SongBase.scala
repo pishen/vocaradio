@@ -26,6 +26,10 @@ object SongBase extends LazyLogging {
           db.run(songs.insertOrUpdate(song)).map { _ =>
             List(Pipe.Out(Saved(song.query), Some(socketId)))
           }
+        case Pipe.In(Right(Delete(query)), socketId, _) =>
+          db.run(songs.filter(_.query === query).delete).map { deleted =>
+            List.fill(deleted)(Pipe.Out(Deleted(query), Some(socketId)))
+          }
         case Pipe.In(Right(Id(id)), socketId, _) =>
           db.run(songs.filter(_.idOpt === id).result).map { songs =>
             List(Pipe.Out(ShowSongs(songs), Some(socketId)))

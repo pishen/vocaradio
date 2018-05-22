@@ -32,11 +32,6 @@ object AdminControls {
 
   val uploadMessage = span(CSS.adminControl).render
 
-  def songSaved() = {
-    uploadedCount += 1
-    uploadMessage.textContent = s"$uploadedCount songs saved."
-  }
-
   val idInput = input(
     CSS.adminControl,
     CSS.adminControlInput,
@@ -50,14 +45,35 @@ object AdminControls {
       placeholder := "query",
       value := query
     ).render
+
     val idInput = input(
       CSS.adminControl,
       CSS.adminControlInput,
       placeholder := "id",
       value := id
     ).render
-    val saveBtn = button(CSS.adminControl, CSS.btn, "Save").render
-    val deleteBtn = button(CSS.adminControl, CSS.btn, "Delete").render
+
+    val saveBtn = button(
+      CSS.adminControl,
+      CSS.btn,
+      onclick := { () =>
+        if (queryInput.value != "") {
+          WS.send(
+            Save(
+              Song(queryInput.value, Some(idInput.value).filter(_ != ""), true)
+            )
+          )
+        }
+      },
+      "Save"
+    ).render
+
+    val deleteBtn = button(
+      CSS.adminControl,
+      CSS.btn,
+      onclick := { () => WS.send(Delete(queryInput.value)) },
+      "Delete"
+    ).render
 
     val element = div(
       CSS.adminControlRow,
@@ -68,16 +84,31 @@ object AdminControls {
     ).render
   }
 
-  val songForms = div(
-    SongForm("", "").element
-  ).render
+  // TODO: Try to eliminate the mutables here
+  var songForms = Seq(SongForm("", ""))
+  val songFormsDiv = div(songForms.map(_.element)).render
 
   def showSongs(songs: Seq[Song]) = {
-    songForms.innerHTML = ""
-    songs.foreach { song =>
-      songForms.appendChild(
-        SongForm(song.query, song.idOpt.getOrElse("")).element
-      )
+    songForms = songs.map {
+      song => SongForm(song.query, song.idOpt.getOrElse(""))
+    }
+    if (songForms.isEmpty) {
+      songForms = Seq(SongForm("", ""))
+    }
+    songFormsDiv.innerHTML = ""
+    songForms.foreach(songForm => songFormsDiv.appendChild(songForm.element))
+  }
+
+  def songSaved(query: String) = {
+    uploadedCount += 1
+    uploadMessage.textContent = s"$uploadedCount songs saved."
+    songForms
+      .filter(_.queryInput.value == query)
+      .foreach(_.element.asInstanceOf[js.Dynamic].remove())
+    songForms = songForms.filterNot(_.queryInput.value == query)
+    if (songForms.isEmpty) {
+      songForms = Seq(SongForm("", ""))
+      songFormsDiv.appendChild(songForms.head.element)
     }
   }
 
@@ -111,7 +142,7 @@ object AdminControls {
         "List"
       )
     ),
-    songForms
+    songFormsDiv
   ).render
   element.hide()
 
