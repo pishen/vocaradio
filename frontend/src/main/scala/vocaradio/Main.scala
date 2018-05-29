@@ -116,7 +116,9 @@ object Main {
           if (isAdmin) AdminControls.element.show()
         }
       case Saved(query) =>
-        AdminControls.songSaved(query)
+        AdminControls.saved(query)
+      case BatchSaved(query) =>
+        AdminControls.batchSaved(query)
       case ShowSongs(songs) =>
         AdminControls.showSongs(songs)
       case Load(id) =>

@@ -25,7 +25,7 @@ object AdminControls {
           .asInstanceOf[String]
           .split("\n")
           .flatMap(str => decode[Song](str).toOption)
-          .foreach(song => WS.send(Save(song)))
+          .foreach(song => WS.send(BatchSave(song)))
       }
     }
   ).render
@@ -99,9 +99,12 @@ object AdminControls {
     songForms.foreach(songForm => songFormsDiv.appendChild(songForm.element))
   }
 
-  def songSaved(query: String) = {
+  def batchSaved(qeury: String) = {
     uploadedCount += 1
     uploadMessage.textContent = s"$uploadedCount songs saved."
+  }
+
+  def saved(query: String) = {
     songForms
       .filter(_.queryInput.value == query)
       .foreach(_.element.asInstanceOf[js.Dynamic].remove())
