@@ -38,7 +38,7 @@ object AdminControls {
     placeholder := "id"
   ).render
 
-  case class SongForm(query: String, id: String) {
+  case class SongForm(var query: String, var id: String) {
     val queryInput = input(
       CSS.adminControl,
       CSS.adminControlInput,
@@ -75,6 +75,37 @@ object AdminControls {
       "Delete"
     ).render
 
+    def setBtnState() = {
+      deleteBtn.disabled = queryInput.value == ""
+      saveBtn.disabled = queryInput.value == "" ||
+        (queryInput.value == query && idInput.value == id)
+      if (!saveBtn.disabled) {
+        saveBtn.textContent = "Save"
+      }
+      if (!deleteBtn.disabled) {
+        deleteBtn.textContent = "Delete"
+      }
+    }
+    queryInput.onkeyup = { _ => setBtnState() }
+    idInput.onkeyup = { _ => setBtnState() }
+    setBtnState()
+
+    def saved() = {
+      query = queryInput.value
+      id = idInput.value
+      saveBtn.textContent = "Saved!"
+      setBtnState()
+    }
+
+    def deleted() = {
+      query = ""
+      id = ""
+      queryInput.value = ""
+      idInput.value = ""
+      deleteBtn.textContent = "Deleted!"
+      setBtnState()
+    }
+
     val element = div(
       CSS.adminControlRow,
       queryInput,
@@ -107,12 +138,13 @@ object AdminControls {
   def saved(query: String) = {
     songForms
       .filter(_.queryInput.value == query)
-      .foreach(_.element.asInstanceOf[js.Dynamic].remove())
-    songForms = songForms.filterNot(_.queryInput.value == query)
-    if (songForms.isEmpty) {
-      songForms = Seq(SongForm("", ""))
-      songFormsDiv.appendChild(songForms.head.element)
-    }
+      .foreach(_.saved())
+  }
+
+  def deleted(query: String) = {
+    songForms
+      .filter(_.queryInput.value == query)
+      .foreach(_.deleted())
   }
 
   val element = div(

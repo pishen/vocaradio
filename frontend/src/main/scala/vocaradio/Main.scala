@@ -117,6 +117,8 @@ object Main {
         }
       case Saved(query) =>
         AdminControls.saved(query)
+      case Deleted(query) =>
+        AdminControls.deleted(query)
       case BatchSaved(query) =>
         AdminControls.batchSaved(query)
       case ShowSongs(songs) =>

@@ -233,6 +233,7 @@ object CSS extends StyleSheet.Inline {
   )
 
   val adminControlRow = style(
+    display.flex,
     margin(0.rem, 0.2.rem, 0.rem, 1.rem)
   )
 
@@ -280,6 +281,10 @@ object CSS extends StyleSheet.Inline {
     ),
     &.active(
       backgroundColor(c"#c9302c")
+    ),
+    &.disabled(
+      backgroundColor(c"#3d3d3d"),
+      color(c"#cccccc")
     )
   )
 
