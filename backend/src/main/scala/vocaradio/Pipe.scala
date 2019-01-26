@@ -8,13 +8,15 @@ import io.circe.parser._
 import io.circe.syntax._
 
 object Pipe {
-  sealed trait SysMsg
-  case object Join extends SysMsg
-  case object Leave extends SysMsg
+  sealed trait PipeMessage
+  sealed trait SystemMessage extends PipeMessage
+  case object Join extends SystemMessage
+  case object Leave extends SystemMessage
+
+  case class ClientMessage(value: VocaMessage) extends PipeMessage
 
   case class In(
-    // TODO: Use type instead of Either
-    msg: Either[SysMsg, VocaMessage],
+    msg: PipeMessage,
     socketId: String,
     userIdOpt: Option[String]
   )
@@ -41,9 +43,9 @@ object Pipe {
           bm.dataStream.runWith(Sink.ignore).map(_ => None)
       }
       .mapConcat(_.toList)
-      .map(msg => Right(msg))
-      .prepend(Source.single(Left(Join)))
-      .++(Source.single(Left(Leave)))
+      .map(msg => ClientMessage(msg))
+      .prepend(Source.single(Join))
+      .++(Source.single(Leave))
       .map(msg => In(msg, socketId, userIdOpt))
       .to(sinkHub)
 

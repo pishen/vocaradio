@@ -12,6 +12,7 @@ import io.circe.Error
 import scala.concurrent.Future
 import scala.util.Random
 import slick.jdbc.H2Profile.api._
+import Pipe.ClientMessage
 
 object Player extends LazyLogging {
   case class OnAir(video: Video, startTimeOpt: Option[Instant]) {
@@ -53,48 +54,38 @@ object Player extends LazyLogging {
         }
       }
 
-      def getAndUpdateVideo(query: String) = {
-        SongBase
-          .getSong(query)
-          .toDeepOption
+      def updateAndGetVideo(query: String): Future[Option[Video]] = {
+        OptionT(SongBase.getSong(query))
           .flatMap { song =>
-            val videoOpt = song.idOpt.toDeepOption
-              .flatMap { id =>
-                YouTube.getVideo(id).asDeepOption
-              }
+            OptionT.fromOption[Future](song.idOpt)
+              .flatMapF(id => YouTube.getVideo(id))
               .orElse {
-                YouTube.search(query).asDeepOption.flatMap { id =>
-                  YouTube.getVideo(id).asDeepOption
+                OptionT(YouTube.search(query))
+                  .flatMapF(id => YouTube.getVideo(id))
+              }
+              .map { video =>
+                // UPDATE
+                if (Some(video.id) != song.idOpt) {
+                  logger.info(s"Update $query from ${song.idOpt} to ${video.id}")
+                  SongBase.updateSong(song.copy(idOpt = Some(video.id)))
                 }
+                video
               }
-            // UPDATE
-            videoOpt.map(_.id).value.map { idOpt =>
-              if (idOpt != song.idOpt) {
-                logger.info(s"Update $query from ${song.idOpt} to $idOpt")
-                SongBase.updateSong(song.copy(idOpt = idOpt))
-              }
-            }
-            videoOpt
           }
+          .value
       }
 
-      def getFilledPickables(filledPool: Seq[String]) = {
-        filledPool
+      def getFilledPickables(filledPool: Seq[String]): Future[Seq[Pickable]] = {
+        val futures = filledPool
           .take(30 - pickables.size)
           .map { query =>
-            getAndUpdateVideo(query)
+            OptionT(updateAndGetVideo(query))
               .map(video => Pickable(video, None))
               .value
-              .value
           }
-          .toList
-          .sequence
-          .map { eithers =>
-            eithers.flatMap(_.left.toOption).foreach { error =>
-              logger.error(error.toString)
-            }
-            pickables ++ eithers.flatMap(_.toOption).flatten
-          }
+        Future.sequence(futures)
+          .map(_.flatten)
+          .map(newPickables => pickables ++ newPickables)
       }
 
       val resF = for {
@@ -139,7 +130,7 @@ object Player extends LazyLogging {
           }
 
           in.msg match {
-            case Right(Ready) =>
+            case ClientMessage(Ready) =>
               state.dropIfEnd().fill().map { newState =>
                 val loadOpt = newState.onAirOpt.map { onAir =>
                   Pipe.Out(Load(onAir.video.id), Some(in.socketId))
@@ -154,7 +145,7 @@ object Player extends LazyLogging {
                 )
                 newState -> (loadOpt.toSeq :+ updatePlaylist)
               }
-            case Right(Resume(id, position)) =>
+            case ClientMessage(Resume(id, position)) =>
               state.dropIfEnd().fill().map(_.startIfNot()).map { newState =>
                 val playOpt = newState.onAirOpt
                   .filter { onAir =>
@@ -177,7 +168,7 @@ object Player extends LazyLogging {
                   }
                 newState -> (playOpt.toSeq ++ updatePlaylistOpt)
               }
-            case Right(Ended) =>
+            case ClientMessage(Ended) =>
               state.dropIfEnd().fill().map(_.startIfNot()).map { newState =>
                 val playOpt = newState.onAirOpt.map { onAir =>
                   Pipe.Out(Play(onAir.video.id, 0), Some(in.socketId))
@@ -190,7 +181,7 @@ object Player extends LazyLogging {
                   }
                 newState -> (playOpt.toSeq ++ updatePlaylistOpt)
               }
-            case Right(Drop) if isAdmin() =>
+            case ClientMessage(Drop) if isAdmin() =>
               state.drop().fill().map { newState =>
                 val loadOpt = newState.onAirOpt.map { onAir =>
                   Pipe.Out(Load(onAir.video.id), None)

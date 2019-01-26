@@ -26,7 +26,11 @@ package object vocaradio {
 
   val db = Database.forConfig("h2")
 
-  case class DecodeError(error: Error, uri: Uri, resp: String) extends Exception
+  case class UriDecodeException(
+      uri: Uri,
+      resp: String,
+      error: Error
+  ) extends Exception
 
   implicit class RichUri(uri: Uri) {
     def withQuery(query: (String, String)*) = {
@@ -37,30 +41,10 @@ package object vocaradio {
         .singleRequest(HttpRequest(uri = uri))
         .flatMap {
           _.entity.toStrict(5.second).map(_.data.utf8String).map { str =>
-            decode[T](str).left.map { error =>
-              DecodeError(error, uri, str)
-            }
+            decode[T](str).left
+              .map(error => UriDecodeException(uri, str, error))
           }
         }
     }
-  }
-
-  implicit class RichFEither[A](f: Future[Either[DecodeError, A]]) {
-    def asEitherT = EitherT(f)
-  }
-
-  implicit class RichFOption[A](f: Future[Option[A]]) {
-    def asOptionT = OptionT(f)
-    def toDeepOption = OptionT(EitherT(f.map(_.asRight[DecodeError])))
-  }
-
-  implicit class RichOption[A](opt: Option[A]) {
-    def toDeepOption = OptionT.fromOption[EitherT[Future, DecodeError, ?]](opt)
-  }
-
-  implicit class RichFEitherOption[A](
-    f: Future[Either[DecodeError, Option[A]]]
-  ) {
-    def asDeepOption = OptionT(EitherT(f))
   }
 }

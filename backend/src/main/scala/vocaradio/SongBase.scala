@@ -7,6 +7,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl._
 import com.typesafe.scalalogging.LazyLogging
 import slick.jdbc.H2Profile.api._
+import Pipe.ClientMessage
 
 object SongBase extends LazyLogging {
   class Songs(tag: Tag) extends Table[Song](tag, "songs") {
@@ -22,19 +23,19 @@ object SongBase extends LazyLogging {
       .source[Pipe.In]
       .filter(_.userIdOpt.map(_ == adminId).getOrElse(false))
       .mapAsync(1) {
-        case Pipe.In(Right(Save(song)), socketId, _) =>
+        case Pipe.In(ClientMessage(Save(song)), socketId, _) =>
           db.run(songs.insertOrUpdate(song)).map { _ =>
             List(Pipe.Out(Saved(song.query), Some(socketId)))
           }
-        case Pipe.In(Right(BatchSave(song)), socketId, _) =>
+        case Pipe.In(ClientMessage(BatchSave(song)), socketId, _) =>
           db.run(songs.insertOrUpdate(song)).map { _ =>
             List(Pipe.Out(BatchSaved(song.query), Some(socketId)))
           }
-        case Pipe.In(Right(Delete(query)), socketId, _) =>
+        case Pipe.In(ClientMessage(Delete(query)), socketId, _) =>
           db.run(songs.filter(_.query === query).delete).map { deleted =>
             List.fill(deleted)(Pipe.Out(Deleted(query), Some(socketId)))
           }
-        case Pipe.In(Right(Id(id)), socketId, _) =>
+        case Pipe.In(ClientMessage(Id(id)), socketId, _) =>
           db.run(songs.filter(_.idOpt === id).result).map { songs =>
             List(Pipe.Out(ShowSongs(songs), Some(socketId)))
           }

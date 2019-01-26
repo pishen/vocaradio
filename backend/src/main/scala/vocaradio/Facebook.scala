@@ -3,9 +3,11 @@ package vocaradio
 import akka.http.scaladsl.model.Uri
 import cats.data.EitherT
 import cats.implicits._
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
+import scala.concurrent.Future
 
-object Facebook {
+object Facebook extends LazyLogging {
   val loginPage =
     Uri("https://www.facebook.com/v2.11/dialog/oauth").withQuery(
       "client_id" -> fbAppId,
@@ -26,13 +28,14 @@ object Facebook {
   case class AccessTokenResp(access_token: String)
   case class MeResp(id: String)
 
-  def getUser(code: String) = {
-    val res = for {
-      tokenResp <- accessTokenUri(code).get[AccessTokenResp].asEitherT
-      meResp <- meUri(tokenResp.access_token).get[MeResp].asEitherT
-    } yield {
-      meResp.id
-    }
-    res.value
+  def getUser(code: String): Future[Option[String]] = {
+    EitherT(accessTokenUri(code).get[AccessTokenResp])
+      .flatMapF(tokenResp => meUri(tokenResp.access_token).get[MeResp])
+      .map(meResp => meResp.id)
+      .leftMap { decodeException =>
+        logger.error("Failed getting User", decodeException)
+      }
+      .toOption
+      .value
   }
 }

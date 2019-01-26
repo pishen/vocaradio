@@ -35,8 +35,9 @@ object Main extends App with LazyLogging {
     SessionConfig.fromConfig()
   )
   def setUserId(userId: String) = setSession(oneOff, usingCookies, userId)
-  val requireUserId = requiredSession(oneOff, usingCookies)
   val optionalUserId = optionalSession(oneOff, usingCookies)
+  val requireUserId = requiredSession(oneOff, usingCookies)
+  val requireAdmin = requireUserId.require(_ == adminId)
   val clearUserId = invalidateSession(oneOff, usingCookies)
 
   // redirects
@@ -54,9 +55,9 @@ object Main extends App with LazyLogging {
       goto(Facebook.loginPage)
     } ~ path("callback") {
       parameters("code") { code =>
-        //TODO toTry.get here?
-        onSuccess(Facebook.getUser(code).map(_.toTry.get)) {
-          id => setUserId(id)(goHome)
+        onSuccess(Facebook.getUser(code)) {
+          case Some(id) => setUserId(id)(goHome)
+          case None => goHome
         }
       }
     } ~ path("logout") {
