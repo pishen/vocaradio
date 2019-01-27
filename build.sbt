@@ -1,9 +1,7 @@
 val commonSettings = Seq(
   name := "vocaradio",
-  version := "2.0.0-SNAPSHOT",
-  scalaVersion := "2.12.6",
-  scalacOptions += "-Ypartial-unification",
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
+  version := "2.1.0",
+  scalaVersion := "2.12.6"
 )
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
